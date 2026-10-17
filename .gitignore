@@ -1,0 +1,31 @@
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 测试 / 构建缓存
+.pytest_cache/
+.build-venv/
+.venv/
+venv/
+build/
+dist/
+
+# 数据库与运行数据（部署时绝不能上传）
+app/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# 环境变量与日志
+.env
+*.log
+logs/
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.dbms_deploy.json
