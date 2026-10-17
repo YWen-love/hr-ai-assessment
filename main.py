@@ -460,6 +460,19 @@ async def get_session_by_id(session_id: str) -> dict:
     }
 
 
+@app.get("/debug/ai-status")
+async def debug_ai_status(test: bool = True) -> dict:
+    """诊断 AI 配置：在浏览器打开 https://your-space.ms.show/debug/ai-status
+    会显示：key 是否读到、base_url / model 是什么、（可选）实际调一次 AI 看回什么错。
+    不暴露完整 key。"""
+    from app.deepseek_client import DeepSeekClient
+    client = DeepSeekClient()
+    status = client.config_status()
+    if test:
+        status["test_call"] = await client.test_call()
+    return status
+
+
 @app.post("/candidate/start")
 async def candidate_start(session_id: str = Form(...)) -> dict:
     session = get_session(session_id)
