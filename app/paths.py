@@ -26,14 +26,14 @@ def resource_path(path: str | Path) -> Path:
 
 
 def _can_use_modelscope_persistent() -> bool:
-    """检测当前是否在魔搭容器内（/data 可读写）。
+    """检测当前是否在魔搭容器内（/mnt/workspace 可读写）。
 
-    魔搭 Space 提供 /data 持久化目录，容器重启数据不丢。
-    本地开发无 /data，自动回退到 app/data/。
+    魔搭创空间的持久化目录是 /mnt/workspace（容器重启数据不丢），
+    不是 /data。本地开发无此目录，自动回退到 app/data/。
     """
     if not sys.platform.startswith("linux"):
         return False
-    data_dir = Path("/data")
+    data_dir = Path("/mnt/workspace")
     if not data_dir.is_dir():
         return False
     try:
@@ -50,8 +50,8 @@ def data_root() -> Path:
     if configured_path:
         path = Path(configured_path)
     elif _can_use_modelscope_persistent():
-        # 魔搭容器：使用 /data 持久化目录（容器重启不丢）
-        path = Path("/data/hr-ai-assessment")
+        # 魔搭容器：使用 /mnt/workspace 持久化目录（容器重启不丢）
+        path = Path("/mnt/workspace/hr-ai-assessment")
     else:
         app_root = project_root()
         if getattr(sys, "frozen", False):
