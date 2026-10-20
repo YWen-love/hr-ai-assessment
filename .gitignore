@@ -29,4 +29,5 @@ logs/
 *.swp
 .DS_Store
 Thumbs.dbms_deploy.json
+*.png
 ms_deploy.json

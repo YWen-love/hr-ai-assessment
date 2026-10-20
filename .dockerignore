@@ -36,5 +36,5 @@ login.png
 app/data/
 
 # 文档 / CI（不需要在镜像里）
+# 注意：不能排除 *.md —— job_intro.md / screen_rules.md 是运行时必读的知识库数据
 README.md
-*.md
