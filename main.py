@@ -1,15 +1,22 @@
 import html
+import time
 from contextlib import asynccontextmanager
 from typing import Optional
 from pathlib import Path
 
 import gradio as gr
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+from fastapi.staticfiles import StaticFiles
 
 from resume_parser import parse_resume_text
 from config import settings
 from app.gradio_ui import HR_UI_CSS, build_hr_ui
+from app.hr_auth import init_db as init_hr_db, seed_default_admin, verify_login, create_user
+from app.login_page import render_login_page, render_register_page
 from app.paths import data_root
 from app.assessment_service import AssessmentService
 from app.knowledge_base import get_job_knowledge, initialize_knowledge_base, list_jobs
@@ -20,15 +27,137 @@ from app.session_store import create_session, get_session, init_db, list_session
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    init_hr_db()
+    seed_default_admin()
     initialize_knowledge_base()
     await assessment_service.prepare_job_knowledge()
     yield
 
 
 app = FastAPI(title="Resume Assessment Agent", lifespan=lifespan)
+
+
+# 强制登录中间件（INNER）：/hr/* 未登录 → 401 JSON / 302 跳登录页；候选人 /candidate/* 与静态资源放行
+# 用 BaseHTTPMiddleware 类形式，确保可在 SessionMiddleware 之后被注册（晚注册 = 更外层）
+class RequireHRAuthMiddleware(BaseHTTPMiddleware):
+    # 注意："/" 单独处理（path == "/"），其余都是前缀匹配
+    EXACT_PUBLIC = {"/"}
+    PUBLIC_PREFIXES = ("/login", "/register", "/api/login", "/api/register", "/api/logout", "/static", "/candidate/", "/docs", "/openapi.json")
+
+    async def dispatch(self, request, call_next):
+        path = request.url.path
+        # 公开路径白名单
+        if path in self.EXACT_PUBLIC:
+            return await call_next(request)
+        for prefix in self.PUBLIC_PREFIXES:
+            if path.startswith(prefix):
+                return await call_next(request)
+        # /hr/* 强制鉴权（Gradio 内部 API 也走这里）
+        if path.startswith("/hr"):
+            if not request.session.get("hr_user_id"):
+                accept = request.headers.get("accept", "")
+                if "application/json" in accept or path.startswith("/hr/api/"):
+                    return JSONResponse({"detail": "Not authenticated"}, status_code=401)
+                return RedirectResponse(url=f"/login?next={path}", status_code=302)
+        return await call_next(request)
+
+
+# 注册顺序：先注册的在内层、后注册的在更外层（包裹前一个）
+# 我们要 SessionMiddleware 在最外层（先于 auth 跑、填充 session）
+# 所以：先 add auth middleware（内层），再 add session（外层）
+app.add_middleware(RequireHRAuthMiddleware)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SESSION_SECRET,
+    session_cookie=settings.SESSION_COOKIE_NAME,
+    max_age=settings.SESSION_MAX_AGE,
+    same_site="lax",
+    https_only=False,
+)
+
+
+# HR 工作台页面注入：关闭标签页自动登出
+# 监听 pagehide（标签页关闭、浏览器关闭都触发；副作用：刷新也会登出）
+# 用 sendBeacon 在 pagehide 期间最可靠；fetch keepalive 兜底
+_AUTO_LOGOUT_SCRIPT = (
+    "<script>(function(){"
+    "function l(){"
+    "try{"
+    "var s=navigator.sendBeacon&&navigator.sendBeacon('/api/logout');"
+    "if(!s){fetch('/api/logout',{method:'POST',keepalive:true}).catch(function(){});}"
+    "}catch(e){}"
+    "}"
+    "window.addEventListener('pagehide',l);"
+    "window.addEventListener('beforeunload',l);"
+    "})();</script>"
+)
+
+
+class InjectLogoutJSMiddleware(BaseHTTPMiddleware):
+    """给 /hr 路径的 HTML 响应注入 pagehide 自动登出脚本。"""
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        path = request.url.path
+        if not path.startswith("/hr"):
+            return response
+        ct = response.headers.get("content-type", "")
+        if "text/html" not in ct:
+            return response
+
+        # 读取整个 body
+        chunks = []
+        async for chunk in response.body_iterator:
+            if isinstance(chunk, str):
+                chunks.append(chunk.encode("utf-8"))
+            else:
+                chunks.append(chunk)
+        body = b"".join(chunks)
+
+        # 在 </head> 前注入（大小写都匹配；找不到就插到 body 开头）
+        marker = b"</head>"
+        idx = body.lower().find(marker)
+        if idx == -1:
+            new_body = _AUTO_LOGOUT_SCRIPT.encode("utf-8") + body
+        else:
+            new_body = body[:idx] + _AUTO_LOGOUT_SCRIPT.encode("utf-8") + body[idx:]
+
+        # 重建响应，删掉旧的 content-length
+        new_headers = {k: v for k, v in response.headers.items() if k.lower() != "content-length"}
+        return Response(
+            content=new_body,
+            status_code=response.status_code,
+            headers=new_headers,
+            media_type="text/html",
+        )
+
+
+app.add_middleware(InjectLogoutJSMiddleware)
+
+# 静态资源（背景图 bg.jpg 放在 <data_root>/static/ 下，自动随魔搭/本地路径解析）
+STATIC_DIR = data_root() / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
 assessment_service = AssessmentService()
 init_db()
+init_hr_db()
+seed_default_admin()
 initialize_knowledge_base()
+
+
+def _require_hr_user(request: Request) -> str:
+    """FastAPI Depends：要求已登录 HR。"""
+    user = request.session.get("hr_user_id")
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+def _set_hr_session(request: Request, username: str) -> None:
+    """写入 HR 登录 session。登录、注册成功后调用。"""
+    request.session["hr_user_id"] = username
+    request.session["hr_login_at"] = int(time.time())
 
 
 def resolve_public_base_url(request: Request | None = None) -> str:
@@ -205,7 +334,16 @@ def render_candidate_page(session_id: str) -> str:
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>候选人测评</title>
         <style>
-            body {{ font-family: Arial, sans-serif; background: #f3f5fb; margin: 0; padding: 24px; }}
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 24px;
+                min-height: 100vh;
+                background:
+                    linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)),
+                    url('/static/测评端.jpg') center/cover no-repeat fixed;
+                background-attachment: fixed;
+            }}
             .panel {{ max-width: 900px; margin: 0 auto; background: white; border-radius: 18px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }}
             h2 {{ margin-top: 0; }}
             .messages {{ display: grid; gap: 12px; margin: 20px 0; }}
@@ -307,11 +445,75 @@ async def read_root(session_id: Optional[str] = None, admin_pwd: Optional[str] =
     }
 
 
-@app.post("/hr/login")
-async def hr_login(username: str = Form(...), password: str = Form(...)) -> dict:
-    if username != settings.ADMIN_USERNAME or password != settings.ADMIN_PASSWORD:
-        raise HTTPException(status_code=401, detail="Invalid HR credentials")
-    return {"status": "ok", "message": "HR login successful"}
+@app.get("/login")
+async def login_page(request: Request, next: str = "/hr") -> HTMLResponse:
+    """登录页（照片背景 + 表单）。"""
+    return HTMLResponse(content=render_login_page(next_url=next or "/hr", error=""), media_type="text/html")
+
+
+@app.post("/api/login")
+async def api_login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    next: str = Form("/hr"),
+) -> HTMLResponse:
+    """登录：bcrypt 校验 → 写 session → 302 回跳。失败回 401 渲染错误。"""
+    target = next if next.startswith("/") else "/hr"
+    if verify_login(username, password):
+        _set_hr_session(request, username)
+        return RedirectResponse(url=target, status_code=302)
+    return HTMLResponse(
+        content=render_login_page(next_url=target, error="账号或密码错误，请重试"),
+        status_code=401,
+        media_type="text/html",
+    )
+
+
+@app.get("/register")
+async def register_page(request: Request, next: str = "/hr") -> HTMLResponse:
+    """注册页（与登录页同款背景图 + 卡片）。"""
+    return HTMLResponse(
+        content=render_register_page(next_url=next or "/hr"),
+        media_type="text/html",
+    )
+
+
+@app.post("/api/register")
+async def api_register(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+    next: str = Form("/hr"),
+) -> HTMLResponse:
+    """自注册：校验 → 写库 → 自动登录 → 302 回跳。失败回 400 渲染错误。"""
+    target = next if next.startswith("/") else "/hr"
+
+    if password != confirm_password:
+        return HTMLResponse(
+            content=render_register_page(next_url=target, error="两次输入的密码不一致", username=username),
+            status_code=400,
+            media_type="text/html",
+        )
+
+    ok, msg = create_user(username, password)
+    if not ok:
+        return HTMLResponse(
+            content=render_register_page(next_url=target, error=msg, username=username),
+            status_code=400,
+            media_type="text/html",
+        )
+
+    _set_hr_session(request, username)
+    return RedirectResponse(url=target, status_code=302)
+
+
+@app.post("/api/logout")
+async def api_logout(request: Request) -> RedirectResponse:
+    """登出：清 session，跳回登录页。"""
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=302)
 
 
 @app.post("/hr/parse-link")
@@ -320,6 +522,7 @@ async def hr_parse_link(
     file: UploadFile = File(...),
     candidate_name: str = Form(...),
     job_name: str = Form(...),
+    _user: str = Depends(_require_hr_user),
 ) -> dict:
     try:
         get_job_knowledge(job_name)
@@ -356,12 +559,12 @@ async def hr_parse_link(
 
 
 @app.get("/hr/sessions")
-async def hr_sessions() -> list[dict]:
+async def hr_sessions(_user: str = Depends(_require_hr_user)) -> list[dict]:
     return list_sessions()
 
 
 @app.get("/hr/result/{session_id}")
-async def hr_result(session_id: str) -> dict:
+async def hr_result(session_id: str, _user: str = Depends(_require_hr_user)) -> dict:
     session = get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -499,9 +702,10 @@ async def finish_assessment(session_id: str = Form(...)) -> dict:
 app = gr.mount_gradio_app(
     app,
     build_hr_ui(),
-    # 把 Gradio 挂到根路径（魔搭 sdk=gradio 要求 /config /invoke /info 在根），
-    # FastAPI 路由（/candidate /assessment /hr-parse-link /session 等）不冲突，照常工作
-    path="/",
+    # HR 工作台挂到 /hr：避开 FastAPI @app.get("/")（返回 JSON health check），
+    # 这样 /hr 真正显示 Gradio UI，/ 仍然是轻量 health check 端点。
+    # FastAPI 的 /candidate /assessment /hr/* 路由不受影响。
+    path="/hr",
     theme=gr.themes.Soft(primary_hue="blue", neutral_hue="slate"),
     css=HR_UI_CSS,
 )

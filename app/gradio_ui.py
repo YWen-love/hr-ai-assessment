@@ -36,12 +36,30 @@ def _resolve_base_url(request: gr.Request | None = None) -> str:
         host = (
             request.headers.get("x-forwarded-host")
             or request.headers.get("host")
-            or "localhost:7860"
+            or "ywen666-hr-ai-assessment.ms.show"
         ).split(",")[0].strip()
         return f"{proto}://{host}"
     return ""
 
 HR_UI_CSS = """
+html, body, .gradio-container, .main.app, main.contain {
+    background:
+        linear-gradient(rgba(255,255,255,0.86), rgba(255,255,255,0.86)),
+        url('/static/hr.jpg') center/cover no-repeat fixed !important;
+    background-attachment: fixed !important;
+}
+/* Gradio 默认给根元素和容器加了浅灰底色，把背景图遮住了。强制设透明。*/
+gradio-app, .gradio-app, .gradio-container, .app {
+    background: transparent !important;
+}
+/* panel / block / wrap 用半透明白底，既透出背景图又保证文字可读*/
+.gradio-group, .block, .wrap, .panel, .form, .styler, .gr-group, .container {
+    background: rgba(255, 255, 255, 0.78) !important;
+}
+/* Gradio 6 在 Group 里包了一层 .styler 和 .gr-group，默认浅灰 rgb(226,232,240) 也会盖住背景。*/
+.svelte-1p9262q {
+    background: rgba(255, 255, 255, 0.78) !important;
+}
 .gradio-container {
     width: 100% !important;
     max-width: none !important;
@@ -111,8 +129,8 @@ def _candidate_url(session_id: str, request: gr.Request | None = None) -> str:
     base_url = _resolve_base_url(request)
     if not base_url:
         # 没拿到 request 也没设 PUBLIC_BASE_URL（理论只发生在后台任务），
-        # 不再硬编魔搭域，避免误把本机 session 指向远端域名
-        base_url = "http://localhost:7860"
+        # 兜底用魔搭公网服务地址
+        base_url = "https://ywen666-hr-ai-assessment.ms.show"
     return f"{base_url}/candidate/{session_id}"
 
 

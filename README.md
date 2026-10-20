@@ -35,6 +35,28 @@ hr-ai-assessment/
     └── session_store.py      # 候选人测评会话持久化（SQLite）
 ```
 
+## 🔓 公网演示账号
+
+> ⚠️ **这是公开在 GitHub 仓库的演示账号，禁止在演示项目里上传真实候选人简历。**
+
+部署到魔搭的实例使用以下共享账号供 HR 团队 / 访客访问：
+
+| 字段 | 值 |
+|---|---|
+| HR 工作台地址 | `https://<your-space>.ms.show/hr` |
+| 用户名 | `HR01` |
+| 密码 | `HR01-123456` |
+
+打开上方的 HR 工作台地址，按提示输入用户名 / 密码即可进入。
+
+**重要说明**
+
+- 该账号是公开 demo 凭证（已写入本仓库），**任何拿到魔搭链接的人都能登录**。
+- 请只在演示项目里**放合成测试数据**，不要上传真实简历。
+- 若需正式部署（接入真实候选人数据）：删除本节，并在魔搭控制台 → 环境变量里**重设** `HR_ADMIN_USERNAME` / `HR_ADMIN_PASSWORD`，然后**私下把新账号密码发给你信任的人**。
+
+---
+
 ## 🚀 快速开始
 
 ```bash
@@ -45,13 +67,15 @@ pip install -r requirements.txt
 cp .env.example .env
 # 编辑 .env，填入 DEEPSEEK_API_KEY 等真实值
 
-# 3. 启动 FastAPI 后端（含 Gradio HR 工作台挂载在 /hr）
+# 3. 启动 FastAPI 后端（含 Gradio HR 工作台挂载在 /hr，本地调试用）
 uvicorn main:app --host 0.0.0.0 --port 8011
-# 浏览器打开 http://127.0.0.1:8011/hr
+# 本地浏览器： http://127.0.0.1:8011/hr
+# 部署到魔搭后直接访问公网入口（见下文"部署到魔搭"）
 
 # 4. 或仅启动 Gradio（魔搭部署模式用 7860）
 python app.py
-# 浏览器打开 http://127.0.0.1:7860
+# 本地浏览器： http://127.0.0.1:7860
+# 部署到魔搭后直接访问公网入口（见下文"部署到魔搭"）
 ```
 
 ## 🌐 部署到魔搭（ModelScope Space）
@@ -83,8 +107,10 @@ def data_root():
 ### 3. 公网链接（base_url 自动跟随）
 
 候选人测评链接的域名不需要硬编码，代码会自动从请求头里取：
-- 本地 `http://127.0.0.1:7860/hr` 操作 → 链接变成 `http://127.0.0.1:7860/candidate/xxx`
-- 魔搭 `https://ywen666-hr-ai-assessment.ms.show/hr` 操作 → 链接变成 `https://ywen666-hr-ai-assessment.ms.show/candidate/xxx`（自动读 `X-Forwarded-Proto` / `X-Forwarded-Host`）
+
+- **公网入口**：魔搭部署后，HR 在 `https://ywen666-hr-ai-assessment.ms.show/hr` 操作 → 给候选人发的链接变成 `https://ywen666-hr-ai-assessment.ms.show/candidate/xxx`（自动读 `X-Forwarded-Proto` / `X-Forwarded-Host`）
+- **项目展示页**（Studio 元信息、说明文档）：`https://www.modelscope.cn/studios/YWen666/hr-ai-assessment`
+- **本地开发**（裸跑 uvicorn，无反代）：在 `.env` 设 `PUBLIC_BASE_URL=http://127.0.0.1:7860` 后，链接变成 `http://127.0.0.1:7860/candidate/xxx`
 
 不用再设 `PUBLIC_BASE_URL` 环境变量。
 
@@ -136,3 +162,84 @@ def data_root():
 | `DEEPSEEK_MODEL` | 模型端点 ID |
 | `PUBLIC_BASE_URL` | 候选人访问链接前缀（默认空，会自动取当前请求地址；魔搭部署时填魔搭公网地址） |
 | `APP_DATA_DIR` | 自定义数据目录（不填则用 `app/data/`） |
+| `SESSION_SECRET` | Session 签名密钥（**首次部署必填**，否则每次重启所有 HR 都会被迫重新登录） |
+| `HR_ADMIN_USERNAME` | HR 管理员账号（默认 `admin`） |
+| `HR_ADMIN_PASSWORD` | HR 管理员密码（**首次部署强烈建议设置**；留空则启动时随机生成并打印到日志） |
+
+## 🔐 HR 工作台登录
+
+HR 工作台（`/hr`）强制登录后才能访问，未登录会被 302 到 `/login`。
+
+### 默认账号
+
+- 首次启动时，`hr_users` 表为空 → 程序自动创建默认账号：
+  - 用户名：`HR_ADMIN_USERNAME`（默认 `admin`）
+  - 密码：若 `HR_ADMIN_PASSWORD` 已设 → 用该密码；否则随机生成，**WARNING 级别打印到日志**（仅启动时一次）
+- 后续重启 → 表里若已有用户，会按 .env 同步默认 admin（改名 / 改密 / 跳过，详见 `seed_default_admin`）
+- 数据库位置：`<data_root>/hr_users.db`（与候选人会话库分开）
+- 密码存储：bcrypt 散列（不是明文）
+
+### 自注册
+
+- 注册页：部署到魔搭后访问 `https://ywen666-hr-ai-assessment.ms.show/register`
+- 登录页底部有「还没有账号？立即注册」入口
+- 表单：账号 / 密码 / 确认密码
+- 验证规则：
+  - 用户名：3-32 字符，字母开头，可含字母、数字、下划线、连字符
+  - 密码：至少 6 位
+  - 两次密码必须一致
+- 注册成功 → **自动登录** → 跳回原请求页
+- 重名 → 400 + "该用户名已被注册"
+- 依赖 `username UNIQUE` 约束兜底，避开先 SELECT 后 INSERT 的竞态
+
+### 登录/登出
+
+- 登录页：部署到魔搭后访问 `https://ywen666-hr-ai-assessment.ms.show/login`
+- 登录后跳回原请求页（如 `/hr`、`/hr/sessions`）
+- 登出：`POST /api/logout`（当前 Gradio 工作台未挂登出按钮，可手动调接口或清 cookie）
+- Session cookie 名：`hr_session`，有效期 `SESSION_MAX_AGE` 秒（默认 86400 = 24 小时）
+
+### 公开路径（无需登录）
+
+- `/`（根，简化版 HTML 上传页）
+- `/login`、`/register`
+- `/api/login`、`/api/register`、`/api/logout`
+- `/static/*`（背景图等静态资源）
+- `/candidate/{session_id}`（候选人测评页，session_id 本身即访问令牌）
+
+## 🖼 三页统一背景图
+
+登录页、HR 工作台、候选人测评页**共用一张背景图**。
+
+### 放置位置
+
+把图片放到 `<data_root>/static/bg.jpg`：
+
+| 部署环境 | 实际路径 |
+|---|---|
+| 本地开发 | `<本地仓库根目录>/app/data/static/bg.jpg` |
+| 魔搭部署 | `/data/hr-ai-assessment/static/bg.jpg` |
+
+> 目录不存在也没关系，程序启动时会自动 `mkdir -p`。
+> `data_root()` 的解析逻辑见 `app/paths.py`（魔搭用 `/data/hr-ai-assessment/`，本地用 `app/data/`）。
+
+### 支持的格式
+
+默认引用 `/static/bg.jpg`。如换 PNG/WebP/SVG：
+
+1. 把图片放到 `<data_root>/static/bg.png`（或 `bg.webp`、`bg.svg`）
+2. 改两处代码里的扩展名：
+   - `app/login_page.py` 第 12 行：`BG_URL = "/static/bg.<ext>"`
+   - `app/gradio_ui.py` 第 48 行：`url('/static/bg.<ext>')`
+   - `main.py` 的 `render_candidate_page()` `<style>` 中：`url('/static/bg.<ext>')`
+
+### 图片缺失的降级
+
+图片不存在时 `url('/static/bg.jpg')` 会 404，但**渐变 overlay 仍生效**，三页都能正常显示（只是没有照片做底）。建议至少放一张浅色图保证视觉效果。
+
+## 📁 文件清单（按本版本）
+
+`app/hr_auth.py` — HR 账号数据库（SQLite + bcrypt）  
+`app/login_page.py` — 登录页 HTML 渲染  
+`main.py` — FastAPI 后端（含登录中间件 + `/static` 静态资源）  
+`app/gradio_ui.py` — Gradio HR 工作台（`HR_UI_CSS` 顶部含背景图 CSS）
