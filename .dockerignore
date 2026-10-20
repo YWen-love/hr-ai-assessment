@@ -1,0 +1,40 @@
+# 不要把以下内容打进镜像
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.db
+*.sqlite
+*.sqlite3
+.env
+*.log
+logs/
+.pytest_cache/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# 本地调试残留、临时截图（README 没引用）
+check_mobile*.py
+pw_link.py
+pw_check.py
+pw_dom.py
+pw_audit.py
+pw_inspect.py
+pw_e2e.py
+pw_dumps/
+test_resume.txt
+candidate.png
+hr_full.png
+hr_v2.png
+hr_v3.png
+login.png
+
+# 应用运行时产物（容器启动后由程序自己重建到 /data）
+app/data/
+
+# 文档 / CI（不需要在镜像里）
+README.md
+*.md
