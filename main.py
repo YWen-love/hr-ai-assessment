@@ -424,7 +424,7 @@ def render_candidate_page(session_id: str) -> str:
 
 
 @app.get("/")
-async def read_root(session_id: Optional[str] = None, admin_pwd: Optional[str] = None) -> dict:
+async def read_root(session_id: Optional[str] = None, admin_pwd: Optional[str] = None):
     if session_id:
         session = get_session(session_id)
         if session:
@@ -439,10 +439,20 @@ async def read_root(session_id: Optional[str] = None, admin_pwd: Optional[str] =
             "admin_username": settings.ADMIN_USERNAME,
         }
 
-    return {
-        "message": "Resume Assessment Agent is running",
-        "hint": "Use HR admin link or candidate session link",
-    }
+    # 魔搭 Studio 预览默认加载根路径：返回自动跳转到 HR 工作台的页面。
+    # 保持 HTTP 200 以通过平台健康检查，同时用户打开项目即进入工作台（/hr 未登录会再跳 /login）。
+    return HTMLResponse(
+        content=(
+            "<!DOCTYPE html><html lang='zh'><head><meta charset='utf-8'>"
+            "<meta http-equiv='refresh' content='0;url=/hr'>"
+            "<title>HR 工作台</title></head>"
+            "<body style='font-family:sans-serif;text-align:center;padding-top:80px;color:#555'>"
+            "<p>正在跳转 HR 工作台…</p>"
+            "<p><a href='/hr'>如果未自动跳转，点击这里</a></p>"
+            "</body></html>"
+        ),
+        media_type="text/html",
+    )
 
 
 @app.get("/login")
