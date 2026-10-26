@@ -31,6 +31,7 @@ from app.job_schema import (
     backup_table_for_prompt,
     count_backups_without_conditions,
     field_table_for_prompt,
+    job_profile_table_for_prompt,
     normalize_job_config,
     operator_table_for_prompt,
     score_rule_table_for_prompt,
@@ -85,6 +86,33 @@ DEFAULT_SCORE_RULES: Dict[str, Any] = {
 
 DEFAULT_THRESHOLD = {"high_min": 5, "mid_min": 3}
 
+# 模型把分组名写成别名的情形。只认 add_score / minus_score 的话，
+# 模型返回 {"加分项": [...]} 这种就被整份丢掉，套上一组永远不会命中的
+# 占位规则 —— 岗位存进库是死的，HR 还以为模型配好了。
+_SCORE_GROUP_ALIASES: Dict[str, str] = {
+    "add_score": "add_score",
+    "add_scores": "add_score",
+    "add": "add_score",
+    "加分项": "add_score",
+    "加分规则": "add_score",
+    "加分": "add_score",
+    "minus_score": "minus_score",
+    "minus_scores": "minus_score",
+    "minus": "minus_score",
+    "sub_score": "minus_score",
+    "扣分项": "minus_score",
+    "扣分规则": "minus_score",
+    "扣分": "minus_score",
+}
+
+# 套了占位模板就必须说出来：模板里每条规则的 value 都是空的，
+# 永远不会命中 —— 这个岗位对所有候选人的分数都一样。
+_TEMPLATED_RULES_NOTE = (
+    "[警告] {reason}，已套用占位模板：模板里每条规则的 value 都是空的，"
+    "永远不会命中，这个岗位对所有候选人的分数都一样。"
+    "请在保存前手工补全 score_rules。"
+)
+
 
 class JobConfigGenerator:
     def __init__(self):
@@ -111,6 +139,7 @@ class JobConfigGenerator:
             .replace("{{operator_table}}", operator_table_for_prompt())
             .replace("{{backup_table}}", backup_table_for_prompt())
             .replace("{{score_rule_table}}", score_rule_table_for_prompt())
+            .replace("{{job_profile_table}}", job_profile_table_for_prompt())
         )
 
         try:
@@ -124,8 +153,11 @@ class JobConfigGenerator:
         if not isinstance(raw, dict):
             raise JobGenerationError("模型返回的不是 JSON 对象")
 
-        config = _build_config(raw, jd_hint=text, job_key=job_key)
+        notes: List[str] = []
+        config = _build_config(raw, jd_hint=text, job_key=job_key, notes=notes)
         errors, warnings = _validate(config)
+        # 模型给的规则一条都用不上时，提示排在最前面 —— 这是最需要人看的一条
+        warnings = notes + warnings
 
         # 模型没给命中条件的备选岗位，规范化阶段会按岗位名兜一条粗条件。
         # 这属于我们替模型补的，得让 HR 知道去细化。
@@ -139,12 +171,25 @@ class JobConfigGenerator:
         return {"config": config, "errors": errors, "warnings": warnings}
 
 
-def _build_config(raw: Dict[str, Any], *, jd_hint: str, job_key: Optional[str]) -> Dict[str, Any]:
+def _build_config(
+    raw: Dict[str, Any],
+    *,
+    jd_hint: str,
+    job_key: Optional[str],
+    notes: Optional[List[str]] = None,
+) -> Dict[str, Any]:
     """把模型输出收敛成合法配置。
 
     逐个字段兜底：模型漏了必填项就直接失败是不够的，
     能从 JD 原文里正则取到的（岗位名称）先补上，再给 HR 看。
+
+    notes 收集「模型给的东西没法用」这类必须让人知道的提示
+    （比如打分规则分组名认不出、套了占位模板）。
     """
+    score_rules, note = _merge_score_rules(raw.get("score_rules"))
+    if note and notes is not None:
+        notes.append(note)
+
     config: Dict[str, Any] = {
         "job_key": job_key or raw.get("job_key") or _guess_job_key(
             raw.get("job_name") or _guess_job_name(jd_hint)
@@ -153,7 +198,7 @@ def _build_config(raw: Dict[str, Any], *, jd_hint: str, job_key: Optional[str]) 
         "job_profile": raw.get("job_profile") or {},
         "dialog_check_items": raw.get("dialog_check_items") or [],
         "exp_keywords": [k for k in (raw.get("exp_keywords") or []) if isinstance(k, str)],
-        "score_rules": _merge_score_rules(raw.get("score_rules")),
+        "score_rules": score_rules,
         "level_threshold": raw.get("level_threshold") or dict(DEFAULT_THRESHOLD),
         "alternate_role_mapping": [b for b in (raw.get("alternate_role_mapping") or []) if isinstance(b, dict)],
         "backup_show_switch": {"when_reject_main_job": True},
@@ -168,8 +213,8 @@ def _build_config(raw: Dict[str, Any], *, jd_hint: str, job_key: Optional[str]) 
     return normalize_job_config(config)
 
 
-def _merge_score_rules(raw: Any) -> Dict[str, Any]:
-    """模型的规则与默认模板合并。
+def _merge_score_rules(raw: Any) -> Tuple[Dict[str, Any], str]:
+    """模型的规则与默认模板合并。返回 (合并后的规则, 需要人看的提示)。
 
     模型给了就用模型的；某条规则缺字段时用模板里的同 id 规则补结构，
     避免模型漏写 score 或 desc 导致整条配置校验不过。
@@ -178,17 +223,24 @@ def _merge_score_rules(raw: Any) -> Dict[str, Any]:
     这种按「全是加分项」处理 —— 直接当 dict 看待会走「类型不对 →
     返回占位模板」的分支，模型写的规则被整份丢掉，只剩一组 value 为空、
     永远不会命中的占位规则，岗位存进库也是死的。
+    分组名写成别名（加分项 / add）同样按名字收敛，不再整份丢掉。
+
+    模型给的规则一条都用不上时，套占位模板并**说清楚**：模板里每条规则的
+    value 都是空的，永远不会命中，这个岗位对所有候选人的分数都一样 ——
+    不说出来，HR 会以为模型已经配好了规则。
     """
     if isinstance(raw, list):
         raw = {"add_score": raw}
     if not isinstance(raw, dict):
-        return json.loads(json.dumps(DEFAULT_SCORE_RULES))
+        return (
+            json.loads(json.dumps(DEFAULT_SCORE_RULES)),
+            _TEMPLATED_RULES_NOTE.format(reason="模型没有返回打分规则"),
+        )
 
+    groups = _group_entries(raw)
     merged: Dict[str, Any] = {}
     for group in ("add_score", "minus_score"):
-        entries = raw.get(group)
-        if not isinstance(entries, list):
-            entries = []
+        entries = groups.get(group) or []
         defaults = {
             item["id"]: item for item in DEFAULT_SCORE_RULES[group]
         }
@@ -206,7 +258,32 @@ def _merge_score_rules(raw: Any) -> Dict[str, Any]:
 
     if not merged["add_score"]:
         merged["add_score"] = json.loads(json.dumps(DEFAULT_SCORE_RULES["add_score"]))
-    return merged
+        reason = (
+            "模型返回的打分规则分组名无法识别（只认 add_score / minus_score）"
+            if not groups
+            else "模型返回的打分规则里没有可用的加分项"
+        )
+        return merged, _TEMPLATED_RULES_NOTE.format(reason=reason)
+    return merged, ""
+
+
+def _group_entries(raw: Dict[str, Any]) -> Dict[str, List[Any]]:
+    """把模型写的分组名收敛成 add_score / minus_score 两组。
+
+    规范名优先：模型同时写了 add_score 和「加分项」时用规范名，
+    别名不顶掉正式分组。
+    """
+    picked: Dict[str, List[Any]] = {}
+    for canonical in ("add_score", "minus_score"):
+        value = raw.get(canonical)
+        if isinstance(value, list):
+            picked[canonical] = value
+            continue
+        for key, entries in raw.items():
+            if _SCORE_GROUP_ALIASES.get(key) == canonical and isinstance(entries, list):
+                picked[canonical] = entries
+                break
+    return picked
 
 
 def _validate(config: Dict[str, Any]) -> Tuple[List[str], List[str]]:

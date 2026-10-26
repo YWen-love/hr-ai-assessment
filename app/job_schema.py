@@ -466,6 +466,19 @@ _JOB_PROFILE_ALIASES: Dict[str, str] = {
     "软性要求": "soft_traits",
     "软性条件": "soft_traits",
     "加分项": "soft_traits",
+    # 模型有时不写中文键，而是自己「翻译」成近义英文键（实测跑出过
+    # working_hours / rest / hard_requirements / soft_qualities）。
+    # 一次生成里 responsibilities 用英文、work_time 用 working_hours，
+    # 运行时按 work_time 取值取不到，报告里就显示「（未配置）」。
+    "working_hours": "work_time",
+    "work_hours": "work_time",
+    "worktime": "work_time",
+    "rest": "rest_schedule",
+    "rest_arrangement": "rest_schedule",
+    "hard_requirements": "hard_gates",
+    "hard_gates": "hard_gates",
+    "soft_qualities": "soft_traits",
+    "soft_quality": "soft_traits",
 }
 
 # 校验结果里带这个前缀的条目是「建议确认」，不是「必须修」。
