@@ -1,0 +1,59 @@
+- generic [ref=f1e5]:
+  - main [ref=f1e6]:
+    - generic [ref=f1e7]:
+      - heading "岗位管理" [level=1] [ref=f1e12]
+      - link "← 返回测评工作台" [ref=f1e17] [cursor=pointer]:
+        - /url: /hr
+      - generic [ref=f1e18]:
+        - button "+ 新增岗位" [ref=f1e19] [cursor=pointer]
+        - paragraph [ref=f1e24]: 岗位由 JD 自动生成规则。新增/编辑都走「上传 JD → 生成规则 → 保存」。
+      - generic [ref=f1e26]:
+        - generic [ref=f1e27]:
+          - paragraph [ref=f1e29]: 岗位列表（点【编辑】或【删除】所在的那一格）
+          - toolbar "Table actions" [ref=f1e30]:
+            - generic [ref=f1e31]:
+              - button "Copy table data" [ref=f1e32] [cursor=pointer]
+              - button "Fullscreen" [ref=f1e37] [cursor=pointer]
+        - grid [ref=f1e41]:
+          - button "将 CSV 或 TSV 文件拖放到此处以将数据导入数据框" [ref=f1e42]:
+            - grid [ref=f1e43]:
+              - generic [ref=f1e44]: 岗位列表（点【编辑】或【删除】所在的那一格）
+              - table [ref=f1e45]:
+                - rowgroup [ref=f1e46]:
+                  - row [ref=f1e47]:
+                    - columnheader [ref=f1e48]:
+                      - button "岗位名称" [ref=f1e51] [cursor=pointer]
+                    - columnheader [ref=f1e52]:
+                      - button "来源" [ref=f1e55] [cursor=pointer]
+                    - columnheader [ref=f1e56]:
+                      - button "创建时间" [ref=f1e59] [cursor=pointer]
+                    - columnheader [ref=f1e60]:
+                      - button "编辑" [ref=f1e63] [cursor=pointer]
+                    - columnheader [ref=f1e64]:
+                      - button "删除" [ref=f1e67] [cursor=pointer]
+              - generic [ref=f1e68]:
+                - generic [ref=f1e69]:
+                  - button "初中二讲老师" [ref=f1e72] [cursor=pointer]
+                  - button "手动" [ref=f1e75] [cursor=pointer]
+                  - button "2026-10-22T04:49:19+00:00" [ref=f1e78] [cursor=pointer]
+                  - button "编辑" [ref=f1e81] [cursor=pointer]
+                  - button "删除" [ref=f1e84] [cursor=pointer]
+                - generic [ref=f1e85]:
+                  - button "初中学习顾问" [ref=f1e88] [cursor=pointer]
+                  - button "手动" [ref=f1e91] [cursor=pointer]
+                  - button "2026-10-22T04:49:19+00:00" [ref=f1e94] [cursor=pointer]
+                  - button "编辑" [ref=f1e97] [cursor=pointer]
+                  - button "删除" [ref=f1e100] [cursor=pointer]
+  - contentinfo "Gradio footer navigation" [ref=f1e101]:
+    - button [ref=f1e102] [cursor=pointer]:
+      - text: 通过 API 使用
+      - img "标志" [ref=f1e103]
+    - generic [ref=f1e104]: ·
+    - link [ref=f1e105] [cursor=pointer]:
+      - /url: https://gradio.app
+      - text: 使用 Gradio 构建
+      - img "标志" [ref=f1e106]
+    - generic [ref=f1e107]: ·
+    - button [ref=f1e108] [cursor=pointer]:
+      - text: 设置
+      - img "设置" [ref=f1e109]

@@ -1,0 +1,327 @@
+- generic [active] [ref=f65e1]:
+  - banner [ref=f65e2]:
+    - button "跳至内容" [ref=f65e4] [cursor=pointer]
+    - button "辅助功能反馈" [ref=f65e7] [cursor=pointer]
+    - generic [ref=f65e10]:
+      - link [ref=f65e11] [cursor=pointer]:
+        - /url: /?FORM=Z9FD1
+        - heading "返回到必应搜索" [level=1] [ref=f65e12]
+      - search [ref=f65e13]:
+        - button "搜索" [ref=f65e16] [cursor=pointer]
+        - searchbox "在此处输入你的搜索 — 输入时会显示搜索建议" [ref=f65e17]: 工商银行 科技菁英 2019 笔试 真题
+        - generic [ref=f65e18] [cursor=pointer]
+    - complementary "帐户奖励和偏好设置" [ref=f65e21]:
+      - button "Microsoft Rewards" [ref=f65e22] [cursor=pointer]:
+        - generic [ref=f65e23]: Rewards
+      - link "登录" [ref=f65e39] [cursor=pointer]:
+        - /url: javascript:void(0)
+    - generic:
+      - generic "国内版" [ref=f65e41]
+      - generic "国际版" [ref=f65e42] [cursor=pointer]
+    - navigation "主菜单" [ref=f65e43]:
+      - list [ref=f65e44]:
+        - listitem [ref=f65e45]:
+          - link "网页" [ref=f65e46] [cursor=pointer]:
+            - /url: /?scope=web&FORM=HDRSC1
+        - listitem [ref=f65e47]:
+          - link "图片" [ref=f65e48] [cursor=pointer]:
+            - /url: /images/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC2
+        - listitem [ref=f65e49]:
+          - link "视频" [ref=f65e50] [cursor=pointer]:
+            - /url: /videos/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC3
+        - listitem [ref=f65e51]:
+          - link "学术" [ref=f65e52] [cursor=pointer]:
+            - /url: /academic/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC4
+        - listitem [ref=f65e53]:
+          - link "词典" [ref=f65e54] [cursor=pointer]:
+            - /url: /dict/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC6
+        - listitem [ref=f65e55]:
+          - link "地图" [ref=f65e56] [cursor=pointer]:
+            - /url: /maps?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC7
+        - listitem [ref=f65e57]:
+          - link "航班" [ref=f65e58] [cursor=pointer]:
+            - /url: /travel/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&m=flights&FORM=FBSCOP
+  - generic [ref=f65e59]:
+    - main "搜索结果" [ref=f65e60]:
+      - generic [ref=f65e61]:
+        - generic [ref=f65e62]:
+          - generic [aria-hidden] [ref=f65e63]:
+            - generic [ref=f65e64] [cursor=pointer]
+            - generic [ref=f65e67] [cursor=pointer]
+            - generic [ref=f65e70] [cursor=pointer]
+          - text: 11 - 20 条结果(共 16,400 条)
+        - button "自适应缩放" [pressed] [ref=f65e73] [cursor=pointer]
+      - list [ref=f65e79]:
+        - listitem [ref=f65e80]:
+          - list [ref=f65e81]:
+            - listitem [ref=f65e82]:
+              - generic [ref=f65e83]:
+                - generic [ref=f65e84] [cursor=pointer]:
+                  - generic [ref=f65e85]: 360文库
+                  - generic: 360文库
+                - heading [level=2] [ref=f65e90]:
+                  - link "SERP,5344" [ref=f65e91] [cursor=pointer]:
+                    - /url: https://c.gdt.qq.com/gdt_click.fcg?viewid=9ARES9aEMkmnl2ZEbelitFmOR4vPfevN8!lhwTKrc65uvySgrF9U6l62DfmIFMX9LYby2M7rY80ac!zMpxaYqloH3nnY8uTnDtQhGG6ALk6Q8EaEVu2g_oY1F9WnPOTudK9B8ntldjtHU_35F5j2ngehARzMBU9Nq8F5VJsdyxusULmAArB9hJSnEAJW9sHwXqsdmKF8!!vRIHKW_cdaSLxix_gKE02ArVkGMnt00iuyGvbnw12SkQ&jtype=0&wspm=1&i=1&os=3&lpp=click_ext%3DeyJhdWlkIjoiODM4NDY3ODciLCJsb25nX3Bvc19pZCI6IjQwNjQ1MjA5NTYyNDAzMTgiLCJtZWRpdW1faWQiOiI0MDYwMzk2MDAyNDU5NiIsIm9zX3R5cGUiOjN9&clklpp=__CLICK_LPP__&cdnxj=1&xp=1&pid=4064520956240318&vto=__VIDEO_PLAY_TIME__&report_source=__REPORT_SOURCE__&kid=126589598746&c_comp_id=1941175757081&queryword=%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%20%E7%A7%91%E6%8A%80%E8%8F%81%E8%8B%B1%202019%20%E7%AC%94%E8%AF%95%20%E7%9C%9F%E9%A2%98&page_number=0&sogou_uuid=bgdkckdxdhdao&request_time_ms=1792983393000&is_sogou_request=1&search_flow_type=18&site_set_name=SITE_SET_QBSEARCH&device_os_type=windows&dynamic_creative_id=11706695127&coupon_click_status=__COUPON_CLICK_STATUS__&tl=1&comp_id=1941175591746&comp_index=0&slot=60
+                    - text: 完整版
+                    - strong [ref=f65e92]: 银行笔试
+                    - text: 题库及答案.doc
+                - generic [ref=f65e94]:
+                  - strong [ref=f65e95]: 银行笔试
+                  - text: 题库及答案完整版,各学科教学资料、考试试题一键下载分类清晰,搜索精准,满足全学科文档需求
+                  - generic [ref=f65e96]: 广告
+                  - generic [ref=f65e99]: "| 来自搜狗"
+            - listitem [ref=f65e100]:
+              - generic [ref=f65e101]:
+                - generic [ref=f65e102] [cursor=pointer]:
+                  - generic [ref=f65e103]: 百度文库
+                  - generic: 百度文库
+                - heading [level=2] [ref=f65e108]:
+                  - link "SERP,5348" [ref=f65e109] [cursor=pointer]:
+                    - /url: https://c.gdt.qq.com/gdt_click.fcg?viewid=9ARES9aEMkmnl2ZEbelitBsPD6ifLVW683a5ExraWiPJ5RPShw3qUmhcIBpKSFuNLYby2M7rY80ac!zMpxaYqloH3nnY8uTnDtQhGG6ALk6Q8EaEVu2g_gtf3vub4aTmIRJNxsa2hEflNzM_32SizQehARzMBU9Nq8F5VJsdyxusULmAArB9hJSnEAJW9sHwXqsdmKF8!!vRIHKW_cdaSLxix_gKE02ArVkGMnt00iuyGvbnw12SkQ&jtype=0&wspm=1&i=1&os=3&lpp=click_ext%3DeyJhdWlkIjoiNTc2OTM1NzQiLCJsb25nX3Bvc19pZCI6IjQwNjQ1MjA5NTYyNDAzMTgiLCJtZWRpdW1faWQiOiI0MDYwMzk2MDAyNDU5NiIsIm9zX3R5cGUiOjN9&clklpp=__CLICK_LPP__&cdnxj=1&xp=1&pid=4064520956240318&vto=__VIDEO_PLAY_TIME__&report_source=__REPORT_SOURCE__&kid=78796251906&c_comp_id=1942733281413&queryword=%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%20%E7%A7%91%E6%8A%80%E8%8F%81%E8%8B%B1%202019%20%E7%AC%94%E8%AF%95%20%E7%9C%9F%E9%A2%98&page_number=0&sogou_uuid=bgdkckdxdhdao&request_time_ms=1792983393000&is_sogou_request=1&search_flow_type=18&site_set_name=SITE_SET_QBSEARCH&component_bak_id=26019178550&device_os_type=windows&dynamic_creative_id=3987065671&coupon_click_status=__COUPON_CLICK_STATUS__&tl=1&comp_id=59672567180&comp_index=0&slot=61
+                    - text: 2026版
+                    - strong [ref=f65e110]: 银行
+                    - text: 考试
+                    - strong [ref=f65e111]: 真题
+                    - text: "[完整版].doc下载!"
+                - generic [ref=f65e113]:
+                  - strong [ref=f65e114]: 银行
+                  - text: 考试
+                  - strong [ref=f65e115]: 真题
+                  - text: 涵盖历年试题及答案解析，权威内容实时更新。
+                  - generic [ref=f65e116]: 广告
+                  - generic [ref=f65e119]: "| 来自搜狗"
+        - listitem [ref=f65e120]:
+          - link "百家号" [ref=f65e122] [cursor=pointer]:
+            - /url: https://baijiahao.baidu.com/s?id=1826798757806242919
+            - generic [ref=f65e127]:
+              - generic [ref=f65e128]: 百家号
+              - generic [ref=f65e130]:
+                - generic [ref=f65e131]: https://baijiahao.baidu.com
+                - generic [ref=f65e132]: 翻译此结果
+          - heading [level=2] [ref=f65e133]:
+            - link "百家号" [ref=f65e134] [cursor=pointer]:
+              - /url: https://baijiahao.baidu.com/s?id=1826798757806242919
+          - paragraph [ref=f65e136]: 由于此网站的设置，我们无法提供该页面的具体描述。
+        - listitem [ref=f65e137]:
+          - link "CSDN博客" [ref=f65e139] [cursor=pointer]:
+            - /url: https://blog.csdn.net/shuo_haiying/article/details/126482795
+            - generic [ref=f65e144]:
+              - generic [ref=f65e145]: CSDN博客
+              - generic [ref=f65e146]: https://blog.csdn.net › shuo_haiying › article › details
+          - heading [level=2] [ref=f65e149]:
+            - link [ref=f65e150] [cursor=pointer]:
+              - /url: https://blog.csdn.net/shuo_haiying/article/details/126482795
+              - text: 【无标题】
+              - strong [ref=f65e151]: 工商银行科技菁英
+              - text: 岗笔经面经 - CSDN博客
+          - paragraph [ref=f65e153]: 2022年8月23日 · 文章浏览阅读1.8w次，点赞6次，收藏34次。本文详细记录了作者应聘工商银行科技菁英岗位的全过程，包括投递信 …
+        - listitem [ref=f65e154]:
+          - link "牛客网" [ref=f65e156] [cursor=pointer]:
+            - /url: https://www.nowcoder.com/discuss/416211654403284992
+            - generic [ref=f65e161]:
+              - generic [ref=f65e162]: 牛客网
+              - generic [ref=f65e163]: https://www.nowcoder.com › discuss
+          - heading [level=2] [ref=f65e166]:
+            - link [ref=f65e167] [cursor=pointer]:
+              - /url: https://www.nowcoder.com/discuss/416211654403284992
+              - text: 中国
+              - strong [ref=f65e168]: 工商银行
+              - text: 2023校园招聘
+              - strong [ref=f65e169]: 科技菁英
+              - text: 类笔经 (10-30)_牛客网
+          - paragraph [ref=f65e171]: 2022年10月30日 · 中国工商银行2023校园招聘科技菁英类笔试经验分享，包括综合能力、通用能力等五个模块的详细内容。
+        - listitem [ref=f65e172]:
+          - link "牛客网" [ref=f65e174] [cursor=pointer]:
+            - /url: https://www.nowcoder.com/feed/main/detail/3aeda4d13473439db8c83bd15b6b9cdb
+            - generic [ref=f65e179]:
+              - generic [ref=f65e180]: 牛客网
+              - generic [ref=f65e181]: https://www.nowcoder.com › feed › main › detail
+          - heading [level=2] [ref=f65e184]:
+            - link [ref=f65e185] [cursor=pointer]:
+              - /url: https://www.nowcoder.com/feed/main/detail/3aeda4d13473439db8c83bd15b6b9cdb
+              - strong [ref=f65e186]: 工商银行科技菁英
+              - text: "2024"
+              - strong [ref=f65e187]: 笔试
+              - text: 回忆_牛客网
+          - paragraph [ref=f65e189]: 五个单元（四个基本单元+一个科技菁英单元） 四个基本单元有时事经济、逻辑推理、案例分析、数量关系、计算、高中语文选择题+ …
+        - listitem [ref=f65e190]:
+          - link "牛客网" [ref=f65e192] [cursor=pointer]:
+            - /url: https://www.nowcoder.com/feed/main/detail/5861cce8b0744bbb966e2fdce68207f4
+            - generic [ref=f65e197]:
+              - generic [ref=f65e198]: 牛客网
+              - generic [ref=f65e199]: https://www.nowcoder.com › feed › main › detail
+          - heading [level=2] [ref=f65e202]:
+            - link [ref=f65e203] [cursor=pointer]:
+              - /url: https://www.nowcoder.com/feed/main/detail/5861cce8b0744bbb966e2fdce68207f4
+              - strong [ref=f65e204]: 工商银行科技菁英
+              - text: "2024"
+              - strong [ref=f65e205]: 笔试
+              - text: 回忆 - 牛客网
+          - paragraph [ref=f65e207]: 2023年11月5日 · 五个单元（四个基本单元+一个科技菁英单元） 四个基本单元有时事经济、逻辑推理、案例分析、数量关系、计算、 …
+        - listitem [ref=f65e208]:
+          - link "知乎专栏" [ref=f65e210] [cursor=pointer]:
+            - /url: https://zhuanlan.zhihu.com/p/159380649
+            - generic [ref=f65e215]:
+              - generic [ref=f65e216]: 知乎专栏
+              - generic [ref=f65e217]: https://zhuanlan.zhihu.com
+          - heading [level=2] [ref=f65e220]:
+            - link [ref=f65e221] [cursor=pointer]:
+              - /url: https://zhuanlan.zhihu.com/p/159380649
+              - text: 中国
+              - strong [ref=f65e222]: 工商银行
+              - text: 历年
+              - strong [ref=f65e223]: 笔试真题
+              - text: ，附赠
+              - strong [ref=f65e224]: 工商银行
+              - text: 求职资料包!
+          - paragraph [ref=f65e226]: 2021年10月20日 · 中国工商银行笔试真题 中国工商银行近几年笔试的形式、内容较为固定，笔试全部采用线上笔试闭卷考试的形式， …
+        - listitem [ref=f65e227]:
+          - link "公务员考试网" [ref=f65e229] [cursor=pointer]:
+            - /url: https://m.gwy.com/yhzp/373288.html
+            - generic [ref=f65e234]:
+              - generic [ref=f65e235]: 公务员考试网
+              - generic [ref=f65e236]: https://m.gwy.com › yhzp
+          - heading [level=2] [ref=f65e239]:
+            - link [ref=f65e240] [cursor=pointer]:
+              - /url: https://m.gwy.com/yhzp/373288.html
+              - text: 2025春招中国
+              - strong [ref=f65e241]: 工商银行笔试
+              - text: 会考什么？
+              - strong [ref=f65e242]: 考试
+              - text: 科目+
+              - strong [ref=f65e243]: 笔试
+              - text: 内容解析
+          - paragraph [ref=f65e245]: 2025年3月16日 · 2025春招中国工商银行笔试会考什么？ 结合以往考试真题，工商银行春招笔试内容通常包括综合知识+通用能力测 …
+        - listitem [ref=f65e246]:
+          - link "知乎专栏" [ref=f65e248] [cursor=pointer]:
+            - /url: https://zhuanlan.zhihu.com/p/687103371
+            - generic [ref=f65e253]:
+              - generic [ref=f65e254]: 知乎专栏
+              - generic [ref=f65e255]: https://zhuanlan.zhihu.com
+          - heading [level=2] [ref=f65e258]:
+            - link [ref=f65e259] [cursor=pointer]:
+              - /url: https://zhuanlan.zhihu.com/p/687103371
+              - text: 中国
+              - strong [ref=f65e260]: 工商银行
+              - text: 2024届春季校园招聘启动，
+              - strong [ref=f65e261]: 笔试
+              - text: 考点、
+              - strong [ref=f65e262]: 真题
+              - text: ...
+          - paragraph [ref=f65e264]: 2024年3月15日 · 由上表可知，工行近几年都是采取分岗位出题考试的方式。 将试题分成三个部分： 第一部分内容主要为 行测知识 和 …
+        - listitem [ref=f65e265]:
+          - link "知乎专栏" [ref=f65e267] [cursor=pointer]:
+            - /url: https://zhuanlan.zhihu.com/p/265621597
+            - img "全球 Web 图标" [ref=f65e271]
+            - generic [ref=f65e272]:
+              - generic [ref=f65e273]: 知乎专栏
+              - generic [ref=f65e274]: https://zhuanlan.zhihu.com
+          - heading [level=2] [ref=f65e277]:
+            - link [ref=f65e278] [cursor=pointer]:
+              - /url: https://zhuanlan.zhihu.com/p/265621597
+              - text: "2020"
+              - strong [ref=f65e279]: 工商银行科技菁英
+              - text: 计划秋招
+              - strong [ref=f65e280]: 笔试
+              - text: 题型分享 - 知乎
+          - paragraph [ref=f65e282]: 2020年10月13日 · 咸鱼刚考完，肯定过不了了，分享一下也许有人想看。 科技菁英计划是科目三，也就是80min的通用能力+40min的 …
+        - listitem [ref=f65e283]:
+          - link "知乎专栏" [ref=f65e285] [cursor=pointer]:
+            - /url: https://zhuanlan.zhihu.com/p/81879135168
+            - generic [ref=f65e290]:
+              - generic [ref=f65e291]: 知乎专栏
+              - generic [ref=f65e292]: https://zhuanlan.zhihu.com
+          - heading [level=2] [ref=f65e295]:
+            - link [ref=f65e296] [cursor=pointer]:
+              - /url: https://zhuanlan.zhihu.com/p/81879135168
+              - text: 11月2日
+              - strong [ref=f65e297]: 笔试
+              - text: ！
+              - strong [ref=f65e298]: 工商银行
+              - text: 2026校招
+              - strong [ref=f65e299]: 笔试
+              - text: 考什么？
+              - strong [ref=f65e300]: 笔试
+              - text: 备考攻略
+          - paragraph [ref=f65e302]: 2025年10月22日 · 2026工商银行校招解读，笔面试考什么？如何备考 宝子们，准备冲工商银行校招的小伙伴看过来！整理了近三年的 …
+        - listitem [ref=f65e303]:
+          - list [ref=f65e304]:
+            - listitem [ref=f65e305]:
+              - generic [ref=f65e306]:
+                - generic [ref=f65e307] [cursor=pointer]:
+                  - generic [ref=f65e308]: 360文库
+                  - generic: 360文库
+                - heading [level=2] [ref=f65e313]:
+                  - link "SERP,5352" [ref=f65e314] [cursor=pointer]:
+                    - /url: https://c.gdt.qq.com/gdt_click.fcg?viewid=9ARES9aEMkmnl2ZEbelitFmOR4vPfevN8!lhwTKrc65uvySgrF9U6l62DfmIFMX9LYby2M7rY80ac!zMpxaYqloH3nnY8uTnDtQhGG6ALk6Q8EaEVu2g_oY1F9WnPOTudK9B8ntldjtHU_35F5j2ngehARzMBU9Nq8F5VJsdyxusULmAArB9hJSnEAJW9sHwXqsdmKF8!!vRIHKW_cdaSLxix_gKE02ArVkGMnt00iuyGvbnw12SkQ&jtype=0&wspm=1&i=1&os=3&lpp=click_ext%3DeyJhdWlkIjoiODM4NDY3ODciLCJsb25nX3Bvc19pZCI6IjQwNjQ1MjA5NTYyNDAzMTgiLCJtZWRpdW1faWQiOiI0MDYwMzk2MDAyNDU5NiIsIm9zX3R5cGUiOjN9&clklpp=__CLICK_LPP__&cdnxj=1&xp=1&pid=4064520956240318&vto=__VIDEO_PLAY_TIME__&report_source=__REPORT_SOURCE__&kid=126589598746&c_comp_id=1941175757081&queryword=%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%20%E7%A7%91%E6%8A%80%E8%8F%81%E8%8B%B1%202019%20%E7%AC%94%E8%AF%95%20%E7%9C%9F%E9%A2%98&page_number=0&sogou_uuid=bgdkckdxdhdao&request_time_ms=1792983393000&is_sogou_request=1&search_flow_type=18&site_set_name=SITE_SET_QBSEARCH&device_os_type=windows&dynamic_creative_id=11706695127&coupon_click_status=__COUPON_CLICK_STATUS__&tl=1&comp_id=1941175591746&comp_index=0&slot=60
+                    - text: 完整版
+                    - strong [ref=f65e315]: 银行笔试
+                    - text: 题库及答案.doc
+                - generic [ref=f65e317]:
+                  - strong [ref=f65e318]: 银行笔试
+                  - text: 题库及答案完整版,各学科教学资料、考试试题一键下载分类清晰,搜索精准,满足全学科文档需求
+                  - generic [ref=f65e319]: 广告
+                  - generic [ref=f65e322]: "| 来自搜狗"
+            - listitem [ref=f65e323]:
+              - generic [ref=f65e324]:
+                - generic [ref=f65e325] [cursor=pointer]:
+                  - generic [ref=f65e326]: 百度文库
+                  - generic: 百度文库
+                - heading [level=2] [ref=f65e331]:
+                  - link "SERP,5356" [ref=f65e332] [cursor=pointer]:
+                    - /url: https://c.gdt.qq.com/gdt_click.fcg?viewid=9ARES9aEMkmnl2ZEbelitBsPD6ifLVW683a5ExraWiPJ5RPShw3qUmhcIBpKSFuNLYby2M7rY80ac!zMpxaYqloH3nnY8uTnDtQhGG6ALk6Q8EaEVu2g_gtf3vub4aTmIRJNxsa2hEflNzM_32SizQehARzMBU9Nq8F5VJsdyxusULmAArB9hJSnEAJW9sHwXqsdmKF8!!vRIHKW_cdaSLxix_gKE02ArVkGMnt00iuyGvbnw12SkQ&jtype=0&wspm=1&i=1&os=3&lpp=click_ext%3DeyJhdWlkIjoiNTc2OTM1NzQiLCJsb25nX3Bvc19pZCI6IjQwNjQ1MjA5NTYyNDAzMTgiLCJtZWRpdW1faWQiOiI0MDYwMzk2MDAyNDU5NiIsIm9zX3R5cGUiOjN9&clklpp=__CLICK_LPP__&cdnxj=1&xp=1&pid=4064520956240318&vto=__VIDEO_PLAY_TIME__&report_source=__REPORT_SOURCE__&kid=78796251906&c_comp_id=1942733281413&queryword=%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%20%E7%A7%91%E6%8A%80%E8%8F%81%E8%8B%B1%202019%20%E7%AC%94%E8%AF%95%20%E7%9C%9F%E9%A2%98&page_number=0&sogou_uuid=bgdkckdxdhdao&request_time_ms=1792983393000&is_sogou_request=1&search_flow_type=18&site_set_name=SITE_SET_QBSEARCH&component_bak_id=26019178550&device_os_type=windows&dynamic_creative_id=3987065671&coupon_click_status=__COUPON_CLICK_STATUS__&tl=1&comp_id=59672567180&comp_index=0&slot=61
+                    - text: 2026版
+                    - strong [ref=f65e333]: 银行
+                    - text: 考试
+                    - strong [ref=f65e334]: 真题
+                    - text: "[完整版].doc下载!"
+                - generic [ref=f65e336]:
+                  - strong [ref=f65e337]: 银行
+                  - text: 考试
+                  - strong [ref=f65e338]: 真题
+                  - text: 涵盖历年试题及答案解析，权威内容实时更新。
+                  - generic [ref=f65e339]: 广告
+                  - generic [ref=f65e342]: "| 来自搜狗"
+        - listitem [ref=f65e343]:
+          - navigation "工商银行 科技菁英 2019 笔试 真题 的更多搜索结果":
+            - list:
+              - listitem [ref=f65e344]:
+                - link "上一页" [ref=f65e345] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&first=1&FORM=PQRE
+              - listitem [ref=f65e346]:
+                - link "第 1 页" [ref=f65e347] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&first=1&FORM=PERE
+                  - text: "1"
+              - listitem [ref=f65e348]:
+                - generic "第 2 页" [ref=f65e349]: "2"
+              - listitem [ref=f65e350]:
+                - link "第 3 页" [ref=f65e351] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&first=21&FORM=PERE1
+                  - text: "3"
+              - listitem [ref=f65e352]:
+                - link "第 4 页" [ref=f65e353] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&first=31&FORM=PERE2
+                  - text: "4"
+              - listitem [ref=f65e354]:
+                - link "下一页" [ref=f65e355] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2019+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&first=21&FORM=PORE
+    - complementary "更多结果" [ref=f65e356]:
+      - list
+    - complementary "浏览更多"
+  - contentinfo [ref=f65e357]:
+    - list [ref=f65e359]:
+      - listitem [ref=f65e360]:
+        - link "增值电信业务经营许可证：合字B2-20090007" [ref=f65e361] [cursor=pointer]:
+          - /url: https://dxzhgl.miit.gov.cn/dxxzsp/xkz/xkzgl/resource/qiyereport.jsp?num=caf04fa4-bd8a-4d9e-80b6-2aa1b86c1509&type=yreport
+      - listitem [ref=f65e362]:
+        - link "京ICP备10036305号-7" [ref=f65e363] [cursor=pointer]:
+          - /url: https://beian.miit.gov.cn
+      - listitem [ref=f65e364]:
+        - link "京公网安备11010802047360号" [ref=f65e365] [cursor=pointer]:
+          - /url: https://beian.mps.gov.cn/#/query/webSearch?code=11010802047360
+      - listitem [ref=f65e366]:
+        - link "隐私" [ref=f65e367] [cursor=pointer]:
+          - /url: http://go.microsoft.com/fwlink/?LinkId=521839
+      - listitem [ref=f65e368]:
+        - link "条款" [ref=f65e369] [cursor=pointer]:
+          - /url: http://go.microsoft.com/fwlink/?LinkID=246338

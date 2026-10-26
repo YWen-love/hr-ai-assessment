@@ -1,0 +1,242 @@
+- generic [active] [ref=f31e1]:
+  - banner [ref=f31e2]:
+    - button "跳至内容" [ref=f31e4] [cursor=pointer]
+    - button "辅助功能反馈" [ref=f31e7] [cursor=pointer]
+    - generic [ref=f31e10]:
+      - link [ref=f31e11] [cursor=pointer]:
+        - /url: /?FORM=Z9FD1
+        - heading "返回到必应搜索" [level=1] [ref=f31e12]
+      - search [ref=f31e13]:
+        - button "搜索" [ref=f31e16] [cursor=pointer]
+        - searchbox "在此处输入你的搜索 — 输入时会显示搜索建议" [ref=f31e17]: 工商银行 科技菁英 校招 笔试题
+        - generic [ref=f31e18] [cursor=pointer]
+    - complementary "帐户奖励和偏好设置" [ref=f31e21]:
+      - button "Microsoft Rewards" [ref=f31e22] [cursor=pointer]:
+        - generic [ref=f31e23]: Rewards
+      - link "登录" [ref=f31e39] [cursor=pointer]:
+        - /url: javascript:void(0)
+    - generic:
+      - generic "国内版" [ref=f31e41]
+      - generic "国际版" [ref=f31e42] [cursor=pointer]
+    - navigation "主菜单" [ref=f31e43]:
+      - list [ref=f31e44]:
+        - listitem [ref=f31e45]:
+          - link "网页" [ref=f31e46] [cursor=pointer]:
+            - /url: /?scope=web&FORM=HDRSC1
+        - listitem [ref=f31e47]:
+          - link "图片" [ref=f31e48] [cursor=pointer]:
+            - /url: /images/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&FORM=HDRSC2
+        - listitem [ref=f31e49]:
+          - link "视频" [ref=f31e50] [cursor=pointer]:
+            - /url: /videos/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&FORM=HDRSC3
+        - listitem [ref=f31e51]:
+          - link "学术" [ref=f31e52] [cursor=pointer]:
+            - /url: /academic/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&FORM=HDRSC4
+        - listitem [ref=f31e53]:
+          - link "词典" [ref=f31e54] [cursor=pointer]:
+            - /url: /dict/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&FORM=HDRSC6
+        - listitem [ref=f31e55]:
+          - link "地图" [ref=f31e56] [cursor=pointer]:
+            - /url: /maps?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&FORM=HDRSC7
+        - listitem [ref=f31e57]:
+          - link "航班" [ref=f31e58] [cursor=pointer]:
+            - /url: /travel/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&m=flights&FORM=FBSCOP
+  - generic [ref=f31e59]:
+    - main "搜索结果" [ref=f31e60]:
+      - generic [ref=f31e61]:
+        - generic [ref=f31e62]:
+          - generic [aria-hidden] [ref=f31e63]:
+            - generic [ref=f31e64] [cursor=pointer]
+            - generic [ref=f31e67] [cursor=pointer]
+            - generic [ref=f31e70] [cursor=pointer]
+          - text: 11 - 20 条结果(共 18,300 条)
+        - button "自适应缩放" [pressed] [ref=f31e74] [cursor=pointer]
+      - list [ref=f31e80]:
+        - listitem [ref=f31e81]:
+          - link "公务员考试网" [ref=f31e83] [cursor=pointer]:
+            - /url: https://m.gwy.com/yhzp/373288.html
+            - generic [ref=f31e88]:
+              - generic [ref=f31e89]: 公务员考试网
+              - generic [ref=f31e90]: https://m.gwy.com › yhzp
+          - heading [level=2] [ref=f31e93]:
+            - link [ref=f31e94] [cursor=pointer]:
+              - /url: https://m.gwy.com/yhzp/373288.html
+              - text: 2025春招中国
+              - strong [ref=f31e95]: 工商银行笔试
+              - text: 会考什么？考试科目+
+              - strong [ref=f31e96]: 笔试
+              - text: 内容解析
+          - paragraph [ref=f31e98]: 2025年3月16日 · 中国工商银行 春季校园招聘笔试一般采取分岗位出题的方式，主要分为A类岗位和B类岗位。A类岗位包括星辰管培生 …
+        - listitem [ref=f31e99]:
+          - link "牛客网" [ref=f31e101] [cursor=pointer]:
+            - /url: https://www.nowcoder.com/feed/main/detail/0062eca62c8a4e21bfb868a34b3f54ea
+            - generic [ref=f31e106]:
+              - generic [ref=f31e107]: 牛客网
+              - generic [ref=f31e108]: https://www.nowcoder.com › feed › main › detail
+          - heading [level=2] [ref=f31e111]:
+            - link [ref=f31e112] [cursor=pointer]:
+              - /url: https://www.nowcoder.com/feed/main/detail/0062eca62c8a4e21bfb868a34b3f54ea
+              - strong [ref=f31e113]: 工行科技菁英
+              - text: 岗
+              - strong [ref=f31e114]: 笔试
+              - text: 考啥呀 - 牛客网
+          - paragraph [ref=f31e116]: 2024年10月29日 · 工行科技菁英岗笔试考啥呀 刚收到工行笔试邀请，科技岗笔试是考行测英语专业题吗 【2024.11.22更新】笔试考行 …
+        - listitem [ref=f31e117]:
+          - link "牛客网" [ref=f31e119] [cursor=pointer]:
+            - /url: https://www.nowcoder.com/feed/main/detail/3aeda4d13473439db8c83bd15b6b9cdb
+            - generic [ref=f31e124]:
+              - generic [ref=f31e125]: 牛客网
+              - generic [ref=f31e126]: https://www.nowcoder.com › feed › main › detail
+          - heading [level=2] [ref=f31e129]:
+            - link [ref=f31e130] [cursor=pointer]:
+              - /url: https://www.nowcoder.com/feed/main/detail/3aeda4d13473439db8c83bd15b6b9cdb
+              - strong [ref=f31e131]: 工商银行科技菁英
+              - text: "2024"
+              - strong [ref=f31e132]: 笔试
+              - text: 回忆_牛客网
+          - paragraph [ref=f31e134]: 五个单元（四个基本单元+一个科技菁英单元） 四个基本单元有时事经济、逻辑推理、案例分析、数量关系、计算、高中语文选择题+ …
+        - listitem [ref=f31e135]:
+          - link "知乎专栏" [ref=f31e137] [cursor=pointer]:
+            - /url: https://zhuanlan.zhihu.com/p/1892986840748897058
+            - img "全球 Web 图标" [ref=f31e141]
+            - generic [ref=f31e142]:
+              - generic [ref=f31e143]: 知乎专栏
+              - generic [ref=f31e144]: https://zhuanlan.zhihu.com
+          - heading [level=2] [ref=f31e147]:
+            - link [ref=f31e148] [cursor=pointer]:
+              - /url: https://zhuanlan.zhihu.com/p/1892986840748897058
+              - text: 已发！4月20日
+              - strong [ref=f31e149]: 笔试
+              - text: ！中国
+              - strong [ref=f31e150]: 工商银行笔试
+              - text: 考前突击资料速看！
+          - paragraph [ref=f31e152]: 2025年4月10日 · 笔试内容 1、 岗位分类： 科目一：仅入围A类岗位笔试（星辰管培生 、专业英才、客户经理、客服经理、服务代表、 …
+        - listitem [ref=f31e153]:
+          - link "免费文档网" [ref=f31e155] [cursor=pointer]:
+            - /url: https://www.mianfeiwendang.com/search/%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%E7%A7%91%E6%8A%80%E8%8F%81%E8%8B%B1%E7%AC%94%E8%AF%95%E7%9C%9F%E9%A2%98
+            - generic [ref=f31e160]:
+              - generic [ref=f31e161]: 免费文档网
+              - generic [ref=f31e162]: https://www.mianfeiwendang.com › search › 工商银行科技...
+          - heading [level=2] [ref=f31e165]:
+            - link [ref=f31e166] [cursor=pointer]:
+              - /url: https://www.mianfeiwendang.com/search/%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%E7%A7%91%E6%8A%80%E8%8F%81%E8%8B%B1%E7%AC%94%E8%AF%95%E7%9C%9F%E9%A2%98
+              - strong [ref=f31e167]: 工商银行科技菁英笔试
+              - text: 真题_word文档在线阅读与下载_免费文档
+          - paragraph [ref=f31e169]: 2.数据库中，用于存储数据的基本对象是（）。 工商银行科技 岗 笔试真题 工商银行科技 岗 笔试真题 一、单选题（每题3分，共30 …
+        - listitem [ref=f31e170]:
+          - link "知乎专栏" [ref=f31e172] [cursor=pointer]:
+            - /url: https://zhuanlan.zhihu.com/p/265621597
+            - generic [ref=f31e177]:
+              - generic [ref=f31e178]: 知乎专栏
+              - generic [ref=f31e179]: https://zhuanlan.zhihu.com
+          - heading [level=2] [ref=f31e182]:
+            - link [ref=f31e183] [cursor=pointer]:
+              - /url: https://zhuanlan.zhihu.com/p/265621597
+              - text: "2020"
+              - strong [ref=f31e184]: 工商银行科技菁英
+              - text: 计划秋招
+              - strong [ref=f31e185]: 笔试
+              - text: 题型分享 - 知乎
+          - paragraph [ref=f31e187]: 2020年10月13日 · 咸鱼刚考完，肯定过不了了，分享一下也许有人想看。 科技菁英计划是科目三，也就是80min的通用能力+40min的 …
+        - listitem [ref=f31e188]:
+          - link "百度文库" [ref=f31e190] [cursor=pointer]:
+            - /url: https://wenku.baidu.com/aggs/e58226c62cc58bd63186bdeb.html
+            - generic [ref=f31e195]:
+              - generic [ref=f31e196]: 百度文库
+              - generic [ref=f31e197]: https://wenku.baidu.com › aggs
+          - heading [level=2] [ref=f31e200]:
+            - link [ref=f31e201] [cursor=pointer]:
+              - /url: https://wenku.baidu.com/aggs/e58226c62cc58bd63186bdeb.html
+              - strong [ref=f31e202]: 工商银行科技菁英
+              - text: 计划
+              - strong [ref=f31e203]: 笔试
+              - text: 合集 - 百度文库
+          - paragraph [ref=f31e205]: 工商银行菁英科技笔试题 工商银行菁英科技笔试题 工商银行菁英科技笔试题是银行为招聘菁英科技人才而设置的 测试题目。这些题目 …
+        - listitem [ref=f31e206]:
+          - generic [ref=f31e207]:
+            - link "浏览此图像" [ref=f31e210] [cursor=pointer]:
+              - /url: /images/search?view=detailV2&ccid=Oc1kkWUk&id=0467B6EA320010A7EF0FE8EEA29E710ECE2DFA28&thid=OIP.Oc1kkWUkxrrlaLvTWeo1EgHaFj&mediaurl=https://picx.zhimg.com/v2-e3e7737f06a361d9cfd4f58e9404ac88_720w.jpg?source=172ae18b&q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&ck=DC193D86A08EFFF06D7505B4F62B5632&idpp=rc&expw=666&exph=500&form=rc2idp
+            - generic [ref=f31e212]:
+              - link "知乎专栏" [ref=f31e214] [cursor=pointer]:
+                - /url: https://zhuanlan.zhihu.com/p/1949870942718230646
+                - generic [ref=f31e219]:
+                  - generic [ref=f31e220]: 知乎专栏
+                  - generic [ref=f31e221]: https://zhuanlan.zhihu.com
+              - heading [level=2] [ref=f31e224]:
+                - link [ref=f31e225] [cursor=pointer]:
+                  - /url: https://zhuanlan.zhihu.com/p/1949870942718230646
+                  - text: 提前看2026
+                  - strong [ref=f31e226]: 工商银行校招
+                  - text: 解读，笔面试考什么？如何备考
+              - paragraph [ref=f31e227]: 2025年9月12日 · 宝子们，准备冲工商银行校招的小伙伴看过来！整理了近三年的考情分析，熬夜理清的备 …
+        - listitem [ref=f31e229]:
+          - link "CSDN博客" [ref=f31e231] [cursor=pointer]:
+            - /url: https://blog.csdn.net/zhebushibiaoshifu/article/details/134897325
+            - generic [ref=f31e236]:
+              - generic [ref=f31e237]: CSDN博客
+              - generic [ref=f31e238]: https://blog.csdn.net › zhebushibiaoshifu › article › details › ...
+          - heading [level=2] [ref=f31e241]:
+            - link [ref=f31e242] [cursor=pointer]:
+              - /url: https://blog.csdn.net/zhebushibiaoshifu/article/details/134897325
+              - text: 中国
+              - strong [ref=f31e243]: 工商银行
+              - text: 数据中心
+              - strong [ref=f31e244]: 科技菁英
+              - text: 校园招聘面试经历与体检情况 ...
+          - paragraph [ref=f31e246]: 2023年12月11日 · 2020工商银行信息技术岗校招笔试经历 工商银行-广东_笔试经验帖总体感受内容分两个单元（总时长：2.5小时）1. …
+        - listitem [ref=f31e247]:
+          - link "牛客网" [ref=f31e249] [cursor=pointer]:
+            - /url: https://www.nowcoder.com/discuss/353157280344514560
+            - generic [ref=f31e254]:
+              - generic [ref=f31e255]: 牛客网
+              - generic [ref=f31e256]: https://www.nowcoder.com › discuss
+          - heading [level=2] [ref=f31e259]:
+            - link [ref=f31e260] [cursor=pointer]:
+              - /url: https://www.nowcoder.com/discuss/353157280344514560
+              - text: 中国
+              - strong [ref=f31e261]: 工商银行科技菁英笔试
+              - text: 面试（北京分行、湖北分行、陕西 ...
+          - paragraph [ref=f31e263]: 2020年10月14日 · 报了中国工商银行三个省分（北分、湖北、陕西）的科技菁英岗，统一笔试，笔试通过后各单位自己组织面试。 1. …
+        - listitem [ref=f31e264]:
+          - navigation "工商银行 科技菁英 校招 笔试题 的更多搜索结果":
+            - list:
+              - listitem [ref=f31e265]:
+                - link "上一页" [ref=f31e266] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&first=1&FORM=PQRE
+              - listitem [ref=f31e267]:
+                - link "第 1 页" [ref=f31e268] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&first=1&FORM=PERE
+                  - text: "1"
+              - listitem [ref=f31e269]:
+                - generic "第 2 页" [ref=f31e270]: "2"
+              - listitem [ref=f31e271]:
+                - link "第 3 页" [ref=f31e272] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&first=21&FORM=PERE1
+                  - text: "3"
+              - listitem [ref=f31e273]:
+                - link "第 4 页" [ref=f31e274] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&first=31&FORM=PERE2
+                  - text: "4"
+              - listitem [ref=f31e275]:
+                - link "下一页" [ref=f31e276] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+%e6%a0%a1%e6%8b%9b+%e7%ac%94%e8%af%95%e9%a2%98&first=21&FORM=PORE
+    - complementary "更多结果" [ref=f31e277]:
+      - list
+    - complementary "浏览更多"
+  - contentinfo [ref=f31e278]:
+    - list [ref=f31e280]:
+      - listitem [ref=f31e281]:
+        - link "增值电信业务经营许可证：合字B2-20090007" [ref=f31e282] [cursor=pointer]:
+          - /url: https://dxzhgl.miit.gov.cn/dxxzsp/xkz/xkzgl/resource/qiyereport.jsp?num=caf04fa4-bd8a-4d9e-80b6-2aa1b86c1509&type=yreport
+      - listitem [ref=f31e283]:
+        - link "京ICP备10036305号-7" [ref=f31e284] [cursor=pointer]:
+          - /url: https://beian.miit.gov.cn
+      - listitem [ref=f31e285]:
+        - link "京公网安备11010802047360号" [ref=f31e286] [cursor=pointer]:
+          - /url: https://beian.mps.gov.cn/#/query/webSearch?code=11010802047360
+      - listitem [ref=f31e287]:
+        - link "隐私" [ref=f31e288] [cursor=pointer]:
+          - /url: http://go.microsoft.com/fwlink/?LinkId=521839
+      - listitem [ref=f31e289]:
+        - link "条款" [ref=f31e290] [cursor=pointer]:
+          - /url: http://go.microsoft.com/fwlink/?LinkID=246338

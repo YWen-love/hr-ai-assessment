@@ -1,0 +1,383 @@
+- generic [active] [ref=f80e1]:
+  - banner [ref=f80e2]:
+    - button "跳至内容" [ref=f80e4] [cursor=pointer]
+    - button "辅助功能反馈" [ref=f80e7] [cursor=pointer]
+    - generic [ref=f80e10]:
+      - link [ref=f80e11] [cursor=pointer]:
+        - /url: /?FORM=Z9FD1
+        - heading "返回到必应搜索" [level=1] [ref=f80e12]
+      - search [ref=f80e13]:
+        - button "搜索" [ref=f80e16] [cursor=pointer]
+        - searchbox "在此处输入你的搜索 — 输入时会显示搜索建议" [ref=f80e17]: 工商银行 科技菁英 2021 笔试 真题
+        - generic [ref=f80e18] [cursor=pointer]
+    - complementary "帐户奖励和偏好设置" [ref=f80e21]:
+      - button "Microsoft Rewards" [ref=f80e22] [cursor=pointer]:
+        - generic [ref=f80e23]: Rewards
+      - link "登录" [ref=f80e39] [cursor=pointer]:
+        - /url: javascript:void(0)
+    - generic:
+      - generic "国内版" [ref=f80e41]
+      - generic "国际版" [ref=f80e42] [cursor=pointer]
+    - navigation "主菜单" [ref=f80e43]:
+      - list [ref=f80e44]:
+        - listitem [ref=f80e45]:
+          - link "网页" [ref=f80e46] [cursor=pointer]:
+            - /url: /?scope=web&FORM=HDRSC1
+        - listitem [ref=f80e47]:
+          - link "图片" [ref=f80e48] [cursor=pointer]:
+            - /url: /images/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2021+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC2
+        - listitem [ref=f80e49]:
+          - link "视频" [ref=f80e50] [cursor=pointer]:
+            - /url: /videos/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2021+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC3
+        - listitem [ref=f80e51]:
+          - link "学术" [ref=f80e52] [cursor=pointer]:
+            - /url: /academic/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2021+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC4
+        - listitem [ref=f80e53]:
+          - link "词典" [ref=f80e54] [cursor=pointer]:
+            - /url: /dict/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2021+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC6
+        - listitem [ref=f80e55]:
+          - link "地图" [ref=f80e56] [cursor=pointer]:
+            - /url: /maps?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2021+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC7
+        - listitem [ref=f80e57]:
+          - link "航班" [ref=f80e58] [cursor=pointer]:
+            - /url: /travel/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2021+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&m=flights&FORM=FBSCOP
+  - generic [ref=f80e59]:
+    - main "搜索结果" [ref=f80e60]:
+      - generic [ref=f80e61]:
+        - generic [ref=f80e62]:
+          - generic [aria-hidden] [ref=f80e63]:
+            - generic [ref=f80e64] [cursor=pointer]
+            - generic [ref=f80e67] [cursor=pointer]
+            - generic [ref=f80e70] [cursor=pointer]
+          - text: 约 10,900 个结果
+        - button "自适应缩放" [pressed] [ref=f80e73] [cursor=pointer]
+      - list [ref=f80e79]:
+        - listitem [ref=f80e80]:
+          - link "百度文库" [ref=f80e82] [cursor=pointer]:
+            - /url: https://wenku.baidu.com/view/403f0a1652e79b89680203d8ce2f0066f5336489.html
+            - generic [ref=f80e87]:
+              - generic [ref=f80e88]: 百度文库
+              - generic [ref=f80e89]: https://wenku.baidu.com › view
+          - heading [level=2] [ref=f80e92]:
+            - link [ref=f80e93] [cursor=pointer]:
+              - /url: https://wenku.baidu.com/view/403f0a1652e79b89680203d8ce2f0066f5336489.html
+              - strong [ref=f80e94]: 工商银行菁英科技
+              - text: 笔
+              - strong [ref=f80e95]: 试题
+              - text: "- 百度文库"
+          - paragraph [ref=f80e97]: 除了以上三类题目，工商银行菁英科技笔试题还可能涉及到项目管理、网络安全、人工智能等其他方面的内容。 在准备阶段，应聘者 …
+        - listitem [ref=f80e98]:
+          - generic [ref=f80e106]:
+            - generic [ref=f80e109]:
+              - generic [ref=f80e113]:
+                - heading "2021中国工商银行招聘考试真题" [level=2] [ref=f80e114]
+                - generic [ref=f80e117]:
+                  - strong [ref=f80e118]: "2021"
+                  - text: 中国
+                  - strong [ref=f80e119]: 工商银行
+                  - text: 招聘考试
+                  - strong [ref=f80e120]: 真题
+                  - text: 及答案 (Word版) ...
+              - link "无忧考网 2021中国工商银行招聘考试真题及答案 (Word版) 2021中国工商银行招聘考试真题及答案 (Word版) ..." [ref=f80e124] [cursor=pointer]:
+                - /url: https://www.51test.net/show/10319826.html#:~:text=2021%E4%B8%AD%E5%9B%BD%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%E6%8B%9B%E8%81%98%E8%80%83%E8%AF%95%E7%9C%9F%E9%A2%98%E5%8F%8A%E7%AD%94%E6%A1%88,%28Word%E7%89%88%29%20
+                - generic [ref=f80e125]:
+                  - generic [ref=f80e126]: 无忧考网
+                  - generic [ref=f80e130]: 2021中国工商银行招聘考试真题及答案 (Word版)
+                  - generic: 2021中国工商银行招聘考试真题及答案 (Word版) ...
+            - status
+        - listitem [ref=f80e133]:
+          - link "百度文库" [ref=f80e135] [cursor=pointer]:
+            - /url: https://wenku.baidu.com/aggs/e58226c62cc58bd63186bdeb.html
+            - generic [ref=f80e140]:
+              - generic [ref=f80e141]: 百度文库
+              - generic [ref=f80e142]: https://wenku.baidu.com › aggs
+          - heading [level=2] [ref=f80e145]:
+            - link [ref=f80e146] [cursor=pointer]:
+              - /url: https://wenku.baidu.com/aggs/e58226c62cc58bd63186bdeb.html
+              - strong [ref=f80e147]: 工商银行科技菁英
+              - text: 计划
+              - strong [ref=f80e148]: 笔试
+              - text: 合集 - 百度文库
+          - paragraph [ref=f80e150]: 工商银行菁英科技笔试题是银行为招聘菁英科技人才而设置的 测试题目。 这些题目往往涵盖了计算机科学、数据分析、金融 知识等多 …
+        - listitem [ref=f80e151]:
+          - link "CSDN博客" [ref=f80e153] [cursor=pointer]:
+            - /url: https://blog.csdn.net/shuo_haiying/article/details/126482795
+            - generic [ref=f80e158]:
+              - generic [ref=f80e159]: CSDN博客
+              - generic [ref=f80e160]: https://blog.csdn.net › shuo_haiying › article › details
+          - heading [level=2] [ref=f80e163]:
+            - link [ref=f80e164] [cursor=pointer]:
+              - /url: https://blog.csdn.net/shuo_haiying/article/details/126482795
+              - text: 【无标题】
+              - strong [ref=f80e165]: 工商银行科技菁英
+              - text: 岗笔经面经 - CSDN博客
+          - generic [ref=f80e169]:
+            - tablist [ref=f80e172]:
+              - tab "投递信息" [selected] [ref=f80e173]
+              - tab "笔试" [ref=f80e174] [cursor=pointer]
+              - tab "面试" [ref=f80e175] [cursor=pointer]
+            - tabpanel "投递信息" [ref=f80e177]:
+              - list [ref=f80e178]:
+                - listitem [ref=f80e179]:
+                  - generic [ref=f80e180]: 应聘岗位： 科技菁英-珠海-后端开发工程师 投递渠道： 官网（ 中国工商银行人才招聘 (icbc.com.cn)） 区域： 广东省-珠海市 投递时间： 2022-7-25 投递截止时间：2022-7-29
+              - link "在blog.csdn.net上查看更多信息" [ref=f80e181] [cursor=pointer]:
+                - /url: https://blog.csdn.net/shuo_haiying/article/details/126482795
+        - listitem [ref=f80e182]:
+          - link "知乎专栏" [ref=f80e184] [cursor=pointer]:
+            - /url: https://zhuanlan.zhihu.com/p/417046844
+            - img "全球 Web 图标" [ref=f80e188]
+            - generic [ref=f80e189]:
+              - generic [ref=f80e190]: 知乎专栏
+              - generic [ref=f80e191]: https://zhuanlan.zhihu.com
+          - heading [level=2] [ref=f80e194]:
+            - link [ref=f80e195] [cursor=pointer]:
+              - /url: https://zhuanlan.zhihu.com/p/417046844
+              - text: 中国
+              - strong [ref=f80e196]: 工商银行
+              - text: 校招历年
+              - strong [ref=f80e197]: 真题
+              - text: 汇总！ - 知乎
+          - paragraph [ref=f80e199]: 2021年10月4日 · 工行作为宇宙第一大行，坚持着校招必玩花活的原则。 2021届校招时创新性的分岗位出题。 试题总共有三部分：① …
+        - listitem [ref=f80e200]:
+          - link "中公网校" [ref=f80e202] [cursor=pointer]:
+            - /url: https://www.eoffcn.com/kszn/bank/icbc/kstk.html
+            - generic [ref=f80e207]:
+              - generic [ref=f80e208]: 中公网校
+              - generic [ref=f80e209]: https://www.eoffcn.com › kszn › bank › icbc › kstk.html
+          - heading [level=2] [ref=f80e212]:
+            - link [ref=f80e213] [cursor=pointer]:
+              - /url: https://www.eoffcn.com/kszn/bank/icbc/kstk.html
+              - strong [ref=f80e214]: 工商银行
+              - text: 招聘
+              - strong [ref=f80e215]: 考试
+              - text: 题库_中公网校
+          - paragraph [ref=f80e217]: 2021年10月26日 · 中公网校银行招聘网为报考工商银行校园招聘考试的考生整理了工商银行校园招聘考试题库，包含历年工商银行校 …
+        - listitem [ref=f80e218]:
+          - link "知乎专栏" [ref=f80e220] [cursor=pointer]:
+            - /url: https://zhuanlan.zhihu.com/p/1890344207664792619
+            - generic [ref=f80e225]:
+              - generic [ref=f80e226]: 知乎专栏
+              - generic [ref=f80e227]: https://zhuanlan.zhihu.com
+          - heading [level=2] [ref=f80e230]:
+            - link [ref=f80e231] [cursor=pointer]:
+              - /url: https://zhuanlan.zhihu.com/p/1890344207664792619
+              - text: 中国
+              - strong [ref=f80e232]: 工商银行
+              - text: 招聘
+              - strong [ref=f80e233]: 笔试真题
+              - text: 及答案13套 - 知乎
+          - paragraph [ref=f80e235]: 2025年8月19日 · 从2017年至2024年，中国工商银行历次招聘笔试真题及答案汇总，助你轻松备战工行招聘考试。 目录： 1、2017年 …
+        - listitem [ref=f80e236]:
+          - link "牛客网" [ref=f80e238] [cursor=pointer]:
+            - /url: https://www.nowcoder.com/discuss/353155708457787392
+            - generic [ref=f80e243]:
+              - generic [ref=f80e244]: 牛客网
+              - generic [ref=f80e245]: https://www.nowcoder.com › discuss
+          - heading [level=2] [ref=f80e248]:
+            - link [ref=f80e249] [cursor=pointer]:
+              - /url: https://www.nowcoder.com/discuss/353155708457787392
+              - strong [ref=f80e250]: 工商银行科技菁英
+              - text: 计划
+              - strong [ref=f80e251]: 笔试题目
+              - text: "- 牛客网"
+          - paragraph [ref=f80e253]: 2019年10月14日 · 工商银行科技菁英计划笔试题目 笔试共分2部分,选择和编程,共120分钟 选择包含的内容比较多和杂,基本就是计算机 …
+        - listitem [ref=f80e254]:
+          - link "原创力文档" [ref=f80e256] [cursor=pointer]:
+            - /url: https://max.book118.com/html/2023/0814/6024105030005213.shtm
+            - generic [ref=f80e261]:
+              - generic [ref=f80e262]: 原创力文档
+              - generic [ref=f80e263]: https://max.book118.com › html
+          - heading [level=2] [ref=f80e266]:
+            - link [ref=f80e267] [cursor=pointer]:
+              - /url: https://max.book118.com/html/2023/0814/6024105030005213.shtm
+              - strong [ref=f80e268]: 工商银行科技菁英
+              - text: 校招
+              - strong [ref=f80e269]: 试题
+              - text: .pdf - 原创力文档
+          - paragraph [ref=f80e271]: 工商银行科技菁英校招试题 2023/8/13 工商银行科技菁英校招试题 一、第一部分 言语理解与表达 （本部分包括表达与理解两方 的内容 …
+        - listitem [ref=f80e272]:
+          - link "无忧考网" [ref=f80e274] [cursor=pointer]:
+            - /url: https://www.51test.net/show/10319826.html
+            - generic [ref=f80e279]:
+              - generic [ref=f80e280]: 无忧考网
+              - generic [ref=f80e281]: https://www.51test.net › show
+          - heading [level=2] [ref=f80e284]:
+            - link [ref=f80e285] [cursor=pointer]:
+              - /url: https://www.51test.net/show/10319826.html
+              - strong [ref=f80e286]: "2021"
+              - text: 中国
+              - strong [ref=f80e287]: 工商银行
+              - text: 招聘
+              - strong [ref=f80e288]: 考试真题
+              - text: 及答案 (Word版)
+          - paragraph [ref=f80e290]: 2021年8月25日 · 2021中国工商银行招聘考试真题及答案 (Word版) ...
+        - listitem [ref=f80e291]:
+          - link "原创力文档" [ref=f80e293] [cursor=pointer]:
+            - /url: https://max.book118.com/html/2026/0812/6211215002012211.shtm
+            - generic [ref=f80e298]:
+              - generic [ref=f80e299]: 原创力文档
+              - generic [ref=f80e300]: https://max.book118.com › html
+          - heading [level=2] [ref=f80e303]:
+            - link [ref=f80e304] [cursor=pointer]:
+              - /url: https://max.book118.com/html/2026/0812/6211215002012211.shtm
+              - text: 2026中国
+              - strong [ref=f80e305]: 工商银行
+              - text: 工银
+              - strong [ref=f80e306]: 科技
+              - text: 校园招聘
+              - strong [ref=f80e307]: 笔试
+              - text: 历年典型考题及 ...
+          - paragraph [ref=f80e309]: 2026年8月13日 · 2026中国工商银行工银科技校园招聘笔试历年典型考题及考点剖析附带答案详解.docx,2026中国工商银行工银科技校 …
+        - listitem [ref=f80e310]:
+          - generic [ref=f80e311]:
+            - heading [level=2] [ref=f80e312]:
+              - text: 深入了解
+              - strong [ref=f80e313]: 工商银行 科技菁英 2021 笔试 真题
+            - list [ref=f80e314]:
+              - listitem [ref=f80e315]:
+                - link [ref=f80e316] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e7%ac%94%e8%af%95%e9%a2%98&FORM=QSRE1
+                  - generic [ref=f80e318]:
+                    - strong [ref=f80e319]: 工商银行科技菁英
+                    - text: 笔试题
+              - listitem [ref=f80e320]:
+                - link [ref=f80e321] [cursor=pointer]:
+                  - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e5%b2%97%e7%ac%94%e8%af%95&FORM=QSRE2
+                  - generic [ref=f80e323]:
+                    - text: 中国
+                    - strong [ref=f80e324]: 工商银行科技菁英
+                    - text: 岗
+                    - strong [ref=f80e325]: 笔试
+              - listitem [ref=f80e326]:
+                - link [ref=f80e327] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e7%ac%94%e8%af%95%e5%86%85%e5%ae%b9&FORM=QSRE3
+                  - generic [ref=f80e329]:
+                    - strong [ref=f80e330]: 工商银行科技菁英笔试
+                    - text: 内容
+              - listitem [ref=f80e331]:
+                - link [ref=f80e332] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e8%8f%81%e8%8b%b1%e7%ac%94%e8%af%95%e9%9d%a2%e7%bb%8f&FORM=QSRE4
+                  - generic [ref=f80e334]:
+                    - strong [ref=f80e335]: 工商银行菁英笔试
+                    - text: 面经
+              - listitem [ref=f80e336]:
+                - link [ref=f80e337] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e9%9d%a2%e8%af%95&FORM=QSRE5
+                  - generic [ref=f80e339]:
+                    - strong [ref=f80e340]: 工商银行科技菁英
+                    - text: 面试
+              - listitem [ref=f80e341]:
+                - link [ref=f80e342] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e5%8e%86%e5%b9%b4%e8%80%83%e8%af%95%e7%9c%9f%e9%a2%98&FORM=QSRE6
+                  - generic [ref=f80e344]:
+                    - strong [ref=f80e345]: 工商银行
+                    - text: 历年考试
+                    - strong [ref=f80e346]: 真题
+              - listitem [ref=f80e347]:
+                - link [ref=f80e348] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e5%b2%97%e9%9d%a2%e8%af%95%e9%97%ae%e9%a2%98&FORM=QSRE7
+                  - generic [ref=f80e350]:
+                    - strong [ref=f80e351]: 工商银行科技菁英
+                    - text: 岗面试问题
+              - listitem [ref=f80e352]:
+                - link [ref=f80e353] [cursor=pointer]:
+                  - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e8%8b%b1%e8%af%ad%e7%9c%9f%e9%a2%98&FORM=QSRE8
+                  - generic [ref=f80e355]:
+                    - text: 中国
+                    - strong [ref=f80e356]: 工商银行
+                    - text: 英语
+                    - strong [ref=f80e357]: 真题
+        - listitem [ref=f80e358]:
+          - text: 为回应符合本地法律要求的通知，部分搜索结果未予显示。有关详细信息，请参阅
+          - link "此处" [ref=f80e359] [cursor=pointer]:
+            - /url: http://go.microsoft.com/fwlink/?LinkID=617350
+          - text: 。
+        - listitem [ref=f80e360]:
+          - navigation "工商银行 科技菁英 2021 笔试 真题 的更多搜索结果":
+            - list:
+              - listitem [ref=f80e361]:
+                - generic "第 1 页" [ref=f80e362]: "1"
+              - listitem [ref=f80e363]:
+                - link "第 2 页" [ref=f80e364] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2021+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FPIG=48486ABD0CCE4FF3A9F55370BE63435C&first=10&FORM=PERE
+                  - text: "2"
+              - listitem [ref=f80e365]:
+                - link "第 3 页" [ref=f80e366] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2021+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FPIG=48486ABD0CCE4FF3A9F55370BE63435C&first=20&FORM=PERE1
+                  - text: "3"
+              - listitem [ref=f80e367]:
+                - link "下一页" [ref=f80e368] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2021+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FPIG=48486ABD0CCE4FF3A9F55370BE63435C&first=10&FORM=PORE
+    - complementary "更多结果" [ref=f80e369]:
+      - list [ref=f80e370]:
+        - listitem [ref=f80e371]:
+          - generic [ref=f80e374]:
+            - heading [level=2] [ref=f80e376]:
+              - text: 深入了解
+              - strong [ref=f80e377]: 工商银行 科技菁英 2021 笔试 真题
+            - generic [ref=f80e378]:
+              - generic:
+                - list
+              - generic [ref=f80e379]:
+                - link [ref=f80e381] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e7%ac%94%e8%af%95%e9%a2%98&FORM=R5FD
+                  - generic [ref=f80e383]:
+                    - strong [ref=f80e384]: 工商银行科技菁英
+                    - text: 笔试题
+                - link [ref=f80e386] [cursor=pointer]:
+                  - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e5%b2%97%e7%ac%94%e8%af%95&FORM=R5FD1
+                  - generic [ref=f80e388]:
+                    - text: 中国
+                    - strong [ref=f80e389]: 工商银行科技菁英
+                    - text: 岗
+                    - strong [ref=f80e390]: 笔试
+                - link [ref=f80e392] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e7%ac%94%e8%af%95%e5%86%85%e5%ae%b9&FORM=R5FD2
+                  - generic [ref=f80e394]:
+                    - strong [ref=f80e395]: 工商银行科技菁英笔试
+                    - text: 内容
+                - link [ref=f80e397] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e8%8f%81%e8%8b%b1%e7%ac%94%e8%af%95%e9%9d%a2%e7%bb%8f&FORM=R5FD3
+                  - generic [ref=f80e399]:
+                    - strong [ref=f80e400]: 工商银行菁英笔试
+                    - text: 面经
+                - link [ref=f80e402] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e9%9d%a2%e8%af%95&FORM=R5FD4
+                  - generic [ref=f80e404]:
+                    - strong [ref=f80e405]: 工商银行科技菁英
+                    - text: 面试
+                - link [ref=f80e407] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e5%8e%86%e5%b9%b4%e8%80%83%e8%af%95%e7%9c%9f%e9%a2%98&FORM=R5FD5
+                  - generic [ref=f80e409]:
+                    - strong [ref=f80e410]: 工商银行
+                    - text: 历年考试
+                    - strong [ref=f80e411]: 真题
+                - link [ref=f80e413] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1%e5%b2%97%e9%9d%a2%e8%af%95%e9%97%ae%e9%a2%98&FORM=R5FD6
+                  - generic [ref=f80e415]:
+                    - strong [ref=f80e416]: 工商银行科技菁英
+                    - text: 岗面试问题
+                - link [ref=f80e418] [cursor=pointer]:
+                  - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e8%8b%b1%e8%af%ad%e7%9c%9f%e9%a2%98&FORM=R5FD7
+                  - generic [ref=f80e420]:
+                    - text: 中国
+                    - strong [ref=f80e421]: 工商银行
+                    - text: 英语
+                    - strong [ref=f80e422]: 真题
+  - contentinfo [ref=f80e423]:
+    - list [ref=f80e425]:
+      - listitem [ref=f80e426]:
+        - link "增值电信业务经营许可证：合字B2-20090007" [ref=f80e427] [cursor=pointer]:
+          - /url: https://dxzhgl.miit.gov.cn/dxxzsp/xkz/xkzgl/resource/qiyereport.jsp?num=caf04fa4-bd8a-4d9e-80b6-2aa1b86c1509&type=yreport
+      - listitem [ref=f80e428]:
+        - link "京ICP备10036305号-7" [ref=f80e429] [cursor=pointer]:
+          - /url: https://beian.miit.gov.cn
+      - listitem [ref=f80e430]:
+        - link "京公网安备11010802047360号" [ref=f80e431] [cursor=pointer]:
+          - /url: https://beian.mps.gov.cn/#/query/webSearch?code=11010802047360
+      - listitem [ref=f80e432]:
+        - link "隐私" [ref=f80e433] [cursor=pointer]:
+          - /url: http://go.microsoft.com/fwlink/?LinkId=521839
+      - listitem [ref=f80e434]:
+        - link "条款" [ref=f80e435] [cursor=pointer]:
+          - /url: http://go.microsoft.com/fwlink/?LinkID=246338

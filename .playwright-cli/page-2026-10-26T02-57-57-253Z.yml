@@ -1,0 +1,404 @@
+- generic [active] [ref=f110e1]:
+  - banner [ref=f110e2]:
+    - button "跳至内容" [ref=f110e4] [cursor=pointer]
+    - button "辅助功能反馈" [ref=f110e7] [cursor=pointer]
+    - generic [ref=f110e10]:
+      - link [ref=f110e11] [cursor=pointer]:
+        - /url: /?FORM=Z9FD1
+        - heading "返回到必应搜索" [level=1] [ref=f110e12]
+      - search [ref=f110e13]:
+        - button "搜索" [ref=f110e16] [cursor=pointer]
+        - searchbox "在此处输入你的搜索 — 输入时会显示搜索建议" [ref=f110e17]: 工商银行 科技菁英 2025 笔试 真题
+        - generic [ref=f110e18] [cursor=pointer]
+    - complementary "帐户奖励和偏好设置" [ref=f110e21]:
+      - button "Microsoft Rewards" [ref=f110e22] [cursor=pointer]:
+        - generic [ref=f110e23]: Rewards
+      - link "登录" [ref=f110e39] [cursor=pointer]:
+        - /url: javascript:void(0)
+    - generic:
+      - generic "国内版" [ref=f110e41]
+      - generic "国际版" [ref=f110e42] [cursor=pointer]
+    - navigation "主菜单" [ref=f110e43]:
+      - list [ref=f110e44]:
+        - listitem [ref=f110e45]:
+          - link "网页" [ref=f110e46] [cursor=pointer]:
+            - /url: /?scope=web&FORM=HDRSC1
+        - listitem [ref=f110e47]:
+          - link "图片" [ref=f110e48] [cursor=pointer]:
+            - /url: /images/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2025+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC2
+        - listitem [ref=f110e49]:
+          - link "视频" [ref=f110e50] [cursor=pointer]:
+            - /url: /videos/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2025+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC3
+        - listitem [ref=f110e51]:
+          - link "学术" [ref=f110e52] [cursor=pointer]:
+            - /url: /academic/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2025+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC4
+        - listitem [ref=f110e53]:
+          - link "词典" [ref=f110e54] [cursor=pointer]:
+            - /url: /dict/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2025+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC6
+        - listitem [ref=f110e55]:
+          - link "地图" [ref=f110e56] [cursor=pointer]:
+            - /url: /maps?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2025+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FORM=HDRSC7
+        - listitem [ref=f110e57]:
+          - link "航班" [ref=f110e58] [cursor=pointer]:
+            - /url: /travel/search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2025+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&m=flights&FORM=FBSCOP
+  - main "搜索结果" [ref=f110e60]:
+    - generic [ref=f110e61]:
+      - generic [ref=f110e62]:
+        - generic [aria-hidden] [ref=f110e63]:
+          - generic [ref=f110e64] [cursor=pointer]
+          - generic [ref=f110e66] [cursor=pointer]
+          - generic [ref=f110e68] [cursor=pointer]
+        - text: 约 7,600 个结果
+      - button "自适应缩放" [pressed] [ref=f110e71] [cursor=pointer]
+    - generic [ref=f110e77]:
+      - list [ref=f110e78]:
+        - listitem [ref=f110e79]:
+          - list [ref=f110e80]:
+            - listitem [ref=f110e81]:
+              - generic [ref=f110e82]:
+                - generic [ref=f110e83] [cursor=pointer]:
+                  - generic [ref=f110e84]: 360文库
+                  - generic: 360文库
+                - heading [level=2] [ref=f110e89]:
+                  - link "SERP,5469" [ref=f110e90] [cursor=pointer]:
+                    - /url: https://c.gdt.qq.com/gdt_click.fcg?viewid=1w3eAlyNkdoHfxX7QSaLuzQbu3mvxd5P_pmD!_MCbJf!Cs4_87IvBvou05fV_0mjf70re!dMRhT7fwzWpSRd!VoH3nnY8uTnDtQhGG6ALk6Q8EaEVu2g_sO4XHOX!rmP7RohID6Dou7gUgPO9qoTu7czmNiWwpUUq8F5VJsdyxusULmAArB9hJSnEAJW9sHwXqsdmKF8!!vRIHKW_cdaSLxix_gKE02ArVkGMnt00iuyGvbnw12SkQ&jtype=0&wspm=1&i=1&os=3&lpp=click_ext%3DeyJhdWlkIjoiNzU2NDg4OTkiLCJsb25nX3Bvc19pZCI6IjQwNjQ1MjA5NTYyNDAzMTgiLCJtZWRpdW1faWQiOiI0MDYwMzk2MDAyNDU5NiIsIm9zX3R5cGUiOjN9&clklpp=__CLICK_LPP__&cdnxj=1&xp=3&pid=4064520956240318&vto=__VIDEO_PLAY_TIME__&report_source=__REPORT_SOURCE__&kid=105558278130&c_comp_id=1929770608079&queryword=%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%20%E7%A7%91%E6%8A%80%E8%8F%81%E8%8B%B1%202025%20%E7%AC%94%E8%AF%95%20%E7%9C%9F%E9%A2%98&page_number=0&sogou_uuid=alngflyhegypo&request_time_ms=1792983475000&is_sogou_request=1&search_flow_type=18&site_set_name=SITE_SET_QBSEARCH&device_os_type=windows&dynamic_creative_id=7225580697&coupon_click_status=__COUPON_CLICK_STATUS__&tl=1&comp_id=61182872472&comp_index=0&slot=60
+                    - text: 完整版
+                    - strong [ref=f110e91]: 银行笔试真题
+                    - text: .doc
+                - generic [ref=f110e93]:
+                  - strong [ref=f110e94]: 银行笔试真题
+                  - text: 专题资料下载,不用四处查资料,海量精选
+                  - strong [ref=f110e95]: 银行笔试真题
+                  - text: 全行业资料覆盖,千万文档即刻下载,点击立享专属优惠
+                  - generic [ref=f110e96]: 广告
+                  - generic [ref=f110e99]: "| 来自搜狗"
+      - list [ref=f110e100]:
+        - listitem [ref=f110e101]:
+          - generic [ref=f110e109]:
+            - generic [ref=f110e112]:
+              - generic [ref=f110e118]:
+                - text: 以下是结合
+                - strong [ref=f110e119]: 2025年中国工商银行校园招聘笔试的最新真题
+                - text: （回忆版）及详细答案解析，内容涵盖行测（言语理解、逻辑推理、数学运算）、综合知识（金融经济、时政、工行常识）、英语（阅读理解、完形填空）三大模块，题型与难度贴近实际考试，供考生参考备考。 一、行测模块（共60题，限时60分钟）（一）言语理解（10题）真题1（主旨概括题） 近年来，随着数字技术的快速发展，商业银行纷纷加快数字化转型步伐。
+              - link "人人文库 2025中国工商银行校园招聘笔试真题及答案解析.docx - 人人文库 以下是结合2025年中国工商银行校园招聘笔试的最新真题（回忆版）及详细答案解析，内容涵盖行测（言语理解、逻辑推理、数学运算）、综合知识（金融经济、时政、工行常识）、英语（阅读理解、完形填空）三大模块，题型与难度贴近实际考试，供考生参考备考。 一、行测模块（共60题，限时60分钟）（一）言语理解（10题）真题1（主旨概括题） 近年来，随着数字技术的快速发展，商…" [ref=f110e123] [cursor=pointer]:
+                - /url: https://www.renrendoc.com/paper/491433535.html#:~:text=%E4%BB%A5%E4%B8%8B%E6%98%AF%E7%BB%93%E5%90%882025%E5%B9%B4%E4%B8%AD%E5%9B%BD%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%E6%A0%A1%E5%9B%AD%E6%8B%9B%E8%81%98%E7%AC%94%E8%AF%95%E7%9A%84%E6%9C%80%E6%96%B0%E7%9C%9F%E9%A2%98%EF%BC%88%E5%9B%9E%E5%BF%86%E7%89%88%EF%BC%89%E5%8F%8A%E8%AF%A6%E7%BB%86%E7%AD%94%E6%A1%88%E8%A7%A3%E6%9E%90%EF%BC%8C%E5%86%85%E5%AE%B9%E6%B6%B5%E7%9B%96%E8%A1%8C%E6%B5%8B%EF%BC%88%E8%A8%80%E8%AF%AD%E7%90%86%E8%A7%A3%E3%80%81%E9%80%BB%E8%BE%91%E6%8E%A8%E7%90%86%E3%80%81%E6%95%B0%E5%AD%A6%E8%BF%90%E7%AE%97%EF%BC%89%E3%80%81%E7%BB%BC%E5%90%88%E7%9F%A5%E8%AF%86%EF%BC%88%E9%87%91%E8%9E%8D%E7%BB%8F%E6%B5%8E%E3%80%81%E6%97%B6%E6%94%BF%E3%80%81%E5%B7%A5%E8%A1%8C%E5%B8%B8%E8%AF%86%EF%BC%89%E3%80%81%E8%8B%B1%E8%AF%AD%EF%BC%88%E9%98%85%E8%AF%BB%E7%90%86%E8%A7%A3%E3%80%81%E5%AE%8C%E5%BD%A2%E5%A1%AB%E7%A9%BA%EF%BC%89%E4%B8%89%E5%A4%A7%E6%A8%A1%E5%9D%97%EF%BC%8C%E9%A2%98%E5%9E%8B%E4%B8%8E%E9%9A%BE%E5%BA%A6%E8%B4%B4%E8%BF%91%E5%AE%9E%E9%99%85%E8%80%83%E8%AF%95%EF%BC%8C%E4%BE%9B%E8%80%83%E7%94%9F%E5%8F%82%E8%80%83%E5%A4%87%E8%80%83%E3%80%82,%E4%B8%80%E3%80%81%E8%A1%8C%E6%B5%8B%E6%A8%A1%E5%9D%97%EF%BC%88%E5%85%B160%E9%A2%98%EF%BC%8C%E9%99%90%E6%97%B660%E5%88%86%E9%92%9F%EF%BC%89%EF%BC%88%E4%B8%80%EF%BC%89%E8%A8%80%E8%AF%AD%E7%90%86%E8%A7%A3%EF%BC%8810%E9%A2%98%EF%BC%89%E7%9C%9F%E9%A2%981%EF%BC%88%E4%B8%BB%E6%97%A8%E6%A6%82%E6%8B%AC%E9%A2%98%EF%BC%89%20%E8%BF%91%E5%B9%B4%E6%9D%A5%EF%BC%8C%E9%9A%8F%E7%9D%80%E6%95%B0%E5%AD%97%E6%8A%80%E6%9C%AF%E7%9A%84%E5%BF%AB%E9%80%9F%E5%8F%91%E5%B1%95%EF%BC%8C%E5%95%86%E4%B8%9A%E9%93%B6%E8%A1%8C%E7%BA%B7%E7%BA%B7%E5%8A%A0%E5%BF%AB%E6%95%B0%E5%AD%97%E5%8C%96%E8%BD%AC%E5%9E%8B%E6%AD%A5%E4%BC%90%E3%80%82
+                - generic [ref=f110e124]:
+                  - generic [ref=f110e125]: 人人文库
+                  - generic [ref=f110e128]: 2025中国工商银行校园招聘笔试真题及答案解析.docx - 人人文库
+                  - generic: 以下是结合2025年中国工商银行校园招聘笔试的最新真题（回忆版）及详细答案解析，内容涵盖行测（言语理解、逻辑推理、数学运算）、综合知识（金融经济、时政、工行常识）、英语（阅读理解、完形填空）三大模块，题型与难度贴近实际考试，供考生参考备考。 一、行测模块（共60题，限时60分钟）（一）言语理解（10题）真题1（主旨概括题） 近年来，随着数字技术的快速发展，商…
+            - status
+        - listitem [ref=f110e131]:
+          - link "百度文库" [ref=f110e133] [cursor=pointer]:
+            - /url: https://wenku.baidu.com/view/403f0a1652e79b89680203d8ce2f0066f5336489.html
+            - img "全球 Web 图标" [ref=f110e137]
+            - generic [ref=f110e138]:
+              - generic [ref=f110e139]: 百度文库
+              - generic [ref=f110e140]: https://wenku.baidu.com › view
+          - heading [level=2] [ref=f110e143]:
+            - link [ref=f110e144] [cursor=pointer]:
+              - /url: https://wenku.baidu.com/view/403f0a1652e79b89680203d8ce2f0066f5336489.html
+              - strong [ref=f110e145]: 工商银行菁英科技
+              - text: 笔
+              - strong [ref=f110e146]: 试题
+              - text: "- 百度文库"
+          - paragraph [ref=f110e148]: 除了以上三类题目，工商银行菁英科技笔试题还可能涉及到项目管理、网络安全、人工智能等其他方面的内容。 在准备阶段，应聘者 …
+        - listitem [ref=f110e149]:
+          - link "百度文库" [ref=f110e151] [cursor=pointer]:
+            - /url: https://wenku.baidu.com/view/88840926bbf67c1cfad6195f312b3169a551ea6c.html
+            - img "全球 Web 图标" [ref=f110e155]
+            - generic [ref=f110e156]:
+              - generic [ref=f110e157]: 百度文库
+              - generic [ref=f110e158]: https://wenku.baidu.com › view
+          - heading [level=2] [ref=f110e161]:
+            - link [ref=f110e162] [cursor=pointer]:
+              - /url: https://wenku.baidu.com/view/88840926bbf67c1cfad6195f312b3169a551ea6c.html
+              - text: 中国
+              - strong [ref=f110e163]: 工商银行2025
+              - text: 招聘
+              - strong [ref=f110e164]: 笔试真题
+              - text: 及答案 - 百度文库
+          - paragraph [ref=f110e166]: 中国工商银行2025招聘笔试真题及答案-A. 代收水电费 B. 信用卡业务 C. 贷款业务 D. 结算业务 答案：C。 贷款业务属于商业银行的资 …
+        - listitem [ref=f110e167]:
+          - link "原创力文档" [ref=f110e169] [cursor=pointer]:
+            - /url: https://max.book118.com/html/2026/0316/6152005231012111.shtm
+            - img "全球 Web 图标" [ref=f110e173]
+            - generic [ref=f110e174]:
+              - generic [ref=f110e175]: 原创力文档
+              - generic [ref=f110e176]: https://max.book118.com › html
+          - heading [level=2] [ref=f110e179]:
+            - link [ref=f110e180] [cursor=pointer]:
+              - /url: https://max.book118.com/html/2026/0316/6152005231012111.shtm
+              - strong [ref=f110e181]: "2025"
+              - text: 年中国
+              - strong [ref=f110e182]: 工商银行
+              - text: 校园招聘
+              - strong [ref=f110e183]: 笔试真题
+              - text: 及答案.docx-原创力文档
+          - paragraph [ref=f110e185]: 2026年3月17日 · 免费在线预览全文 2025年中国工商银行校园招聘笔试练习题及答案 第一部分：行政职业能力测试（共30题，每题1.5 …
+        - listitem [ref=f110e186]:
+          - link "人人文库" [ref=f110e188] [cursor=pointer]:
+            - /url: https://www.renrendoc.com/paper/491433535.html
+            - img "全球 Web 图标" [ref=f110e192]
+            - generic [ref=f110e193]:
+              - generic [ref=f110e194]: 人人文库
+              - generic [ref=f110e195]: https://www.renrendoc.com › paper
+          - heading [level=2] [ref=f110e198]:
+            - link [ref=f110e199] [cursor=pointer]:
+              - /url: https://www.renrendoc.com/paper/491433535.html
+              - strong [ref=f110e200]: "2025"
+              - text: 中国
+              - strong [ref=f110e201]: 工商银行
+              - text: 校园招聘
+              - strong [ref=f110e202]: 笔试真题
+              - text: 及答案解析.docx - 人人文库
+          - paragraph [ref=f110e204]: 2025年11月14日 · 以下是结合2025年中国工商银行校园招聘笔试的最新真题回忆版及详细答案解析，内容涵盖行测言语理解逻辑推理 …
+        - listitem [ref=f110e205]:
+          - link "原创力文档" [ref=f110e207] [cursor=pointer]:
+            - /url: https://max.book118.com/html/2024/1019/6013050004010234.shtm
+            - img "全球 Web 图标" [ref=f110e211]
+            - generic [ref=f110e212]:
+              - generic [ref=f110e213]: 原创力文档
+              - generic [ref=f110e214]: https://max.book118.com › html
+          - heading [level=2] [ref=f110e217]:
+            - link [ref=f110e218] [cursor=pointer]:
+              - /url: https://max.book118.com/html/2024/1019/6013050004010234.shtm
+              - text: "[中央]"
+              - strong [ref=f110e219]: "2025"
+              - text: 年中国
+              - strong [ref=f110e220]: 工商银行
+              - text: 校园招聘
+              - strong [ref=f110e221]: 笔试
+              - text: 历年典型考题及解题 ...
+          - paragraph [ref=f110e223]: 2024年10月21日 · 免费在线预览全文 [中央]2025年中国工商银行校园招聘笔试历年典型考题及解题思路分析附带答案详解 一、单选题 …
+        - listitem [ref=f110e224]:
+          - link "中公网校" [ref=f110e226] [cursor=pointer]:
+            - /url: https://www.eoffcn.com/kszn/bank/icbc/kstk.html
+            - img "全球 Web 图标" [ref=f110e230]
+            - generic [ref=f110e231]:
+              - generic [ref=f110e232]: 中公网校
+              - generic [ref=f110e233]: https://www.eoffcn.com › kszn › bank › icbc › kstk.html
+          - heading [level=2] [ref=f110e236]:
+            - link [ref=f110e237] [cursor=pointer]:
+              - /url: https://www.eoffcn.com/kszn/bank/icbc/kstk.html
+              - strong [ref=f110e238]: 工商银行
+              - text: 招聘
+              - strong [ref=f110e239]: 考试
+              - text: 题库_中公网校
+          - paragraph [ref=f110e241]: 2021年10月26日 · 中公网校银行招聘网为报考工商银行校园招聘考试的考生整理了工商银行校园招聘考试题库，包含历年工商银行校 …
+        - listitem [ref=f110e242]:
+          - link "豆丁网" [ref=f110e244] [cursor=pointer]:
+            - /url: https://www.docin.com/p-4800437228.html
+            - img "全球 Web 图标" [ref=f110e248]
+            - generic [ref=f110e249]:
+              - generic [ref=f110e250]: 豆丁网
+              - generic [ref=f110e251]: https://www.docin.com
+          - heading [level=2] [ref=f110e254]:
+            - link [ref=f110e255] [cursor=pointer]:
+              - /url: https://www.docin.com/p-4800437228.html
+              - text: "[中央]"
+              - strong [ref=f110e256]: "2025"
+              - text: 年中国
+              - strong [ref=f110e257]: 工商银行
+              - text: 校园招聘
+              - strong [ref=f110e258]: 笔试
+              - text: 历年参考题库附带 ...
+          - paragraph [ref=f110e260]: 2025年1月11日 · 解析：文段开篇引出话题，指出科学技术的能量越来越大，把控不好它的危险会日益加剧。 接着通过反面论证强调如 …
+        - listitem [ref=f110e261]:
+          - link "豆丁网" [ref=f110e263] [cursor=pointer]:
+            - /url: https://www.docin.com/p-4643427135.html
+            - img "全球 Web 图标" [ref=f110e267]
+            - generic [ref=f110e268]:
+              - generic [ref=f110e269]: 豆丁网
+              - generic [ref=f110e270]: https://www.docin.com
+          - heading [level=2] [ref=f110e273]:
+            - link [ref=f110e274] [cursor=pointer]:
+              - /url: https://www.docin.com/p-4643427135.html
+              - strong [ref=f110e275]: 工商银行菁英科技
+              - text: 笔
+              - strong [ref=f110e276]: 试题
+              - text: "- 豆丁网"
+          - paragraph [ref=f110e278]: 2024年4月17日 · 工商银行菁英科技笔试题是银行招聘中常见的一种笔试形式，主要用来测试应聘者在技术方面的能力和专业知识。 下 …
+        - listitem [ref=f110e279]:
+          - link "道客巴巴" [ref=f110e281] [cursor=pointer]:
+            - /url: https://www.doc88.com/p-77380449614121.html
+            - img "全球 Web 图标" [ref=f110e285]
+            - generic [ref=f110e286]:
+              - generic [ref=f110e287]: 道客巴巴
+              - generic [ref=f110e288]: https://www.doc88.com
+          - heading [level=2] [ref=f110e291]:
+            - link [ref=f110e292] [cursor=pointer]:
+              - /url: https://www.doc88.com/p-77380449614121.html
+              - strong [ref=f110e293]: "2025"
+              - text: 年中国
+              - strong [ref=f110e294]: 工商银行
+              - text: 招聘
+              - strong [ref=f110e295]: 笔试真题
+              - text: 与答案解析全集 - 道客巴巴
+          - paragraph [ref=f110e297]: 2024年11月15日 · 内容提示： 工行笔试题及参照答案 工行笔试题及参照答案 (一) 1、我国人民币的主币是： A 元 B 角 C 分 D 厘 (答 …
+        - listitem [ref=f110e298]:
+          - link "搜狐" [ref=f110e300] [cursor=pointer]:
+            - /url: https://www.sohu.com/a/997307883_120230824
+            - img "全球 Web 图标" [ref=f110e304]
+            - generic [ref=f110e305]:
+              - generic [ref=f110e306]: 搜狐
+              - generic [ref=f110e307]: https://www.sohu.com
+          - heading [level=2] [ref=f110e310]:
+            - link [ref=f110e311] [cursor=pointer]:
+              - /url: https://www.sohu.com/a/997307883_120230824
+              - text: 中国
+              - strong [ref=f110e312]: 工商银行2025
+              - text: 秋季校园招聘
+              - strong [ref=f110e313]: 笔试
+              - text: 统考
+              - strong [ref=f110e314]: 试题
+              - text: "| 分数统计 ..."
+          - paragraph [ref=f110e316]: 2026年3月16日 · 吉老师就结合2025秋季校园招聘的完整真题，以及考友们做这套题的正确率情况，来解答考友们的疑惑。 因为一般 …
+        - listitem [ref=f110e317]:
+          - list [ref=f110e318]:
+            - listitem [ref=f110e319]:
+              - generic [ref=f110e320]:
+                - generic [ref=f110e321] [cursor=pointer]:
+                  - generic [ref=f110e322]: 360文库
+                  - generic: 360文库
+                - heading [level=2] [ref=f110e327]:
+                  - link "SERP,5473" [ref=f110e328] [cursor=pointer]:
+                    - /url: https://c.gdt.qq.com/gdt_click.fcg?viewid=1w3eAlyNkdoHfxX7QSaLuzQbu3mvxd5P_pmD!_MCbJf!Cs4_87IvBvou05fV_0mjf70re!dMRhT7fwzWpSRd!VoH3nnY8uTnDtQhGG6ALk6Q8EaEVu2g_sO4XHOX!rmP7RohID6Dou7gUgPO9qoTu7czmNiWwpUUq8F5VJsdyxusULmAArB9hJSnEAJW9sHwXqsdmKF8!!vRIHKW_cdaSLxix_gKE02ArVkGMnt00iuyGvbnw12SkQ&jtype=0&wspm=1&i=1&os=3&lpp=click_ext%3DeyJhdWlkIjoiNzU2NDg4OTkiLCJsb25nX3Bvc19pZCI6IjQwNjQ1MjA5NTYyNDAzMTgiLCJtZWRpdW1faWQiOiI0MDYwMzk2MDAyNDU5NiIsIm9zX3R5cGUiOjN9&clklpp=__CLICK_LPP__&cdnxj=1&xp=3&pid=4064520956240318&vto=__VIDEO_PLAY_TIME__&report_source=__REPORT_SOURCE__&kid=105558278130&c_comp_id=1929770608079&queryword=%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%20%E7%A7%91%E6%8A%80%E8%8F%81%E8%8B%B1%202025%20%E7%AC%94%E8%AF%95%20%E7%9C%9F%E9%A2%98&page_number=0&sogou_uuid=alngflyhegypo&request_time_ms=1792983475000&is_sogou_request=1&search_flow_type=18&site_set_name=SITE_SET_QBSEARCH&device_os_type=windows&dynamic_creative_id=7225580697&coupon_click_status=__COUPON_CLICK_STATUS__&tl=1&comp_id=61182872472&comp_index=0&slot=60
+                    - text: 完整版
+                    - strong [ref=f110e329]: 银行笔试真题
+                    - text: .doc
+                - generic [ref=f110e331]:
+                  - strong [ref=f110e332]: 银行笔试真题
+                  - text: 专题资料下载,不用四处查资料,海量精选
+                  - strong [ref=f110e333]: 银行笔试真题
+                  - text: 全行业资料覆盖,千万文档即刻下载,点击立享专属优惠
+                  - generic [ref=f110e334]: 广告
+                  - generic [ref=f110e337]: "| 来自搜狗"
+        - listitem [ref=f110e338]:
+          - generic [ref=f110e339]:
+            - heading [level=2] [ref=f110e340]:
+              - text: 深入了解
+              - strong [ref=f110e341]: 工商银行 科技菁英 2025 笔试 真题
+            - list [ref=f110e342]:
+              - listitem [ref=f110e343]:
+                - link [ref=f110e344] [cursor=pointer]:
+                  - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c2025%e7%ac%94%e8%af%95&FORM=QSRE1
+                  - generic [ref=f110e346]:
+                    - text: 中国
+                    - strong [ref=f110e347]: 工商银行2025笔试
+              - listitem [ref=f110e348]:
+                - link [ref=f110e349] [cursor=pointer]:
+                  - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%ac%94%e8%af%95%e7%9c%9f%e9%a2%98&FORM=QSRE2
+                  - generic [ref=f110e351]:
+                    - text: 中国
+                    - strong [ref=f110e352]: 工商银行笔试真题
+              - listitem [ref=f110e353]:
+                - link [ref=f110e354] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e8%8f%81%e8%8b%b1%e7%ac%94%e8%af%95%e9%a2%98&FORM=QSRE3
+                  - generic [ref=f110e356]:
+                    - strong [ref=f110e357]: 工商银行菁英
+                    - text: 笔试题
+              - listitem [ref=f110e358]:
+                - link [ref=f110e359] [cursor=pointer]:
+                  - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%ac%94%e8%af%95%e7%ad%94%e6%a1%88&FORM=QSRE4
+                  - generic [ref=f110e361]:
+                    - text: 中国
+                    - strong [ref=f110e362]: 工商银行笔试
+                    - text: 答案
+              - listitem [ref=f110e363]:
+                - link [ref=f110e364] [cursor=pointer]:
+                  - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%ac%94%e8%af%95%e9%a2%98%e5%ba%93&FORM=QSRE5
+                  - generic [ref=f110e366]:
+                    - text: 中国
+                    - strong [ref=f110e367]: 工商银行
+                    - text: 笔试题库
+              - listitem [ref=f110e368]:
+                - link [ref=f110e369] [cursor=pointer]:
+                  - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e6%8b%9b%e8%81%98%e7%ac%94%e8%af%95&FORM=QSRE6
+                  - generic [ref=f110e371]:
+                    - text: 中国
+                    - strong [ref=f110e372]: 工商银行
+                    - text: 招聘
+                    - strong [ref=f110e373]: 笔试
+        - listitem [ref=f110e374]:
+          - text: 为回应符合本地法律要求的通知，部分搜索结果未予显示。有关详细信息，请参阅
+          - link "此处" [ref=f110e375] [cursor=pointer]:
+            - /url: http://go.microsoft.com/fwlink/?LinkID=617350
+          - text: 。
+        - listitem [ref=f110e376]:
+          - navigation "工商银行 科技菁英 2025 笔试 真题 的更多搜索结果":
+            - list:
+              - listitem [ref=f110e377]:
+                - generic "第 1 页" [ref=f110e378]: "1"
+              - listitem [ref=f110e379]:
+                - link "第 2 页" [ref=f110e380] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2025+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FPIG=0EBC85B1151049F2B1EA9ED7099AEB75&first=10&FORM=PERE
+                  - text: "2"
+              - listitem [ref=f110e381]:
+                - link "第 3 页" [ref=f110e382] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2025+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FPIG=0EBC85B1151049F2B1EA9ED7099AEB75&first=20&FORM=PERE1
+                  - text: "3"
+              - listitem [ref=f110e383]:
+                - link "下一页" [ref=f110e384] [cursor=pointer]:
+                  - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c+%e7%a7%91%e6%8a%80%e8%8f%81%e8%8b%b1+2025+%e7%ac%94%e8%af%95+%e7%9c%9f%e9%a2%98&FPIG=0EBC85B1151049F2B1EA9ED7099AEB75&first=10&FORM=PORE
+      - complementary "更多结果" [ref=f110e385]:
+        - list [ref=f110e386]:
+          - listitem [ref=f110e387]:
+            - generic [ref=f110e390]:
+              - heading [level=2] [ref=f110e392]:
+                - text: 深入了解
+                - strong [ref=f110e393]: 工商银行 科技菁英 2025 笔试 真题
+              - generic [ref=f110e394]:
+                - generic:
+                  - list
+                - generic [ref=f110e395]:
+                  - link [ref=f110e397] [cursor=pointer]:
+                    - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c2025%e7%ac%94%e8%af%95&FORM=R5FD
+                    - generic [ref=f110e399]:
+                      - text: 中国
+                      - strong [ref=f110e400]: 工商银行2025笔试
+                  - link [ref=f110e402] [cursor=pointer]:
+                    - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%ac%94%e8%af%95%e7%9c%9f%e9%a2%98&FORM=R5FD1
+                    - generic [ref=f110e404]:
+                      - text: 中国
+                      - strong [ref=f110e405]: 工商银行笔试真题
+                  - link [ref=f110e407] [cursor=pointer]:
+                    - /url: /search?q=%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e8%8f%81%e8%8b%b1%e7%ac%94%e8%af%95%e9%a2%98&FORM=R5FD2
+                    - generic [ref=f110e409]:
+                      - strong [ref=f110e410]: 工商银行菁英
+                      - text: 笔试题
+                  - link [ref=f110e412] [cursor=pointer]:
+                    - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%ac%94%e8%af%95%e7%ad%94%e6%a1%88&FORM=R5FD3
+                    - generic [ref=f110e414]:
+                      - text: 中国
+                      - strong [ref=f110e415]: 工商银行笔试
+                      - text: 答案
+                  - link [ref=f110e417] [cursor=pointer]:
+                    - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e7%ac%94%e8%af%95%e9%a2%98%e5%ba%93&FORM=R5FD4
+                    - generic [ref=f110e419]:
+                      - text: 中国
+                      - strong [ref=f110e420]: 工商银行
+                      - text: 笔试题库
+                  - link [ref=f110e422] [cursor=pointer]:
+                    - /url: /search?q=%e4%b8%ad%e5%9b%bd%e5%b7%a5%e5%95%86%e9%93%b6%e8%a1%8c%e6%8b%9b%e8%81%98%e7%ac%94%e8%af%95&FORM=R5FD5
+                    - generic [ref=f110e424]:
+                      - text: 中国
+                      - strong [ref=f110e425]: 工商银行
+                      - text: 招聘
+                      - strong [ref=f110e426]: 笔试
+  - contentinfo [ref=f110e427]:
+    - list [ref=f110e429]:
+      - listitem [ref=f110e430]:
+        - link "增值电信业务经营许可证：合字B2-20090007" [ref=f110e431] [cursor=pointer]:
+          - /url: https://dxzhgl.miit.gov.cn/dxxzsp/xkz/xkzgl/resource/qiyereport.jsp?num=caf04fa4-bd8a-4d9e-80b6-2aa1b86c1509&type=yreport
+      - listitem [ref=f110e432]:
+        - link "京ICP备10036305号-7" [ref=f110e433] [cursor=pointer]:
+          - /url: https://beian.miit.gov.cn
+      - listitem [ref=f110e434]:
+        - link "京公网安备11010802047360号" [ref=f110e435] [cursor=pointer]:
+          - /url: https://beian.mps.gov.cn/#/query/webSearch?code=11010802047360
+      - listitem [ref=f110e436]:
+        - link "隐私" [ref=f110e437] [cursor=pointer]:
+          - /url: http://go.microsoft.com/fwlink/?LinkId=521839
+      - listitem [ref=f110e438]:
+        - link "条款" [ref=f110e439] [cursor=pointer]:
+          - /url: http://go.microsoft.com/fwlink/?LinkID=246338

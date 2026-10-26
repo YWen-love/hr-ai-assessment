@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0",
+  "job_key": "education_learning_consultant",
+  "job_name": "初中学习顾问",
+
+  "job_profile": {
+    "industry": "K12教培",
+    "responsibilities": [
+      "带短期班，单班约50人，一期课程一周左右",
+      "前期添加班级成员家长微信，建立班级群聊、发放学习资料与课堂习题、通知孩子到课",
+      "中期主讲负责授课，学习顾问旁听并跟进孩子学习进度、对接沟通家长",
+      "后期结合每个孩子的薄弱点推荐正价课程，完成体验课用户到正价课用户的转化",
+      "不需要做招生引流工作"
+    ],
+    "nature": ["含销售性质", "需要沟通和转化能力"],
+    "work_time": ["周三至周日 13:00-23:00", "中间晚饭休息一个半小时", "高转化期偶尔加班"],
+    "rest_schedule": ["周一至周二双休"],
+    "salary": [
+      "实习期日底薪按简历最高学历：本科100元/天，硕士研究生130元/天，另加每月提成",
+      "实习期综合收入 4-8K",
+      "正式员工每月底薪4000元加提成，综合 8-15K",
+      "交通补贴：每日下班后30元内打车报销",
+      "住房补贴：2026届应届毕业生可申请，通常500-600元",
+      "社保：正式员工入职试用期帮交五险一金，试用期后另加商业保险，共六险一金"
+    ],
+    "hard_gates": [
+      "本科及以上，不含专升本",
+      "本科2001年及以后出生，硕士研究生1999年及以后出生"
+    ],
+    "soft_traits": ["沟通表达能力", "解决问题能力", "抗压能力", "能接受一定工作强度"]
+  },
+
+  "dialog_check_items": [
+    {
+      "id": "check_nature",
+      "text": "候选人是否理解并接受这个岗位包含课程销售转化性质"
+    },
+    {
+      "id": "check_shift",
+      "text": "候选人是否接受周三至周日 13:00-23:00 的排班安排"
+    },
+    {
+      "id": "check_salary",
+      "text": "候选人是否接受该学历对应的底薪范围"
+    }
+  ],
+
+  "exp_keywords": [
+    "销售", "课程顾问", "课程转化", "教培销售", "招生", "续费",
+    "客户转化", "电话销售", "教培", "教育培训", "辅导"
+  ],
+
+  "score_rules": {
+    "add_score": [
+      {
+        "id": "intent_sales",
+        "field": "resume_intention",
+        "op": "contains_any",
+        "value": ["销售", "课程销售", "学习顾问", "课程顾问"],
+        "score": 2,
+        "desc": "求职意向包含销售 / 课程销售 / 学习顾问 / 课程顾问类岗位"
+      },
+      {
+        "id": "major_business",
+        "field": "major",
+        "op": "contains_any",
+        "value": ["市场营销", "营销", "工商管理", "电子商务", "国际贸易", "金融"],
+        "score": 1,
+        "desc": "市场营销等商科相关专业"
+      },
+      {
+        "id": "exp_edu_sales",
+        "field": "exp_tags",
+        "op": "has_any",
+        "value": ["电话销售", "课程转化", "教培销售", "课程顾问", "招生", "续费", "客户转化"],
+        "score": 2,
+        "desc": "有电话销售 / 课程转化类销售实习或工作经历"
+      },
+      {
+        "id": "exp_general_sales",
+        "score": 1,
+        "desc": "有普通销售经历（同时不是课程销售、不是电话销售）",
+        "all_of": [
+          {
+            "field": "exp_tags",
+            "op": "has_any",
+            "value": ["销售", "客户转化"]
+          },
+          {
+            "field": "exp_tags",
+            "op": "has_none",
+            "value": ["电话销售", "课程销售", "课程转化", "课程顾问", "教培销售"]
+          }
+        ]
+      }
+    ],
+    "minus_score": []
+  },
+
+  "level_threshold": {
+    "high_min": 5,
+    "mid_min": 3
+  },
+
+  "alternate_role_mapping": [
+    {
+      "backup_job_key": "education_erjiang",
+      "backup_job_name": "初中二讲老师",
+      "match_condition": [
+        "师范院校或师范类专业背景",
+        "实习/工作经历为授课、代课、主讲",
+        "专业为学科类（数学、语文、英语等）",
+        "对话中表达更喜欢讲课，排斥课程销售转化"
+      ]
+    }
+  ],
+
+  "backup_show_switch": {
+    "when_reject_main_job": true
+  },
+
+  "rag_doc_id": "education_learning_consultant"
+}

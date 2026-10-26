@@ -1,4 +1,5 @@
 import html
+import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -14,14 +15,29 @@ from fastapi.staticfiles import StaticFiles
 
 from resume_parser import parse_resume_text
 from config import settings
-from app.gradio_ui import HR_UI_CSS, build_hr_ui
+from app.gradio_ui import HR_UI_CSS, build_job_manager_ui, build_workbench_ui
 from app.hr_auth import init_db as init_hr_db, seed_default_admin, verify_login, create_user
 from app.login_page import render_login_page, render_register_page
-from app.paths import data_root
-from app.assessment_service import AssessmentService
+from app.paths import data_root, resource_path
+from app.assessment_service import AssessmentError, AssessmentService
+from app.job_config_store import (
+    JobConfigError,
+    delete_job_config,
+    get_job_config,
+    get_job_config_object,
+    list_job_configs,
+    save_job_config,
+    seed_from_files,
+    update_job_config_meta,
+)
+from app.job_generator import JobConfigGenerator, JobGenerationError
+from app.job_schema import is_valid_job_key
 from app.knowledge_base import get_job_knowledge, initialize_knowledge_base, list_jobs
+from app.rag_bypass import init_rag_store
 from app.resume_reader import read_resume_text
-from app.session_store import create_session, get_session, init_db, list_sessions
+from app.session_store import create_session, get_candidate_view, get_session, init_db, list_sessions
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -30,7 +46,11 @@ async def lifespan(app: FastAPI):
     init_hr_db()
     seed_default_admin()
     initialize_knowledge_base()
-    await assessment_service.prepare_job_knowledge()
+    # 岗位配置从 job_configs/*.json 种子化入库；HR 在后台改的是数据库，文件是初值
+    seeded = seed_from_files(resource_path("job_configs"))
+    if seeded:
+        logger.info("已导入岗位配置：%s", ", ".join(seeded))
+    init_rag_store()
     yield
 
 
@@ -426,11 +446,19 @@ def render_candidate_page(session_id: str) -> str:
 @app.get("/")
 async def read_root(session_id: Optional[str] = None, admin_pwd: Optional[str] = None):
     if session_id:
+        # 会话已在 /assessment/start 建好并写入首轮开场白，
+        # 这里只回读，不重新生成 —— 刷新页面不该让对话重来一遍。
         session = get_session(session_id)
-        if session:
-            payload = await assessment_service.launch_candidate_session(session_id, session)
-            return payload
-        raise HTTPException(status_code=404, detail="Invalid session_id")
+        if not session:
+            raise HTTPException(status_code=404, detail="Invalid session_id")
+        return {
+            "mode": "candidate",
+            "session_id": session_id,
+            "job_name": session.get("job_name"),
+            "candidate_name": session.get("candidate_name"),
+            "status": session.get("status"),
+            "candidate_msg": session.get("candidate_msg"),
+        }
 
     if admin_pwd == settings.ADMIN_PASSWORD:
         return {
@@ -553,7 +581,7 @@ async def hr_parse_link(
     session_id = create_session(
         candidate_name=candidate_name,
         job_name=job_name,
-        resume_json=profile.model_dump(),
+        resume_json=profile,
         candidate_summary=resume_text[:1500],
     )
 
@@ -563,7 +591,7 @@ async def hr_parse_link(
         "session_id": session_id,
         "candidate_name": candidate_name,
         "job_name": job_name,
-        "candidate_data": profile.model_dump(),
+        "candidate_data": profile,
         "public_link": public_link,
     }
 
@@ -658,8 +686,24 @@ async def candidate_page(session_id: str) -> HTMLResponse:
 
 
 @app.post("/resume/parse")
-async def parse_resume(file: UploadFile = File(...)) -> dict:
-    return await assessment_service.parse_resume(file)
+async def parse_resume(file: UploadFile = File(...), job_key: str = Form(...)) -> dict:
+    """解析简历。必须带 job_key —— 经验标签是岗位驱动的封闭词表。"""
+    upload_dir = data_root() / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    temp_path = upload_dir / Path(file.filename or "resume.txt").name
+    temp_path.write_bytes(await file.read())
+
+    resume_text = await read_resume_text(str(temp_path))
+    tags = await assessment_service.resume_parser.parse(resume_text, _require_config(job_key))
+    return {"status": "ok", "candidate": tags}
+
+
+def _require_config(job_key: str) -> dict:
+    """取岗位配置，缺失直接 400。配置错了不该等到解析完才发现。"""
+    config = get_job_config_object(job_key)
+    if config is None:
+        raise HTTPException(status_code=400, detail=f"岗位配置不存在或已删除：{job_key}")
+    return config
 
 
 @app.get("/session/{session_id}")
@@ -678,44 +722,259 @@ async def debug_ai_status(test: bool = True) -> dict:
     """诊断 AI 配置：在浏览器打开 https://your-space.ms.show/debug/ai-status
     会显示：key 是否读到、base_url / model 是什么、（可选）实际调一次 AI 看回什么错。
     不暴露完整 key。"""
-    from app.deepseek_client import DeepSeekClient
-    client = DeepSeekClient()
+    from app.llm_client import LLMClient
+    client = LLMClient()
     status = client.config_status()
     if test:
-        status["test_call"] = await client.test_call()
+        try:
+            status["test_call"] = (await client.chat("你是助手。", "回复两个字：正常"))[:200]
+        except Exception as exc:
+            status["test_call"] = f"调用失败：{type(exc).__name__}: {str(exc)[:300]}"
     return status
 
 
-@app.post("/candidate/start")
-async def candidate_start(session_id: str = Form(...)) -> dict:
-    session = get_session(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    return await assessment_service.launch_candidate_session(session_id, session)
-
-
 @app.post("/assessment/start")
-async def start_assessment(candidate_id: str = Form(...), job_name: str = Form(...)) -> dict:
-    return await assessment_service.start_assessment(candidate_id, job_name)
+async def start_assessment(
+    job_key: str = Form(...),
+    file: UploadFile = File(...),
+    candidate_name: str = Form(""),
+) -> dict:
+    """上传简历开始测评。"""
+    upload_dir = data_root() / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    temp_path = upload_dir / Path(file.filename or "resume.txt").name
+    temp_path.write_bytes(await file.read())
+
+    resume_text = await read_resume_text(str(temp_path))
+    try:
+        return await assessment_service.start(
+            job_key=job_key, resume_text=resume_text, candidate_name=candidate_name
+        )
+    except AssessmentError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.post("/assessment/next")
 async def next_question(session_id: str = Form(...), user_answer: str = Form(...)) -> dict:
-    return await assessment_service.next_question(session_id, user_answer)
+    """候选人回一句话。内部会自动判断是否触发 RAG 旁路与是否收尾。"""
+    try:
+        return await assessment_service.handle_turn(session_id, user_answer)
+    except AssessmentError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
 
 @app.post("/assessment/finish")
 async def finish_assessment(session_id: str = Form(...)) -> dict:
-    return await assessment_service.finish_assessment(session_id)
+    try:
+        return await assessment_service.finish(session_id)
+    except AssessmentError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
+
+@app.get("/hr/report/{session_id}")
+async def hr_report(
+    session_id: str,
+    _user: str = Depends(_require_hr_user),
+) -> dict:
+    """完整测评报告：静态分 + 对话意向 + 对话摘要 + 备选岗位推荐。
+
+    与 /hr/result 的区别：这里用组装层把三层数据合并成一份可读结论。
+    """
+    return assessment_service.build_report(session_id)
+
+
+@app.get("/candidate/result/{session_id}")
+async def candidate_result(session_id: str) -> dict:
+    """候选人侧结果。物理上只返回 candidate_msg，不含分数与备选岗。"""
+    view = get_candidate_view(session_id)
+    if not view:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return view
+
+
+# 挂载顺序是硬约束，不能调换：Starlette 的 Mount 正则是 ^/hr/jobs/(?P<path>.*)$，
+# 而 ^/hr/(?P<path>.*)$ 会把 /hr/jobs 也完整匹配掉。所以岗位管理必须先挂，
+# 工作台后挂，否则 /hr/jobs/ 会被工作台吞掉。
+_HR_THEME = gr.themes.Soft(primary_hue="blue", neutral_hue="slate")
+
+# 手敲 /hr/jobs（不带尾斜杠）要走这里：它不匹配上面的 Mount，会掉进
+# /hr mount 当成工作台的子路径，直接 404。挂载前的普通路由优先于 Mount。
+# 页面里的导航链接本来就带斜杠，但登录跳转的 ?next= 不会 —— session 过期
+# 落回来时带的就是用户原来敲的地址。
+@app.get("/hr/jobs", include_in_schema=False)
+async def redirect_job_manager() -> RedirectResponse:
+    return RedirectResponse(url="/hr/jobs/", status_code=307)
 
 app = gr.mount_gradio_app(
     app,
-    build_hr_ui(),
+    build_job_manager_ui(),
     # HR 工作台挂到 /hr：避开 FastAPI @app.get("/")（返回 JSON health check），
     # 这样 /hr 真正显示 Gradio UI，/ 仍然是轻量 health check 端点。
     # FastAPI 的 /candidate /assessment /hr/* 路由不受影响。
-    path="/hr",
-    theme=gr.themes.Soft(primary_hue="blue", neutral_hue="slate"),
+    path="/hr/jobs",
+    theme=_HR_THEME,
     css=HR_UI_CSS,
 )
+
+app = gr.mount_gradio_app(
+    app,
+    build_workbench_ui(),
+    path="/hr",
+    theme=_HR_THEME,
+    css=HR_UI_CSS,
+)
+
+
+# ---------------------------------------------------------------------------
+# 岗位配置管理（HR 后台）
+# ---------------------------------------------------------------------------
+# 全部要求登录。生成与保存是两步：/generate 只做预览不落库，
+# HR 改完预览里的分值/阈值，再调 /save 落库 —— 落库默认 pending，
+# 还要再调 /review 标记复核，两个动作不能合并。
+# 合并的话「AI 生成的配置」和「HR 确认过的配置」就再也分不开了。
+
+@app.get("/api/job/list")
+async def api_job_list(
+    include_deleted: bool = False,
+    _user: str = Depends(_require_hr_user),
+) -> dict:
+    configs = list_job_configs(include_deleted=include_deleted)
+    return {"items": configs, "total": len(configs)}
+
+
+@app.get("/api/job/{job_key}")
+async def api_job_get(
+    job_key: str,
+    include_deleted: bool = False,
+    _user: str = Depends(_require_hr_user),
+) -> dict:
+    record = get_job_config(job_key, include_deleted=include_deleted)
+    if not record:
+        raise HTTPException(status_code=404, detail=f"岗位不存在：{job_key}")
+    return record
+
+
+@app.post("/api/job/generate")
+async def api_job_generate(
+    request: Request,
+    _user: str = Depends(_require_hr_user),
+) -> dict:
+    """JD → 配置预览。**不落库。**"""
+    payload = await _read_json(request)
+    jd_text = str(payload.get("jd") or "").strip()
+    if not jd_text:
+        raise HTTPException(status_code=400, detail="jd 不能为空")
+
+    try:
+        result = await JobConfigGenerator().generate(
+            jd_text, job_key=payload.get("job_key")
+        )
+    except JobGenerationError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    if result["errors"]:
+        raise HTTPException(status_code=422, detail=result["errors"])
+    return result
+
+
+@app.post("/api/job/save")
+async def api_job_save(
+    request: Request,
+    _user: str = Depends(_require_hr_user),
+) -> dict:
+    """保存岗位配置。source=auto_llm 表示来自 JD 生成，默认 pending 待复核。"""
+    payload = await _read_json(request)
+    config = payload.get("config")
+    if not isinstance(config, dict):
+        raise HTTPException(status_code=400, detail="config 必须是对象")
+
+    source_type = str(payload.get("source_type") or "manual")
+    raw_jd = payload.get("raw_jd")
+    # 待复核状态由 review_status 显式传入，不从 config 里读 ——
+    # config 里的 review_status 是模型给的，不能当成人的意思
+    review_status = str(payload.get("review_status") or "pending")
+
+    try:
+        return save_job_config(
+            config,
+            source_type=source_type,
+            raw_jd=str(raw_jd) if raw_jd else None,
+            review_status=review_status,
+        )
+    except JobConfigError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors) from exc
+
+
+@app.post("/api/job/{job_key}/review")
+async def api_job_review(
+    job_key: str,
+    request: Request,
+    _user: str = Depends(_require_hr_user),
+) -> dict:
+    """人工复核标记。pending → reviewed。
+
+    仅供追溯「这份规则谁确认过」。测评链路不读这个字段，
+    pending 的配置同样可以正常发起测评。
+    """
+    payload = await _read_json(request)
+    review_status = str(payload.get("review_status") or "")
+    if review_status not in ("pending", "reviewed"):
+        raise HTTPException(status_code=400, detail="review_status 必须是 pending 或 reviewed")
+    if not get_job_config(job_key):
+        raise HTTPException(status_code=404, detail=f"岗位不存在：{job_key}")
+    return update_job_config_meta(job_key, review_status=review_status)
+
+
+@app.post("/api/job/{job_key}/copy")
+async def api_job_copy(
+    job_key: str,
+    request: Request,
+    _user: str = Depends(_require_hr_user),
+) -> dict:
+    """复制岗位配置。复制品一律 pending —— 改过了就得重看一遍。"""
+    payload = await _read_json(request)
+    source = get_job_config_object(job_key)
+    if not source:
+        raise HTTPException(status_code=404, detail=f"岗位不存在：{job_key}")
+
+    new_key = str(payload.get("job_key") or "").strip() or f"{job_key}_copy"
+    if not is_valid_job_key(new_key):
+        raise HTTPException(status_code=400, detail="job_key 只能包含小写字母、数字和下划线")
+    if get_job_config(new_key):
+        raise HTTPException(status_code=409, detail=f"岗位已存在：{new_key}")
+
+    duplicate = dict(source)
+    duplicate["job_key"] = new_key
+    if payload.get("job_name"):
+        duplicate["job_name"] = str(payload["job_name"])
+    # 一岗一库：复制品必须换 rag_doc_id，否则两个岗位共用一份知识库，
+    # 违反 RAG 约定 4（各岗位独立 rag_doc_id 隔离）。
+    duplicate["rag_doc_id"] = new_key
+    duplicate["review_status"] = "pending"
+
+    try:
+        return save_job_config(duplicate, source_type="manual", review_status="pending")
+    except JobConfigError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors) from exc
+
+
+@app.delete("/api/job/{job_key}")
+async def api_job_delete(
+    job_key: str,
+    hard: bool = False,
+    _user: str = Depends(_require_hr_user),
+) -> dict:
+    """默认软删。历史测评记录按 job_key 关联岗位，硬删会留下悬空引用。"""
+    if not delete_job_config(job_key, hard=hard):
+        raise HTTPException(status_code=404, detail=f"岗位不存在或已删除：{job_key}")
+    return {"job_key": job_key, "hard_deleted": hard}
+
+
+async def _read_json(request: Request) -> dict:
+    try:
+        payload = await request.json()
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="请求体不是合法 JSON") from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="请求体必须是 JSON 对象")
+    return payload

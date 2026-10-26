@@ -1,0 +1,1201 @@
+- generic [active] [ref=f56e1]:
+  - generic [ref=f56e3]:
+    - link "原创力文档 知识共享平台" [ref=f56e5] [cursor=pointer]:
+      - /url: https://max.book118.com
+      - strong [ref=f56e7]: 原创力文档
+      - generic [ref=f56e8]: 知识共享平台
+    - list [ref=f56e9]:
+      - listitem [ref=f56e10]:
+        - link "文档分类" [ref=f56e11] [cursor=pointer]:
+          - /url: /html/docs/
+      - listitem [ref=f56e13]:
+        - link "免费文档" [ref=f56e14] [cursor=pointer]:
+          - /url: /free
+      - listitem [ref=f56e15]:
+        - link "VIP精选" [ref=f56e16] [cursor=pointer]:
+          - /url: /user_center_v1/home/vip/doc.html
+    - generic [ref=f56e19]:
+      - textbox "原创力文档-5亿文档供您搜" [ref=f56e20]:
+        - /placeholder: 中国工商银行工银科技招聘笔试真题2023
+      - button "" [ref=f56e21] [cursor=pointer]
+    - list [ref=f56e22]:
+      - listitem [ref=f56e23]:
+        - link " 关注我们" [ref=f56e24] [cursor=pointer]:
+          - /url: javascript:;
+          - generic [ref=f56e25]: 
+          - generic [ref=f56e26]: 关注我们
+      - listitem [ref=f56e27]:
+        - link " 我要上传" [ref=f56e28] [cursor=pointer]:
+          - /url: /upload.html?from=top
+          - generic [ref=f56e29]: 
+          - generic [ref=f56e30]: 我要上传
+      - listitem [ref=f56e31]:
+        - link " 足迹" [ref=f56e32] [cursor=pointer]:
+          - /url: /user_center_v1/user/Document/myBrowse.html
+          - generic [ref=f56e33]: 
+          - generic [ref=f56e34]: 足迹
+      - listitem [ref=f56e35]:
+        - link " 未登录" [ref=f56e36] [cursor=pointer]:
+          - /url: javascript:;
+          - generic [ref=f56e37]: 
+          - generic [ref=f56e38]: 未登录
+  - list [ref=f56e40]:
+    - listitem [ref=f56e41]: 您所在位置：
+    - listitem [ref=f56e42]:
+      - link "网站首页" [ref=f56e43] [cursor=pointer]:
+        - /url: https://max.book118.com
+    - listitem [ref=f56e44]:
+      - link "文档分类" [ref=f56e46] [cursor=pointer]:
+        - /url: /html/docs/
+    - listitem [ref=f56e47]:
+      - link "资格/认证考试" [ref=f56e49] [cursor=pointer]:
+        - /url: /doclist/list-669.html
+    - listitem [ref=f56e50]:
+      - link "银行从业资格" [ref=f56e52] [cursor=pointer]:
+        - /url: /doclist/list-688.html
+  - generic [ref=f56e53]:
+    - generic [ref=f56e54]:
+      - generic [ref=f56e55]:
+        - heading [level=1] [ref=f56e58]:
+          - text: 中国工商银行工银科技招聘笔试真题2023.pdf
+          - emphasis [ref=f56e59]: VIP
+        - list [ref=f56e60]:
+          - listitem [ref=f56e61]:
+            - link " 下载本文档" [ref=f56e62] [cursor=pointer]:
+              - /url: javascript:;
+      - list [ref=f56e64]:
+        - listitem [ref=f56e65]:  270
+        - listitem [ref=f56e67]:  1
+        - listitem [ref=f56e69]: 约6.62千字
+        - listitem [ref=f56e71]: 约 9页
+        - listitem [ref=f56e73]: 2024-09-21 发布于江苏
+        - listitem [ref=f56e75]:
+          - link " 举报" [ref=f56e76] [cursor=pointer]:
+            - /url: javascript:;
+      - generic [ref=f56e78]:
+        - generic [ref=f56e79]:
+          - generic [ref=f56e83]:
+            - text: 1/
+            - emphasis [ref=f56e84]: "9"
+            - text: 页
+          - generic [ref=f56e86]:
+            - list [ref=f56e87]:
+              - listitem [ref=f56e88]:
+                - link "GB_T20221-2023无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材" [ref=f56e89] [cursor=pointer]:
+                  - /url: /search.html?q=GB_T20221-2023无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材
+              - listitem [ref=f56e90]:
+                - link "《无压埋地排污，排水用硬聚氯乙烯(PVC-U)管材》(GB/T20221-2023)" [ref=f56e91] [cursor=pointer]:
+                  - /url: /search.html?q=《无压埋地排污，排水用硬聚氯乙烯(PVC-U)管材》(GB/T20221-2023)
+              - listitem [ref=f56e92]:
+                - link "GB_T 20221-2023 无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材" [ref=f56e93] [cursor=pointer]:
+                  - /url: /search.html?q=GB_T 20221-2023 无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材
+              - listitem [ref=f56e94]:
+                - link "《GB20221-2016-T无压埋地排污、排水用硬聚氯乙烯(PVC-U)管材》" [ref=f56e95] [cursor=pointer]:
+                  - /url: /search.html?q=《GB20221-2016-T无压埋地排污、排水用硬聚氯乙烯(PVC-U)管材》
+              - listitem [ref=f56e96]:
+                - link "GB/T20221-2006无压埋地排污、排水用硬聚氯乙烯(PVC-U)管材" [ref=f56e97] [cursor=pointer]:
+                  - /url: /search.html?q=GB/T20221-2006无压埋地排污、排水用硬聚氯乙烯(PVC-U)管材
+              - listitem [ref=f56e98]:
+                - link "GB/T 20221-2023<<无压埋地排污、排水用硬质聚氯乙烯（PVC-U）管材>>" [ref=f56e99] [cursor=pointer]:
+                  - /url: /search.html?q=GB/T 20221-2023<<无压埋地排污、排水用硬质聚氯乙烯（PVC-U）管材>>
+              - listitem [ref=f56e100]:
+                - link "无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材" [ref=f56e101] [cursor=pointer]:
+                  - /url: /search.html?q=无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材
+              - listitem [ref=f56e102]:
+                - link "GB_T20221-2023无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材正式版" [ref=f56e103] [cursor=pointer]:
+                  - /url: /search.html?q=GB_T20221-2023无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材正式版
+              - listitem [ref=f56e104]:
+                - link "GB/T 20221-2023无压埋地排污、排水用硬聚氯乙烯(PVC-U)管材" [ref=f56e105] [cursor=pointer]:
+                  - /url: /search.html?q=GB/T 20221-2023无压埋地排污、排水用硬聚氯乙烯(PVC-U)管材
+              - listitem [ref=f56e106]:
+                - link "GB_T 20221-2023 无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材正式版" [ref=f56e107] [cursor=pointer]:
+                  - /url: /search.html?q=GB_T 20221-2023 无压埋地排污、排水用硬聚氯乙烯（PVC-U）管材正式版
+            - link "站内产品 VIP去掉" [ref=f56e108] [cursor=pointer]:
+              - /url: /user_center_v1/home/vip/open?from=detail_close_re_vip_open
+          - generic [ref=f56e113]:
+            - text: 2/
+            - emphasis [ref=f56e114]: "9"
+            - text: 页
+          - generic [ref=f56e116]:
+            - generic [ref=f56e117]:
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - generic [ref=f56e118]: 预览加载中，请您耐心等待几秒...
+            - generic [ref=f56e120]:
+              - text: 3/
+              - emphasis [ref=f56e121]: "9"
+              - text: 页
+          - generic [ref=f56e123]:
+            - generic [ref=f56e124]:
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - emphasis
+              - generic [ref=f56e125]: 预览加载中，请您耐心等待几秒...
+            - generic [ref=f56e127]:
+              - text: 4/
+              - emphasis [ref=f56e128]: "9"
+              - text: 页
+        - button "剩余5页未预览，下载后可查看全文 " [ref=f56e133] [cursor=pointer]:
+          - generic [ref=f56e134]: 剩余5页未预览，下载后可查看全文
+          - text: 
+        - generic [ref=f56e137]:
+          - list [ref=f56e138]:
+            - listitem
+            - listitem [ref=f56e139]:
+              - textbox [ref=f56e140]: "1"
+              - text: / 9
+            - listitem [ref=f56e141]:
+              - link "" [ref=f56e142] [cursor=pointer]:
+                - /url: javascript:;
+            - listitem [ref=f56e143]:
+              - link "" [ref=f56e144] [cursor=pointer]:
+                - /url: javascript:;
+            - listitem
+            - listitem [ref=f56e145]:
+              - link "" [ref=f56e146] [cursor=pointer]:
+                - /url: javascript:;
+          - list [ref=f56e147]:
+            - listitem [ref=f56e148]:
+              - link " 下载本文档" [ref=f56e149] [cursor=pointer]:
+                - /url: javascript:;
+            - listitem [ref=f56e150]:
+              - link " 收藏" [ref=f56e151] [cursor=pointer]:
+                - /url: javascript:;
+                - generic [ref=f56e152]: 
+                - generic [ref=f56e153]: 收藏
+            - listitem [ref=f56e154]:
+              - link " 分享赚钱 奖" [ref=f56e155] [cursor=pointer]:
+                - /url: javascript:;
+                - generic [ref=f56e156]: 
+                - generic [ref=f56e157]: 分享赚钱
+                - generic [ref=f56e158]: 奖
+      - generic [ref=f56e159]:
+        - list [ref=f56e160]:
+          - listitem [ref=f56e161]:
+            - link "文本预览 " [ref=f56e162] [cursor=pointer]:
+              - /url: javascript:;
+          - listitem [ref=f56e163]:
+            - link "常见问题" [ref=f56e164] [cursor=pointer]:
+              - /url: /html/xzcj.html
+        - generic [ref=f56e167]:
+          - paragraph [ref=f56e168]: 根据考友回忆整理精选真题
+          - paragraph [ref=f56e169]: 中国工商银行工银科技招聘笔试真题
+          - paragraph [ref=f56e170]: "2023"
+          - paragraph [ref=f56e171]: （满分100分时间120分钟）
+          - paragraph [ref=f56e172]: 一、单选题（每题只有一个正确答案，答错、不答或多答均不得分）
+          - paragraph [ref=f56e173]: 1.根据《民法典》的规定,当事人在保证合同中对保证方式没有约定或者约定不明确的,按照（）
+          - paragraph [ref=f56e174]: 承担保证责任。
+          - paragraph [ref=f56e175]: A.连带责任保证
+          - paragraph [ref=f56e176]: B.一般保证
+          - paragraph [ref=f56e177]: C.特殊保证
+          - paragraph [ref=f56e178]: D.有限责任保证
+          - paragraph [ref=f56e179]: 【答案】：B
+          - paragraph [ref=f56e180]: 2.下列不属于单位结算账户是（）。
+          - paragraph [ref=f56e181]: A.基本存款账户
+          - paragraph [ref=f56e182]: B.一般存款账户
+          - paragraph [ref=f56e183]: C.临时存款账户
+          - paragraph [ref=f56e184]: D.长期存款账户
+          - paragraph [ref=f56e185]: 【答案】：D
+          - paragraph [ref=f56e186]: 3.当外审机构（）,银行可以委托其从事外部审计业务。
+          - paragraph [ref=f56e187]: A.专业胜任能力、从事银行业金融机构审计的经验、风险承受能力明显不足的
+          - paragraph [ref=f56e188]: B.对金融法规、银行业金融机构业务流程、内部控制制度以及各种风险管理政策不熟悉
+          - paragraph [ref=f56e189]: C.与被审计机构存在关联关系,可能影响审计独立性的
+          - paragraph [ref=f56e190]: D.存在欺诈和舞弊行为,在执业经历中受过行政处罚、刑事处罚且已满4年的
+          - paragraph [ref=f56e191]: 【答案】：D
+          - paragraph [ref=f56e192]: 4.（）是我国商业银行最为传统、最为熟悉的信贷业务,但同时也是企
+      - generic [ref=f56e195]:
+        - heading "您可能关注的文档" [level=3] [ref=f56e197]
+        - generic [ref=f56e198]:
+          - list [ref=f56e199]:
+            - listitem [ref=f56e200]:
+              - link "中国工商银行厦门市分行招聘笔试真题2023.pdf" [ref=f56e201] [cursor=pointer]:
+                - /url: /html/2024/0919/6013040101010223.shtm
+            - listitem [ref=f56e203]:
+              - link "六盘水市六枝特区选聘城市社区工作者笔试真题2023.pdf" [ref=f56e204] [cursor=pointer]:
+                - /url: /html/2024/0919/7012035052006153.shtm
+            - listitem [ref=f56e206]:
+              - link "商丘市梁园区事业单位引进笔试真题2023.pdf" [ref=f56e207] [cursor=pointer]:
+                - /url: /html/2024/0919/8011035045006127.shtm
+            - listitem [ref=f56e209]:
+              - link "岳阳汨罗市事业单位招聘笔试真题2023.pdf" [ref=f56e210] [cursor=pointer]:
+                - /url: /html/2024/0919/5014112122011322.shtm
+            - listitem [ref=f56e212]:
+              - link "河北省地矿局事业单位选聘工作人员笔试真题2023.pdf" [ref=f56e213] [cursor=pointer]:
+                - /url: /html/2024/0919/8011046045006127.shtm
+            - listitem [ref=f56e215]:
+              - link "牡丹江海林市招聘公益性岗位笔试真题2023.pdf" [ref=f56e216] [cursor=pointer]:
+                - /url: /html/2024/0919/6013110101010223.shtm
+            - listitem [ref=f56e218]:
+              - link "石家庄市正定县公安局招录警务辅助人员笔试真题2023.pdf" [ref=f56e219] [cursor=pointer]:
+                - /url: /html/2024/0919/7012062052006153.shtm
+            - listitem [ref=f56e221]:
+              - link "齐齐哈尔计划招录定向选调生笔试真题2023.pdf" [ref=f56e222] [cursor=pointer]:
+                - /url: /html/2024/0919/8011057045006127.shtm
+            - listitem [ref=f56e224]:
+              - link "中国工商银行工银瑞信招聘笔试真题2023.pdf" [ref=f56e225] [cursor=pointer]:
+                - /url: /html/2024/0919/8011123045006127.shtm
+            - listitem [ref=f56e227]:
+              - link "中国工商银行河北雄安分行招聘笔试真题2023.pdf" [ref=f56e228] [cursor=pointer]:
+                - /url: /html/2024/0919/6013223101010223.shtm
+          - list [ref=f56e230]:
+            - listitem [ref=f56e231]:
+              - link "（共49页PPT）期中考试成绩分析指导主题班会课件1.pptx" [ref=f56e232] [cursor=pointer]:
+                - /url: /html/2026/1021/7121156144011162.shtm
+            - listitem [ref=f56e234]:
+              - link "（共40页PPT）文庙·锦某省市摄影大某省市光影·皋城印象主题活动策划方某省市地标】.pptx" [ref=f56e235] [cursor=pointer]:
+                - /url: /html/2026/1021/6014233204012233.shtm
+            - listitem [ref=f56e237]:
+              - link "（共40页PPT）语文开学第一课.pptx" [ref=f56e238] [cursor=pointer]:
+                - /url: /html/2026/1021/6022055204012233.shtm
+            - listitem [ref=f56e240]:
+              - link "（共42页PPT）别告诉我你懂.pptx" [ref=f56e241] [cursor=pointer]:
+                - /url: /html/2026/1021/8033132114010135.shtm
+            - listitem [ref=f56e243]:
+              - link "（共42页PPT）城南优品道星光广场招商发布会策划案.pptx" [ref=f56e244] [cursor=pointer]:
+                - /url: /html/2026/1021/6044114204012233.shtm
+            - listitem [ref=f56e246]:
+              - link "（共42页PPT）高尔夫协会酒会活动策划方案.ppt" [ref=f56e247] [cursor=pointer]:
+                - /url: /html/2026/1021/8035141114010135.shtm
+            - listitem [ref=f56e249]:
+              - link "（共43页PPT）环保危险废物鉴别培训.pptx" [ref=f56e250] [cursor=pointer]:
+                - /url: /html/2026/1021/5143204301013333.shtm
+            - listitem [ref=f56e252]:
+              - link "（共43页PPT）有限空间作业安全培训.ppt" [ref=f56e253] [cursor=pointer]:
+                - /url: /html/2026/1021/5211141301013333.shtm
+            - listitem [ref=f56e255]:
+              - link "（共38页PPT）正交试验基本方法.ppt" [ref=f56e256] [cursor=pointer]:
+                - /url: /html/2026/1021/7121153135011162.shtm
+            - listitem [ref=f56e258]:
+              - link "（共40页PPT）安佳BrandIdentitymunication提案.pptx" [ref=f56e259] [cursor=pointer]:
+                - /url: /html/2026/1021/5342220300013333.shtm
+      - generic [ref=f56e261]:
+        - heading "最近下载" [level=3] [ref=f56e263]
+        - generic [ref=f56e264]:
+          - list:
+            - listitem [ref=f56e265]:
+              - link "复合软包装材料与工艺40-456.ppt VIP" [ref=f56e266] [cursor=pointer]:
+                - /url: /html/2019/0511/5011313031002034.shtm
+                - generic [ref=f56e268]: 复合软包装材料与工艺40-456.ppt
+                - emphasis [ref=f56e269]: VIP
+            - listitem [ref=f56e270]:
+              - link "复合软包装材料与工艺01-50.pdf VIP" [ref=f56e271] [cursor=pointer]:
+                - /url: /html/2017/0512/106375474.shtm
+                - generic [ref=f56e273]: 复合软包装材料与工艺01-50.pdf
+                - emphasis [ref=f56e274]: VIP
+            - listitem [ref=f56e275]:
+              - link "伤害监测工作实施方案.docx VIP" [ref=f56e276] [cursor=pointer]:
+                - /url: /html/2024/0222/8104045041006037.shtm
+                - generic [ref=f56e278]: 伤害监测工作实施方案.docx
+                - emphasis [ref=f56e279]: VIP
+            - listitem [ref=f56e280]:
+              - link "专题 03 选择性必修上册第三单元“多样文化”主题作文导写-高考语文作文复习之教材单元主题作文导写.docx VIP" [ref=f56e281] [cursor=pointer]:
+                - /url: /html/2025/0521/6021023201011131.shtm
+                - generic [ref=f56e283]: 专题 03 选择性必修上册第三单元“多样文化”主题作文导写-高考语文作文复习之教材单元主题作文导写.docx
+                - emphasis [ref=f56e284]: VIP
+            - listitem [ref=f56e285]:
+              - link "《水利水电工程鱼道设计导则》SL609-2020条文说明.pdf VIP" [ref=f56e286] [cursor=pointer]:
+                - /url: /html/2023/0624/7060026200005124.shtm
+                - generic [ref=f56e288]: 《水利水电工程鱼道设计导则》SL609-2020条文说明.pdf
+                - emphasis [ref=f56e289]: VIP
+            - listitem [ref=f56e290]:
+              - link "四川省成都市树德实验中学2024-2025学年八年级上学期期中考试数学试卷（含答案）.pdf VIP" [ref=f56e291] [cursor=pointer]:
+                - /url: /html/2025/1020/6215155013012001.shtm
+                - generic [ref=f56e293]: 四川省成都市树德实验中学2024-2025学年八年级上学期期中考试数学试卷（含答案）.pdf
+                - emphasis [ref=f56e294]: VIP
+            - listitem [ref=f56e295]:
+              - link "建设工程设计合同示范文本(专业建设工程)gf—2015—0210.doc VIP" [ref=f56e296] [cursor=pointer]:
+                - /url: /html/2017/0527/109495676.shtm
+                - generic [ref=f56e298]: 建设工程设计合同示范文本(专业建设工程)gf—2015—0210.doc
+                - emphasis [ref=f56e299]: VIP
+            - listitem [ref=f56e300]:
+              - link "深静脉血栓的预防及护理课件.pptx VIP" [ref=f56e301] [cursor=pointer]:
+                - /url: /html/2024/0427/6143153213010122.shtm
+                - generic [ref=f56e303]: 深静脉血栓的预防及护理课件.pptx
+                - emphasis [ref=f56e304]: VIP
+            - listitem [ref=f56e305]:
+              - link "深静脉血栓预防及护理课件.pptx VIP" [ref=f56e306] [cursor=pointer]:
+                - /url: /html/2024/0121/7020030001006033.shtm
+                - generic [ref=f56e308]: 深静脉血栓预防及护理课件.pptx
+                - emphasis [ref=f56e309]: VIP
+            - listitem [ref=f56e310]:
+              - link "半导体器件物理.pptx VIP" [ref=f56e311] [cursor=pointer]:
+                - /url: /html/2026/0824/5234213233013311.shtm
+                - generic [ref=f56e313]: 半导体器件物理.pptx
+                - emphasis [ref=f56e314]: VIP
+      - generic [ref=f56e315]:
+        - heading "文档评论（0）" [level=3] [ref=f56e317]
+        - generic [ref=f56e318]:
+          - textbox "请自觉遵守互联网相关的政策法规，严禁发布色情、暴力、反动的言论。" [ref=f56e319]
+          - button "发表评论" [disabled] [ref=f56e321]
+    - generic [ref=f56e323]:
+      - generic [ref=f56e324]:
+        - heading "相关文档" [level=3] [ref=f56e325]
+        - link "更多 >" [ref=f56e327] [cursor=pointer]:
+          - /url: /search.html?q=%E4%B8%AD%E5%9B%BD%E5%B7%A5%E5%95%86%E9%93%B6%E8%A1%8C%E5%B7%A5%E9%93%B6%E7%A7%91%E6%8A%80%E6%8B%9B%E8%81%98%E7%AC%94%E8%AF%95%E7%9C%9F%E9%A2%982023&from=detail_side_similar
+      - list [ref=f56e329]:
+        - listitem [ref=f56e330]:
+          - link "中国工商银行工银理财招聘笔试真题2023.pdf           3.5 2024-09-16 9页 VIP" [ref=f56e331] [cursor=pointer]:
+            - /url: /html/2024/0916/6212110144010222.shtm
+            - strong [ref=f56e332]:
+              - generic [ref=f56e334]: 中国工商银行工银理财招聘笔试真题2023.pdf
+            - generic [ref=f56e335]:
+              - generic [ref=f56e336]:
+                - generic [ref=f56e337]:
+                  - generic [ref=f56e338]:
+                    - generic [ref=f56e339]: 
+                    - generic [ref=f56e341]: 
+                  - generic [ref=f56e343]:
+                    - generic [ref=f56e344]: 
+                    - generic [ref=f56e346]: 
+                  - generic [ref=f56e348]:
+                    - generic [ref=f56e349]: 
+                    - generic [ref=f56e351]: 
+                  - generic [ref=f56e353]:
+                    - generic [ref=f56e354]: 
+                    - generic [ref=f56e356]: 
+                  - generic [ref=f56e358]:
+                    - generic [ref=f56e359]: 
+                    - generic: 
+                - emphasis [ref=f56e362]: "3.5"
+              - generic [ref=f56e363]:
+                - text: 2024-09-169页
+                - emphasis [ref=f56e365]: VIP
+        - listitem [ref=f56e366]:
+          - link "中国工商银行工银金融租赁有限公司招聘笔试真题2023.pdf           4.0 2024-09-15 9页 VIP" [ref=f56e367] [cursor=pointer]:
+            - /url: /html/2024/0915/6201111130010222.shtm
+            - strong [ref=f56e368]:
+              - generic [ref=f56e370]: 中国工商银行工银金融租赁有限公司招聘笔试真题2023.pdf
+            - generic [ref=f56e371]:
+              - generic [ref=f56e372]:
+                - generic [ref=f56e373]:
+                  - generic [ref=f56e374]:
+                    - generic [ref=f56e375]: 
+                    - generic [ref=f56e377]: 
+                  - generic [ref=f56e379]:
+                    - generic [ref=f56e380]: 
+                    - generic [ref=f56e382]: 
+                  - generic [ref=f56e384]:
+                    - generic [ref=f56e385]: 
+                    - generic [ref=f56e387]: 
+                  - generic [ref=f56e389]:
+                    - generic [ref=f56e390]: 
+                    - generic [ref=f56e392]: 
+                  - generic [ref=f56e394]:
+                    - generic [ref=f56e395]: 
+                    - generic: 
+                - emphasis [ref=f56e398]: "4.0"
+              - generic [ref=f56e399]:
+                - text: 2024-09-159页
+                - emphasis [ref=f56e401]: VIP
+        - listitem [ref=f56e402]:
+          - link "中国工商银行度工银科技有限公司招聘笔试题库2025.pdf           4.3 2025-02-22 66页" [ref=f56e403] [cursor=pointer]:
+            - /url: /html/2025/0222/8031071024007034.shtm
+            - strong [ref=f56e404]:
+              - generic [ref=f56e406]: 中国工商银行度工银科技有限公司招聘笔试题库2025.pdf
+            - generic [ref=f56e407]:
+              - generic [ref=f56e408]:
+                - generic [ref=f56e409]:
+                  - generic [ref=f56e410]:
+                    - generic [ref=f56e411]: 
+                    - generic [ref=f56e413]: 
+                  - generic [ref=f56e415]:
+                    - generic [ref=f56e416]: 
+                    - generic [ref=f56e418]: 
+                  - generic [ref=f56e420]:
+                    - generic [ref=f56e421]: 
+                    - generic [ref=f56e423]: 
+                  - generic [ref=f56e425]:
+                    - generic [ref=f56e426]: 
+                    - generic [ref=f56e428]: 
+                  - generic [ref=f56e430]:
+                    - generic [ref=f56e431]: 
+                    - generic [ref=f56e433]: 
+                - emphasis [ref=f56e435]: "4.3"
+              - generic [ref=f56e436]: 2025-02-2266页
+        - listitem [ref=f56e438]:
+          - link "中国工商银行工银瑞信招聘笔试真题2023.pdf           4.0 2024-09-19 9页 VIP" [ref=f56e439] [cursor=pointer]:
+            - /url: /html/2024/0919/8011123045006127.shtm
+            - strong [ref=f56e440]:
+              - generic [ref=f56e442]: 中国工商银行工银瑞信招聘笔试真题2023.pdf
+            - generic [ref=f56e443]:
+              - generic [ref=f56e444]:
+                - generic [ref=f56e445]:
+                  - generic [ref=f56e446]:
+                    - generic [ref=f56e447]: 
+                    - generic [ref=f56e449]: 
+                  - generic [ref=f56e451]:
+                    - generic [ref=f56e452]: 
+                    - generic [ref=f56e454]: 
+                  - generic [ref=f56e456]:
+                    - generic [ref=f56e457]: 
+                    - generic [ref=f56e459]: 
+                  - generic [ref=f56e461]:
+                    - generic [ref=f56e462]: 
+                    - generic [ref=f56e464]: 
+                  - generic [ref=f56e466]:
+                    - generic [ref=f56e467]: 
+                    - generic: 
+                - emphasis [ref=f56e470]: "4.0"
+              - generic [ref=f56e471]:
+                - text: 2024-09-199页
+                - emphasis [ref=f56e473]: VIP
+        - listitem [ref=f56e474]:
+          - link "2026中国工商银行工银科技校园招聘备考题库及答案详解（真题汇编）.docx           3.8 2025-12-16 46页 VIP" [ref=f56e475] [cursor=pointer]:
+            - /url: /html/2025/1216/5123344320013033.shtm
+            - strong [ref=f56e476]:
+              - generic [ref=f56e478]: 2026中国工商银行工银科技校园招聘备考题库及答案详解（真题汇编）.docx
+            - generic [ref=f56e479]:
+              - generic [ref=f56e480]:
+                - generic [ref=f56e481]:
+                  - generic [ref=f56e482]:
+                    - generic [ref=f56e483]: 
+                    - generic [ref=f56e485]: 
+                  - generic [ref=f56e487]:
+                    - generic [ref=f56e488]: 
+                    - generic [ref=f56e490]: 
+                  - generic [ref=f56e492]:
+                    - generic [ref=f56e493]: 
+                    - generic [ref=f56e495]: 
+                  - generic [ref=f56e497]:
+                    - generic [ref=f56e498]: 
+                    - generic [ref=f56e500]: 
+                  - generic [ref=f56e502]:
+                    - generic [ref=f56e503]: 
+                    - generic: 
+                - emphasis [ref=f56e506]: "3.8"
+              - generic [ref=f56e507]:
+                - text: 2025-12-1646页
+                - emphasis [ref=f56e509]: VIP
+        - listitem [ref=f56e510]:
+          - link "2026中国工商银行工银科技校园招聘备考题库及答案详解（各地真题）.docx           3.8 2025-12-16 47页 VIP" [ref=f56e511] [cursor=pointer]:
+            - /url: /html/2025/1216/8047011125010022.shtm
+            - strong [ref=f56e512]:
+              - generic [ref=f56e514]: 2026中国工商银行工银科技校园招聘备考题库及答案详解（各地真题）.docx
+            - generic [ref=f56e515]:
+              - generic [ref=f56e516]:
+                - generic [ref=f56e517]:
+                  - generic [ref=f56e518]:
+                    - generic [ref=f56e519]: 
+                    - generic [ref=f56e521]: 
+                  - generic [ref=f56e523]:
+                    - generic [ref=f56e524]: 
+                    - generic [ref=f56e526]: 
+                  - generic [ref=f56e528]:
+                    - generic [ref=f56e529]: 
+                    - generic [ref=f56e531]: 
+                  - generic [ref=f56e533]:
+                    - generic [ref=f56e534]: 
+                    - generic [ref=f56e536]: 
+                  - generic [ref=f56e538]:
+                    - generic [ref=f56e539]: 
+                    - generic: 
+                - emphasis [ref=f56e542]: "3.8"
+              - generic [ref=f56e543]:
+                - text: 2025-12-1647页
+                - emphasis [ref=f56e545]: VIP
+        - listitem [ref=f56e546]:
+          - link "中国工商银行私人银行部招聘笔试真题2023.pdf           3.5 2024-09-16 9页 VIP" [ref=f56e547] [cursor=pointer]:
+            - /url: /html/2024/0916/5310212224011321.shtm
+            - strong [ref=f56e548]:
+              - generic [ref=f56e550]: 中国工商银行私人银行部招聘笔试真题2023.pdf
+            - generic [ref=f56e551]:
+              - generic [ref=f56e552]:
+                - generic [ref=f56e553]:
+                  - generic [ref=f56e554]:
+                    - generic [ref=f56e555]: 
+                    - generic [ref=f56e557]: 
+                  - generic [ref=f56e559]:
+                    - generic [ref=f56e560]: 
+                    - generic [ref=f56e562]: 
+                  - generic [ref=f56e564]:
+                    - generic [ref=f56e565]: 
+                    - generic [ref=f56e567]: 
+                  - generic [ref=f56e569]:
+                    - generic [ref=f56e570]: 
+                    - generic [ref=f56e572]: 
+                  - generic [ref=f56e574]:
+                    - generic [ref=f56e575]: 
+                    - generic: 
+                - emphasis [ref=f56e578]: "3.5"
+              - generic [ref=f56e579]:
+                - text: 2024-09-169页
+                - emphasis [ref=f56e581]: VIP
+        - listitem [ref=f56e582]:
+          - link "2023年中国工商银行工银科技招聘考试真题及答案.pdf           4.3 2024-09-15 11页 VIP" [ref=f56e583] [cursor=pointer]:
+            - /url: /html/2024/0915/6001153114010222.shtm
+            - strong [ref=f56e584]:
+              - generic [ref=f56e586]: 2023年中国工商银行工银科技招聘考试真题及答案.pdf
+            - generic [ref=f56e587]:
+              - generic [ref=f56e588]:
+                - generic [ref=f56e589]:
+                  - generic [ref=f56e590]:
+                    - generic [ref=f56e591]: 
+                    - generic [ref=f56e593]: 
+                  - generic [ref=f56e595]:
+                    - generic [ref=f56e596]: 
+                    - generic [ref=f56e598]: 
+                  - generic [ref=f56e600]:
+                    - generic [ref=f56e601]: 
+                    - generic [ref=f56e603]: 
+                  - generic [ref=f56e605]:
+                    - generic [ref=f56e606]: 
+                    - generic [ref=f56e608]: 
+                  - generic [ref=f56e610]:
+                    - generic [ref=f56e611]: 
+                    - generic [ref=f56e613]: 
+                - emphasis [ref=f56e615]: "4.3"
+              - generic [ref=f56e616]:
+                - text: 2024-09-1511页
+                - emphasis [ref=f56e618]: VIP
+        - listitem [ref=f56e619]:
+          - link "中国工商银行工银安盛招聘笔试真题2023.pdf           3.5 2024-09-18 9页 VIP" [ref=f56e620] [cursor=pointer]:
+            - /url: /html/2024/0918/7013041025006153.shtm
+            - strong [ref=f56e621]:
+              - generic [ref=f56e623]: 中国工商银行工银安盛招聘笔试真题2023.pdf
+            - generic [ref=f56e624]:
+              - generic [ref=f56e625]:
+                - generic [ref=f56e626]:
+                  - generic [ref=f56e627]:
+                    - generic [ref=f56e628]: 
+                    - generic [ref=f56e630]: 
+                  - generic [ref=f56e632]:
+                    - generic [ref=f56e633]: 
+                    - generic [ref=f56e635]: 
+                  - generic [ref=f56e637]:
+                    - generic [ref=f56e638]: 
+                    - generic [ref=f56e640]: 
+                  - generic [ref=f56e642]:
+                    - generic [ref=f56e643]: 
+                    - generic [ref=f56e645]: 
+                  - generic [ref=f56e647]:
+                    - generic [ref=f56e648]: 
+                    - generic: 
+                - emphasis [ref=f56e651]: "3.5"
+              - generic [ref=f56e652]:
+                - text: 2024-09-189页
+                - emphasis [ref=f56e654]: VIP
+        - listitem [ref=f56e655]:
+          - link "中国工商银行2026年度工银科技有限公司招聘测评笔试题库2026资料.pdf           4.6 2026-04-10 64页" [ref=f56e656] [cursor=pointer]:
+            - /url: /html/2026/0410/8111010007010062.shtm
+            - strong [ref=f56e657]:
+              - generic [ref=f56e659]: 中国工商银行2026年度工银科技有限公司招聘测评笔试题库2026资料.pdf
+            - generic [ref=f56e660]:
+              - generic [ref=f56e661]:
+                - generic [ref=f56e662]:
+                  - generic [ref=f56e663]:
+                    - generic [ref=f56e664]: 
+                    - generic [ref=f56e666]: 
+                  - generic [ref=f56e668]:
+                    - generic [ref=f56e669]: 
+                    - generic [ref=f56e671]: 
+                  - generic [ref=f56e673]:
+                    - generic [ref=f56e674]: 
+                    - generic [ref=f56e676]: 
+                  - generic [ref=f56e678]:
+                    - generic [ref=f56e679]: 
+                    - generic [ref=f56e681]: 
+                  - generic [ref=f56e683]:
+                    - generic [ref=f56e684]: 
+                    - generic [ref=f56e686]: 
+                - emphasis [ref=f56e688]: "4.6"
+              - generic [ref=f56e689]: 2026-04-1064页
+        - listitem [ref=f56e691]:
+          - link "2026中国工商银行工银科技校园招聘笔试参考题库附答案解析.docx           4.1 2025-09-07 29页 VIP" [ref=f56e692] [cursor=pointer]:
+            - /url: /html/2025/0907/6105211243011224.shtm
+            - strong [ref=f56e693]:
+              - generic [ref=f56e695]: 2026中国工商银行工银科技校园招聘笔试参考题库附答案解析.docx
+            - generic [ref=f56e696]:
+              - generic [ref=f56e697]:
+                - generic [ref=f56e698]:
+                  - generic [ref=f56e699]:
+                    - generic [ref=f56e700]: 
+                    - generic [ref=f56e702]: 
+                  - generic [ref=f56e704]:
+                    - generic [ref=f56e705]: 
+                    - generic [ref=f56e707]: 
+                  - generic [ref=f56e709]:
+                    - generic [ref=f56e710]: 
+                    - generic [ref=f56e712]: 
+                  - generic [ref=f56e714]:
+                    - generic [ref=f56e715]: 
+                    - generic [ref=f56e717]: 
+                  - generic [ref=f56e719]:
+                    - generic [ref=f56e720]: 
+                    - generic [ref=f56e722]: 
+                - emphasis [ref=f56e724]: "4.1"
+              - generic [ref=f56e725]:
+                - text: 2025-09-0729页
+                - emphasis [ref=f56e727]: VIP
+        - listitem [ref=f56e728]:
+          - link "中国工商银行工银安盛招聘考试真题2024.docx           3.5 2025-09-17 11页 VIP" [ref=f56e729] [cursor=pointer]:
+            - /url: /html/2025/0917/8014056100007133.shtm
+            - strong [ref=f56e730]:
+              - generic [ref=f56e732]: 中国工商银行工银安盛招聘考试真题2024.docx
+            - generic [ref=f56e733]:
+              - generic [ref=f56e734]:
+                - generic [ref=f56e735]:
+                  - generic [ref=f56e736]:
+                    - generic [ref=f56e737]: 
+                    - generic [ref=f56e739]: 
+                  - generic [ref=f56e741]:
+                    - generic [ref=f56e742]: 
+                    - generic [ref=f56e744]: 
+                  - generic [ref=f56e746]:
+                    - generic [ref=f56e747]: 
+                    - generic [ref=f56e749]: 
+                  - generic [ref=f56e751]:
+                    - generic [ref=f56e752]: 
+                    - generic [ref=f56e754]: 
+                  - generic [ref=f56e756]:
+                    - generic [ref=f56e757]: 
+                    - generic: 
+                - emphasis [ref=f56e760]: "3.5"
+              - generic [ref=f56e761]:
+                - text: 2025-09-1711页
+                - emphasis [ref=f56e763]: VIP
+        - listitem [ref=f56e764]:
+          - link "2026中国工商银行工银科技校园招聘备考题库含答案详解（典型题）.docx           3.8 2025-12-16 49页 VIP" [ref=f56e765] [cursor=pointer]:
+            - /url: /html/2025/1216/7053161151011024.shtm
+            - strong [ref=f56e766]:
+              - generic [ref=f56e768]: 2026中国工商银行工银科技校园招聘备考题库含答案详解（典型题）.docx
+            - generic [ref=f56e769]:
+              - generic [ref=f56e770]:
+                - generic [ref=f56e771]:
+                  - generic [ref=f56e772]:
+                    - generic [ref=f56e773]: 
+                    - generic [ref=f56e775]: 
+                  - generic [ref=f56e777]:
+                    - generic [ref=f56e778]: 
+                    - generic [ref=f56e780]: 
+                  - generic [ref=f56e782]:
+                    - generic [ref=f56e783]: 
+                    - generic [ref=f56e785]: 
+                  - generic [ref=f56e787]:
+                    - generic [ref=f56e788]: 
+                    - generic [ref=f56e790]: 
+                  - generic [ref=f56e792]:
+                    - generic [ref=f56e793]: 
+                    - generic: 
+                - emphasis [ref=f56e796]: "3.8"
+              - generic [ref=f56e797]:
+                - text: 2025-12-1649页
+                - emphasis [ref=f56e799]: VIP
+        - listitem [ref=f56e800]:
+          - link "2026中国工商银行工银科技校园招聘笔试模拟试题及答案解析.docx           4.1 2025-09-07 29页" [ref=f56e801] [cursor=pointer]:
+            - /url: /html/2025/0907/5230142344012323.shtm
+            - strong [ref=f56e802]:
+              - generic [ref=f56e804]: 2026中国工商银行工银科技校园招聘笔试模拟试题及答案解析.docx
+            - generic [ref=f56e805]:
+              - generic [ref=f56e806]:
+                - generic [ref=f56e807]:
+                  - generic [ref=f56e808]:
+                    - generic [ref=f56e809]: 
+                    - generic [ref=f56e811]: 
+                  - generic [ref=f56e813]:
+                    - generic [ref=f56e814]: 
+                    - generic [ref=f56e816]: 
+                  - generic [ref=f56e818]:
+                    - generic [ref=f56e819]: 
+                    - generic [ref=f56e821]: 
+                  - generic [ref=f56e823]:
+                    - generic [ref=f56e824]: 
+                    - generic [ref=f56e826]: 
+                  - generic [ref=f56e828]:
+                    - generic [ref=f56e829]: 
+                    - generic [ref=f56e831]: 
+                - emphasis [ref=f56e833]: "4.1"
+              - generic [ref=f56e834]: 2025-09-0729页
+        - listitem [ref=f56e836]:
+          - link "中国工商银行度工银科技有限公司招聘笔试题库2024.pdf           4.3 2024-04-29 54页" [ref=f56e837] [cursor=pointer]:
+            - /url: /html/2024/0429/7133116051006102.shtm
+            - strong [ref=f56e838]:
+              - generic [ref=f56e840]: 中国工商银行度工银科技有限公司招聘笔试题库2024.pdf
+            - generic [ref=f56e841]:
+              - generic [ref=f56e842]:
+                - generic [ref=f56e843]:
+                  - generic [ref=f56e844]:
+                    - generic [ref=f56e845]: 
+                    - generic [ref=f56e847]: 
+                  - generic [ref=f56e849]:
+                    - generic [ref=f56e850]: 
+                    - generic [ref=f56e852]: 
+                  - generic [ref=f56e854]:
+                    - generic [ref=f56e855]: 
+                    - generic [ref=f56e857]: 
+                  - generic [ref=f56e859]:
+                    - generic [ref=f56e860]: 
+                    - generic [ref=f56e862]: 
+                  - generic [ref=f56e864]:
+                    - generic [ref=f56e865]: 
+                    - generic [ref=f56e867]: 
+                - emphasis [ref=f56e869]: "4.3"
+              - generic [ref=f56e870]: 2024-04-2954页
+        - listitem [ref=f56e872]:
+          - link "2026中国工商银行工银科技校园招聘备考题库附答案详解（基础题）.docx           3.8 2025-12-16 48页 VIP" [ref=f56e873] [cursor=pointer]:
+            - /url: /html/2025/1216/8046054125010022.shtm
+            - strong [ref=f56e874]:
+              - generic [ref=f56e876]: 2026中国工商银行工银科技校园招聘备考题库附答案详解（基础题）.docx
+            - generic [ref=f56e877]:
+              - generic [ref=f56e878]:
+                - generic [ref=f56e879]:
+                  - generic [ref=f56e880]:
+                    - generic [ref=f56e881]: 
+                    - generic [ref=f56e883]: 
+                  - generic [ref=f56e885]:
+                    - generic [ref=f56e886]: 
+                    - generic [ref=f56e888]: 
+                  - generic [ref=f56e890]:
+                    - generic [ref=f56e891]: 
+                    - generic [ref=f56e893]: 
+                  - generic [ref=f56e895]:
+                    - generic [ref=f56e896]: 
+                    - generic [ref=f56e898]: 
+                  - generic [ref=f56e900]:
+                    - generic [ref=f56e901]: 
+                    - generic: 
+                - emphasis [ref=f56e904]: "3.8"
+              - generic [ref=f56e905]:
+                - text: 2025-12-1648页
+                - emphasis [ref=f56e907]: VIP
+        - listitem [ref=f56e908]:
+          - link "2026中国工商银行工银科技校园招聘备考题库附答案详解（典型题）.docx           3.8 2025-12-16 46页 VIP" [ref=f56e909] [cursor=pointer]:
+            - /url: /html/2025/1216/5123144320013033.shtm
+            - strong [ref=f56e910]:
+              - generic [ref=f56e912]: 2026中国工商银行工银科技校园招聘备考题库附答案详解（典型题）.docx
+            - generic [ref=f56e913]:
+              - generic [ref=f56e914]:
+                - generic [ref=f56e915]:
+                  - generic [ref=f56e916]:
+                    - generic [ref=f56e917]: 
+                    - generic [ref=f56e919]: 
+                  - generic [ref=f56e921]:
+                    - generic [ref=f56e922]: 
+                    - generic [ref=f56e924]: 
+                  - generic [ref=f56e926]:
+                    - generic [ref=f56e927]: 
+                    - generic [ref=f56e929]: 
+                  - generic [ref=f56e931]:
+                    - generic [ref=f56e932]: 
+                    - generic [ref=f56e934]: 
+                  - generic [ref=f56e936]:
+                    - generic [ref=f56e937]: 
+                    - generic: 
+                - emphasis [ref=f56e940]: "3.8"
+              - generic [ref=f56e941]:
+                - text: 2025-12-1646页
+                - emphasis [ref=f56e943]: VIP
+        - listitem [ref=f56e944]:
+          - link "2026中国工商银行工银科技校园招聘备考题库含答案详解（基础题）.docx           3.8 2025-12-16 49页 VIP" [ref=f56e945] [cursor=pointer]:
+            - /url: /html/2025/1216/8046127125010022.shtm
+            - strong [ref=f56e946]:
+              - generic [ref=f56e948]: 2026中国工商银行工银科技校园招聘备考题库含答案详解（基础题）.docx
+            - generic [ref=f56e949]:
+              - generic [ref=f56e950]:
+                - generic [ref=f56e951]:
+                  - generic [ref=f56e952]:
+                    - generic [ref=f56e953]: 
+                    - generic [ref=f56e955]: 
+                  - generic [ref=f56e957]:
+                    - generic [ref=f56e958]: 
+                    - generic [ref=f56e960]: 
+                  - generic [ref=f56e962]:
+                    - generic [ref=f56e963]: 
+                    - generic [ref=f56e965]: 
+                  - generic [ref=f56e967]:
+                    - generic [ref=f56e968]: 
+                    - generic [ref=f56e970]: 
+                  - generic [ref=f56e972]:
+                    - generic [ref=f56e973]: 
+                    - generic: 
+                - emphasis [ref=f56e976]: "3.8"
+              - generic [ref=f56e977]:
+                - text: 2025-12-1649页
+                - emphasis [ref=f56e979]: VIP
+        - listitem [ref=f56e980]:
+          - link "2026中国工商银行工银科技校园招聘备考题库含答案详解（预热题）.docx           3.8 2025-12-16 47页 VIP" [ref=f56e981] [cursor=pointer]:
+            - /url: /html/2025/1216/7053122151011024.shtm
+            - strong [ref=f56e982]:
+              - generic [ref=f56e984]: 2026中国工商银行工银科技校园招聘备考题库含答案详解（预热题）.docx
+            - generic [ref=f56e985]:
+              - generic [ref=f56e986]:
+                - generic [ref=f56e987]:
+                  - generic [ref=f56e988]:
+                    - generic [ref=f56e989]: 
+                    - generic [ref=f56e991]: 
+                  - generic [ref=f56e993]:
+                    - generic [ref=f56e994]: 
+                    - generic [ref=f56e996]: 
+                  - generic [ref=f56e998]:
+                    - generic [ref=f56e999]: 
+                    - generic [ref=f56e1001]: 
+                  - generic [ref=f56e1003]:
+                    - generic [ref=f56e1004]: 
+                    - generic [ref=f56e1006]: 
+                  - generic [ref=f56e1008]:
+                    - generic [ref=f56e1009]: 
+                    - generic: 
+                - emphasis [ref=f56e1012]: "3.8"
+              - generic [ref=f56e1013]:
+                - text: 2025-12-1647页
+                - emphasis [ref=f56e1015]: VIP
+        - listitem [ref=f56e1016]:
+          - link "2026中国工商银行工银理财校园招聘备考题库及答案详解（历年真题）.docx           3.8 2025-12-16 48页 VIP" [ref=f56e1017] [cursor=pointer]:
+            - /url: /html/2025/1216/6104014221012030.shtm
+            - strong [ref=f56e1018]:
+              - generic [ref=f56e1020]: 2026中国工商银行工银理财校园招聘备考题库及答案详解（历年真题）.docx
+            - generic [ref=f56e1021]:
+              - generic [ref=f56e1022]:
+                - generic [ref=f56e1023]:
+                  - generic [ref=f56e1024]:
+                    - generic [ref=f56e1025]: 
+                    - generic [ref=f56e1027]: 
+                  - generic [ref=f56e1029]:
+                    - generic [ref=f56e1030]: 
+                    - generic [ref=f56e1032]: 
+                  - generic [ref=f56e1034]:
+                    - generic [ref=f56e1035]: 
+                    - generic [ref=f56e1037]: 
+                  - generic [ref=f56e1039]:
+                    - generic [ref=f56e1040]: 
+                    - generic [ref=f56e1042]: 
+                  - generic [ref=f56e1044]:
+                    - generic [ref=f56e1045]: 
+                    - generic: 
+                - emphasis [ref=f56e1048]: "3.8"
+              - generic [ref=f56e1049]:
+                - text: 2025-12-1648页
+                - emphasis [ref=f56e1051]: VIP
+        - listitem [ref=f56e1052]:
+          - link "2026中国工商银行工银理财校园招聘备考题库及答案详解（各地真题）.docx           3.8 2025-12-16 47页 VIP" [ref=f56e1053] [cursor=pointer]:
+            - /url: /html/2025/1216/8050010125010022.shtm
+            - strong [ref=f56e1054]:
+              - generic [ref=f56e1056]: 2026中国工商银行工银理财校园招聘备考题库及答案详解（各地真题）.docx
+            - generic [ref=f56e1057]:
+              - generic [ref=f56e1058]:
+                - generic [ref=f56e1059]:
+                  - generic [ref=f56e1060]:
+                    - generic [ref=f56e1061]: 
+                    - generic [ref=f56e1063]: 
+                  - generic [ref=f56e1065]:
+                    - generic [ref=f56e1066]: 
+                    - generic [ref=f56e1068]: 
+                  - generic [ref=f56e1070]:
+                    - generic [ref=f56e1071]: 
+                    - generic [ref=f56e1073]: 
+                  - generic [ref=f56e1075]:
+                    - generic [ref=f56e1076]: 
+                    - generic [ref=f56e1078]: 
+                  - generic [ref=f56e1080]:
+                    - generic [ref=f56e1081]: 
+                    - generic: 
+                - emphasis [ref=f56e1084]: "3.8"
+              - generic [ref=f56e1085]:
+                - text: 2025-12-1647页
+                - emphasis [ref=f56e1087]: VIP
+        - listitem [ref=f56e1088]:
+          - link "2023年中国工商银行工银金融租赁有限公司招聘考试真题及答案.pdf           3.5 2024-09-17 10页 VIP" [ref=f56e1089] [cursor=pointer]:
+            - /url: /html/2024/0917/6125020234010222.shtm
+            - strong [ref=f56e1090]:
+              - generic [ref=f56e1092]: 2023年中国工商银行工银金融租赁有限公司招聘考试真题及答案.pdf
+            - generic [ref=f56e1093]:
+              - generic [ref=f56e1094]:
+                - generic [ref=f56e1095]:
+                  - generic [ref=f56e1096]:
+                    - generic [ref=f56e1097]: 
+                    - generic [ref=f56e1099]: 
+                  - generic [ref=f56e1101]:
+                    - generic [ref=f56e1102]: 
+                    - generic [ref=f56e1104]: 
+                  - generic [ref=f56e1106]:
+                    - generic [ref=f56e1107]: 
+                    - generic [ref=f56e1109]: 
+                  - generic [ref=f56e1111]:
+                    - generic [ref=f56e1112]: 
+                    - generic [ref=f56e1114]: 
+                  - generic [ref=f56e1116]:
+                    - generic [ref=f56e1117]: 
+                    - generic: 
+                - emphasis [ref=f56e1120]: "3.5"
+              - generic [ref=f56e1121]:
+                - text: 2024-09-1710页
+                - emphasis [ref=f56e1123]: VIP
+        - listitem [ref=f56e1124]:
+          - link "2026中国工商银行工银科技校园招聘18人笔试模拟试题及答案解析.docx           4.2 2025-09-07 34页 VIP" [ref=f56e1125] [cursor=pointer]:
+            - /url: /html/2025/0907/6051142243011224.shtm
+            - strong [ref=f56e1126]:
+              - generic [ref=f56e1128]: 2026中国工商银行工银科技校园招聘18人笔试模拟试题及答案解析.docx
+            - generic [ref=f56e1129]:
+              - generic [ref=f56e1130]:
+                - generic [ref=f56e1131]:
+                  - generic [ref=f56e1132]:
+                    - generic [ref=f56e1133]: 
+                    - generic [ref=f56e1135]: 
+                  - generic [ref=f56e1137]:
+                    - generic [ref=f56e1138]: 
+                    - generic [ref=f56e1140]: 
+                  - generic [ref=f56e1142]:
+                    - generic [ref=f56e1143]: 
+                    - generic [ref=f56e1145]: 
+                  - generic [ref=f56e1147]:
+                    - generic [ref=f56e1148]: 
+                    - generic [ref=f56e1150]: 
+                  - generic [ref=f56e1152]:
+                    - generic [ref=f56e1153]: 
+                    - generic [ref=f56e1155]: 
+                - emphasis [ref=f56e1157]: "4.2"
+              - generic [ref=f56e1158]:
+                - text: 2025-09-0734页
+                - emphasis [ref=f56e1160]: VIP
+        - listitem [ref=f56e1161]:
+          - link "2023年中国工商银行工银瑞信招聘考试真题及答案.pdf           4.0 2024-09-16 11页" [ref=f56e1162] [cursor=pointer]:
+            - /url: /html/2024/0916/8050136100006126.shtm
+            - strong [ref=f56e1163]:
+              - generic [ref=f56e1165]: 2023年中国工商银行工银瑞信招聘考试真题及答案.pdf
+            - generic [ref=f56e1166]:
+              - generic [ref=f56e1167]:
+                - generic [ref=f56e1168]:
+                  - generic [ref=f56e1169]:
+                    - generic [ref=f56e1170]: 
+                    - generic [ref=f56e1172]: 
+                  - generic [ref=f56e1174]:
+                    - generic [ref=f56e1175]: 
+                    - generic [ref=f56e1177]: 
+                  - generic [ref=f56e1179]:
+                    - generic [ref=f56e1180]: 
+                    - generic [ref=f56e1182]: 
+                  - generic [ref=f56e1184]:
+                    - generic [ref=f56e1185]: 
+                    - generic [ref=f56e1187]: 
+                  - generic [ref=f56e1189]:
+                    - generic [ref=f56e1190]: 
+                    - generic: 
+                - emphasis [ref=f56e1193]: "4.0"
+              - generic [ref=f56e1194]: 2024-09-1611页
+        - listitem [ref=f56e1196]:
+          - link "中国工商银行工银科技有限公司2023年校园招聘人才参考题库附答案解析.docx           4.2 2023-06-15 31页 VIP" [ref=f56e1197] [cursor=pointer]:
+            - /url: /html/2023/0615/8063034054005101.shtm
+            - strong [ref=f56e1198]:
+              - generic [ref=f56e1200]: 中国工商银行工银科技有限公司2023年校园招聘人才参考题库附答案解析.docx
+            - generic [ref=f56e1201]:
+              - generic [ref=f56e1202]:
+                - generic [ref=f56e1203]:
+                  - generic [ref=f56e1204]:
+                    - generic [ref=f56e1205]: 
+                    - generic [ref=f56e1207]: 
+                  - generic [ref=f56e1209]:
+                    - generic [ref=f56e1210]: 
+                    - generic [ref=f56e1212]: 
+                  - generic [ref=f56e1214]:
+                    - generic [ref=f56e1215]: 
+                    - generic [ref=f56e1217]: 
+                  - generic [ref=f56e1219]:
+                    - generic [ref=f56e1220]: 
+                    - generic [ref=f56e1222]: 
+                  - generic [ref=f56e1224]:
+                    - generic [ref=f56e1225]: 
+                    - generic [ref=f56e1227]: 
+                - emphasis [ref=f56e1229]: "4.2"
+              - generic [ref=f56e1230]:
+                - text: 2023-06-1531页
+                - emphasis [ref=f56e1232]: VIP
+        - listitem [ref=f56e1233]:
+          - link "中国工商银行工银科技2023年校园招聘参考题库附答案解析.docx           4.2 2023-06-15 31页 VIP" [ref=f56e1234] [cursor=pointer]:
+            - /url: /html/2023/0615/5133141134010230.shtm
+            - strong [ref=f56e1235]:
+              - generic [ref=f56e1237]: 中国工商银行工银科技2023年校园招聘参考题库附答案解析.docx
+            - generic [ref=f56e1238]:
+              - generic [ref=f56e1239]:
+                - generic [ref=f56e1240]:
+                  - generic [ref=f56e1241]:
+                    - generic [ref=f56e1242]: 
+                    - generic [ref=f56e1244]: 
+                  - generic [ref=f56e1246]:
+                    - generic [ref=f56e1247]: 
+                    - generic [ref=f56e1249]: 
+                  - generic [ref=f56e1251]:
+                    - generic [ref=f56e1252]: 
+                    - generic [ref=f56e1254]: 
+                  - generic [ref=f56e1256]:
+                    - generic [ref=f56e1257]: 
+                    - generic [ref=f56e1259]: 
+                  - generic [ref=f56e1261]:
+                    - generic [ref=f56e1262]: 
+                    - generic [ref=f56e1264]: 
+                - emphasis [ref=f56e1266]: "4.2"
+              - generic [ref=f56e1267]:
+                - text: 2023-06-1531页
+                - emphasis [ref=f56e1269]: VIP
+        - listitem [ref=f56e1270]:
+          - link "中国工商银行工银科技2023年校园招聘人员参考题库附答案解析.docx           4.2 2023-06-15 30页 VIP" [ref=f56e1271] [cursor=pointer]:
+            - /url: /html/2023/0615/5142331134010230.shtm
+            - strong [ref=f56e1272]:
+              - generic [ref=f56e1274]: 中国工商银行工银科技2023年校园招聘人员参考题库附答案解析.docx
+            - generic [ref=f56e1275]:
+              - generic [ref=f56e1276]:
+                - generic [ref=f56e1277]:
+                  - generic [ref=f56e1278]:
+                    - generic [ref=f56e1279]: 
+                    - generic [ref=f56e1281]: 
+                  - generic [ref=f56e1283]:
+                    - generic [ref=f56e1284]: 
+                    - generic [ref=f56e1286]: 
+                  - generic [ref=f56e1288]:
+                    - generic [ref=f56e1289]: 
+                    - generic [ref=f56e1291]: 
+                  - generic [ref=f56e1293]:
+                    - generic [ref=f56e1294]: 
+                    - generic [ref=f56e1296]: 
+                  - generic [ref=f56e1298]:
+                    - generic [ref=f56e1299]: 
+                    - generic [ref=f56e1301]: 
+                - emphasis [ref=f56e1303]: "4.2"
+              - generic [ref=f56e1304]:
+                - text: 2023-06-1530页
+                - emphasis [ref=f56e1306]: VIP
+        - listitem [ref=f56e1307]:
+          - link "中国工商银行工银科技2023年秋季招聘人才参考题库附答案解析.docx           4.2 2023-06-22 30页 VIP" [ref=f56e1308] [cursor=pointer]:
+            - /url: /html/2023/0622/6104132115005151.shtm
+            - strong [ref=f56e1309]:
+              - generic [ref=f56e1311]: 中国工商银行工银科技2023年秋季招聘人才参考题库附答案解析.docx
+            - generic [ref=f56e1312]:
+              - generic [ref=f56e1313]:
+                - generic [ref=f56e1314]:
+                  - generic [ref=f56e1315]:
+                    - generic [ref=f56e1316]: 
+                    - generic [ref=f56e1318]: 
+                  - generic [ref=f56e1320]:
+                    - generic [ref=f56e1321]: 
+                    - generic [ref=f56e1323]: 
+                  - generic [ref=f56e1325]:
+                    - generic [ref=f56e1326]: 
+                    - generic [ref=f56e1328]: 
+                  - generic [ref=f56e1330]:
+                    - generic [ref=f56e1331]: 
+                    - generic [ref=f56e1333]: 
+                  - generic [ref=f56e1335]:
+                    - generic [ref=f56e1336]: 
+                    - generic [ref=f56e1338]: 
+                - emphasis [ref=f56e1340]: "4.2"
+              - generic [ref=f56e1341]:
+                - text: 2023-06-2230页
+                - emphasis [ref=f56e1343]: VIP
+        - listitem [ref=f56e1344]:
+          - link "中国工商银行工银科技2023年秋季招聘人才模拟卷（含答案解析）.docx           4.0 2023-07-05 14页 VIP" [ref=f56e1345] [cursor=pointer]:
+            - /url: /html/2023/0705/7122022132005130.shtm
+            - strong [ref=f56e1346]:
+              - generic [ref=f56e1348]: 中国工商银行工银科技2023年秋季招聘人才模拟卷（含答案解析）.docx
+            - generic [ref=f56e1349]:
+              - generic [ref=f56e1350]:
+                - generic [ref=f56e1351]:
+                  - generic [ref=f56e1352]:
+                    - generic [ref=f56e1353]: 
+                    - generic [ref=f56e1355]: 
+                  - generic [ref=f56e1357]:
+                    - generic [ref=f56e1358]: 
+                    - generic [ref=f56e1360]: 
+                  - generic [ref=f56e1362]:
+                    - generic [ref=f56e1363]: 
+                    - generic [ref=f56e1365]: 
+                  - generic [ref=f56e1367]:
+                    - generic [ref=f56e1368]: 
+                    - generic [ref=f56e1370]: 
+                  - generic [ref=f56e1372]:
+                    - generic [ref=f56e1373]: 
+                    - generic: 
+                - emphasis [ref=f56e1376]: "4.0"
+              - generic [ref=f56e1377]:
+                - text: 2023-07-0514页
+                - emphasis [ref=f56e1379]: VIP
+        - listitem [ref=f56e1380]:
+          - link "中国工商银行工银科技2023年秋季招聘70名人才模拟卷（含答案解析）.docx           4.0 2023-07-05 14页 VIP" [ref=f56e1381] [cursor=pointer]:
+            - /url: /html/2023/0705/7165046132005130.shtm
+            - strong [ref=f56e1382]:
+              - generic [ref=f56e1384]: 中国工商银行工银科技2023年秋季招聘70名人才模拟卷（含答案解析）.docx
+            - generic [ref=f56e1385]:
+              - generic [ref=f56e1386]:
+                - generic [ref=f56e1387]:
+                  - generic [ref=f56e1388]:
+                    - generic [ref=f56e1389]: 
+                    - generic [ref=f56e1391]: 
+                  - generic [ref=f56e1393]:
+                    - generic [ref=f56e1394]: 
+                    - generic [ref=f56e1396]: 
+                  - generic [ref=f56e1398]:
+                    - generic [ref=f56e1399]: 
+                    - generic [ref=f56e1401]: 
+                  - generic [ref=f56e1403]:
+                    - generic [ref=f56e1404]: 
+                    - generic [ref=f56e1406]: 
+                  - generic [ref=f56e1408]:
+                    - generic [ref=f56e1409]: 
+                    - generic: 
+                - emphasis [ref=f56e1412]: "4.0"
+              - generic [ref=f56e1413]:
+                - text: 2023-07-0514页
+                - emphasis [ref=f56e1415]: VIP
+  - generic [ref=f56e1416]:
+    - link "VIP超值钜惠" [ref=f56e1418] [cursor=pointer]:
+      - /url: /user_center_v1/home/vip/open?from=sidebar_btn_index
+    - list [ref=f56e1420]:
+      - listitem [ref=f56e1421]:
+        - link "分享赚钱" [ref=f56e1422] [cursor=pointer]:
+          - /url: javascript:;
+      - listitem [ref=f56e1425]:
+        - link "浏览足迹" [ref=f56e1426] [cursor=pointer]:
+          - /url: /user_center_v1/user/Document/myBrowse.html
+      - listitem [ref=f56e1429]:
+        - link "官方客服" [ref=f56e1430] [cursor=pointer]:
+          - /url: /user_center_v1/home/chat/index.html
+  - generic [ref=f56e1434]:
+    - generic [ref=f56e1435]:
+      - text: 原创力文档从2008年开站以来，已有数亿文档，我们定位于“知识共享、知识服务”；我们为内容提供方提供“无忧创作”解决方案：您作为内容提供方只需要将您创作的数字作品提供/授权给我们，后续的质量管理/宣传/推广/销售/内容分发/开具发票/售后/退款等均由我们完成，让您创作无后顾之忧，让您安心创作更多优质的数字作品！上传者QQ群（最新）：751299218。 有任何问题，请随时联系
+      - link "智能客服" [ref=f56e1436] [cursor=pointer]:
+        - /url: /user_center_v1/home/chat/index.html
+      - text: ，侵权专属
+      - link "客服微信" [ref=f56e1437] [cursor=pointer]:
+        - /url: https://work.weixin.qq.com/kfid/kfc4a3e69774a2375e1
+      - text: ！其它问题点击
+      - link "联系我们" [ref=f56e1438] [cursor=pointer]:
+        - /url: /help4.html
+      - text: ！本站内容，未经授权，不得采集、搬运！包括但不限于Al采集后用于训练，侵权必究！
+    - list [ref=f56e1439]:
+      - listitem [ref=f56e1440]:
+        - text: 公安局备案号:51011502000106
+        - emphasis [ref=f56e1442]: "|"
+        - text: "工信部备案号:"
+        - link "蜀ICP备08101938号-1" [ref=f56e1443] [cursor=pointer]:
+          - /url: http://beian.miit.gov.cn
+        - emphasis [ref=f56e1444]: "|"
+        - text: "ICP经营许可证/EDI许可证:"
+        - link "川B2-20180569" [ref=f56e1445] [cursor=pointer]:
+          - /url: /jyxkz.html
+        - emphasis [ref=f56e1446]: "|"
+        - link "公司营业执照" [ref=f56e1447] [cursor=pointer]:
+          - /url: /yyzz.html
+        - emphasis [ref=f56e1448]: "|"
+        - text: "出版物经营许可证:"
+        - link "成新出发高新字第046号" [ref=f56e1449] [cursor=pointer]:
+          - /url: /html/cbwxkz.html
+        - emphasis [ref=f56e1450]: "|"
+        - link "网信算备:510107145616301250011号" [ref=f56e1451] [cursor=pointer]:
+          - /url: https://beian.cac.gov.cn/#/searchResult
+      - listitem [ref=f56e1452]: © 2010-2026 max.book118.com 原创力文档. All Rights Reserved 四川文动网络科技有限公司 违法与不良信息举报电话：18582317992

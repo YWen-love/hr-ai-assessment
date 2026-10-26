@@ -1,162 +1,363 @@
-import logging
-import re
+"""测评主流程编排。
 
-from prompts import QUESTION_PROMPT, SUMMARY_PROMPT, SYSTEM_PROMPT
-from app.deepseek_client import DeepSeekClient
+三类 Agent，一个文件，按隔离要求分工：
+
+- **ChatAgent** —— 主线对话。上下文里【没有 alternate_role_mapping】，模型无从说漏备选岗。
+- **AssessmentAgent** —— 收尾评估。只在这里才加载备选岗位，产出事实不给分数。
+- **CandidateMsgAgent** —— 候选人侧回访。上下文里连 job_config 都不给，
+  只给它"确认结果 + 是否愿意"，从物理上杜绝候选人看到任何内部判断。
+
+分数一律不在本文件产生，由 rule_engine 按 job_config 重算（定稿决策 4）。
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import logging
+from typing import Any, Dict, List, Optional
+
+from prompts import (
+    ASSESSMENT_SYSTEM_PROMPT,
+    BACKUP_MATCH_SYSTEM_PROMPT,
+    CANDIDATE_MSG_SYSTEM_PROMPT,
+    CHAT_SYSTEM_PROMPT,
+)
+from app.job_schema import iter_check_item_texts
+from app.llm_client import LLMClient
+from app.redline import ChatMessage, build_forbidden_terms, parse_chat_message
+from app.report import keyword_hints, should_recommend_alternates
+from app.traits import TraitExtractor, trait_summary
 
 logger = logging.getLogger(__name__)
 
-_INTERNSHIP_DAILY_RATES = {
-    "初中学习顾问": {"本科": 100, "硕士研究生": 130},
-    "人力实习生": {"本科": 110, "硕士研究生": 150},
-}
-_DEGREE_DAILY_RATE_PATTERN = re.compile(
-    r"(?:本科|硕士研究生)(?:实习生)?\s*[:：]?\s*"
-    r"(?:每日底薪|日底薪|日薪)\s*\d+\s*元"
-)
+
+def config_hash(job_config: Dict[str, Any]) -> str:
+    """岗位配置指纹。测评结论要能追溯到"用的是哪一版配置"。"""
+    payload = json.dumps(job_config, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
-def _personalize_internship_salary(text: str, job_name: str, education: str | None) -> str:
-    rates = _INTERNSHIP_DAILY_RATES.get(job_name)
-    if not rates:
-        return text
+def _profile_lines(job_config: Dict[str, Any]) -> List[str]:
+    profile = job_config.get("job_profile") or {}
 
-    recognized_education = education if education in rates else None
-    tailored_text = _DEGREE_DAILY_RATE_PATTERN.sub(
-        lambda match: (
-            match.group(0)
-            if recognized_education and match.group(0).startswith(recognized_education)
-            else ""
-        ),
-        text,
-    )
-    if recognized_education:
-        salary_instruction = (
-            f"本候选人简历识别的最高学历为{recognized_education}，"
-            f"本次只向候选人介绍{recognized_education}实习生日底薪"
-            f"{rates[recognized_education]}元。不要提及其他学历对应的日薪，也不要同时列出多个金额。"
+    def joined(field_name: str) -> str:
+        values = profile.get(field_name) or []
+        if isinstance(values, list):
+            return "；".join(str(v) for v in values if v)
+        return str(values) if values else "（未配置）"
+
+    return [joined("responsibilities"), joined("work_time"), joined("salary")]
+
+
+def render_resume_tags(resume_tags: Dict[str, Any], *, max_exp_tags: int = 20) -> str:
+    """简历标签的可读化。控制长度 —— 标签全量塞进 prompt 会挤占对话注意力。"""
+    tags = resume_tags or {}
+    school_type = tags.get("school_type") or {}
+
+    lines = [
+        f"姓名：{tags.get('name') or '未提供'}",
+        f"学历：{tags.get('degree') or '未识别'}",
+        f"专业：{tags.get('major') or '未识别'}",
+        f"毕业院校：{tags.get('school_name') or '未识别'}",
+        f"毕业年份：{tags.get('graduation_year') or '未识别'}"
+        f"（{tags.get('graduation_status') or '未知'}）",
+        f"求职意向：{tags.get('resume_intention') or '未填写'}",
+    ]
+
+    if isinstance(school_type, dict) and any(school_type.values()):
+        marks = [key for key, hit in school_type.items() if hit is True]
+        lines.append(f"院校类型：{', '.join(marks)}")
+
+    exp_tags = [t for t in (tags.get("exp_tags") or []) if t][:max_exp_tags]
+    lines.append(f"经验标签：{'、'.join(exp_tags) if exp_tags else '未识别'}")
+
+    work = tags.get("work_experience")
+    if work:
+        lines.append(f"经历概括：{work}")
+
+    return "\n".join(lines)
+
+
+def format_transcript(chat_history: List[Dict[str, str]]) -> str:
+    """对话记录转文本。角色标签用中性的"HR/候选人"，不含岗位名。"""
+    if not chat_history:
+        return "（无对话记录）"
+    lines = []
+    for message in chat_history:
+        role = "HR" if message.get("role") == "assistant" else "候选人"
+        content = (message.get("content") or "").strip()
+        if content:
+            lines.append(f"{role}：{content}")
+    return "\n".join(lines) or "（无对话记录）"
+
+
+# ---------------------------------------------------------------------------
+# 主线对话
+# ---------------------------------------------------------------------------
+
+class ChatAgent:
+    """主线对话 Agent。
+
+    硬性隔离：__init__ 之后本对象的任何方法都不会把 alternate_role_mapping 传给模型。
+    不是靠 prompt 叮嘱，是数据流上根本没有这个字段。
+    """
+
+    def __init__(self):
+        self.client = LLMClient(temperature=0.6)
+
+    def render_system_prompt(self, job_config: Dict[str, Any], resume_tags: Dict[str, Any]) -> str:
+        """只注入主岗信息。alternate_role_mapping 不在这里，也没有别的地方。"""
+        responsibilities, work_time, salary = _profile_lines(job_config)
+        return (
+            CHAT_SYSTEM_PROMPT
+            .replace("{{job_name}}", job_config.get("job_name", "该岗位"))
+            .replace("{{job_responsibilities}}", responsibilities)
+            .replace("{{job_nature}}", "、".join((job_config.get("job_profile") or {}).get("nature") or []) or "详见岗位职责")
+            .replace("{{job_work_time}}", work_time)
+            .replace("{{job_rest_schedule}}", "、".join((job_config.get("job_profile") or {}).get("rest_schedule") or []) or "未配置")
+            .replace("{{job_salary}}", salary)
+            .replace("{{check_items}}", "；".join(iter_check_item_texts(job_config)) or "（无）")
+            .replace("{{resume_tags}}", render_resume_tags(resume_tags))
         )
-    else:
-        salary_instruction = (
-            "本候选人的最高学历无法确认为本科或硕士研究生，不得向候选人报出这两档日薪，"
-            "应说明具体日薪需由HR核实。"
-        )
-    return f"{tailored_text}\n\n候选人薪资说明要求：{salary_instruction}"
 
+    async def reply(
+        self,
+        job_config: Dict[str, Any],
+        resume_tags: Dict[str, Any],
+        chat_history: List[Dict[str, str]],
+    ) -> ChatMessage:
+        """生成一轮回复。协议标记与红线词在此刻被代码捕获。"""
+        # 红线词每次按当前岗位配置重建：运营可能刚给这个岗位加了备选岗
+        forbidden = build_forbidden_terms(job_config)
+        system_prompt = self.render_system_prompt(job_config, resume_tags)
+
+        try:
+            raw = await self.client.chat(
+                system_prompt,
+                f"对话记录：\n{format_transcript(chat_history)}",
+            )
+        except Exception:
+            logger.exception("主线对话生成失败，job=%s", job_config.get("job_key"))
+            raw = FALLBACK_REPLY
+
+        message = parse_chat_message(raw, forbidden_terms=forbidden)
+        if message.was_blocked:
+            logger.warning(
+                "拦截到红线词 %s，job=%s", message.blocked_terms, job_config.get("job_key")
+            )
+            message.text = FALLBACK_BLOCKED
+        elif not message.text.strip():
+            message.text = FALLBACK_REPLY
+
+        return message
+
+
+FALLBACK_REPLY = "抱歉，我这边网络有点问题，刚才那句没发出去，能再说一次吗？"
+FALLBACK_BLOCKED = "好的，我这边先记录下来，稍后同步给 HR 跟你确认。"
+
+
+# ---------------------------------------------------------------------------
+# 收尾评估
+# ---------------------------------------------------------------------------
 
 class AssessmentAgent:
+    """收尾评估 Agent。只产出事实，不产出分数。"""
+
     def __init__(self):
-        self.client = DeepSeekClient()
+        self.client = LLMClient(temperature=0.2)
+        self.traits = TraitExtractor()
 
-    @staticmethod
-    def fallback_question(candidate_summary: dict, chat_history: str = "") -> str:
-        name = candidate_summary.get("name") or "候选人"
-        job_name = candidate_summary.get("job_name") or "岗位"
-        if job_name == "人力实习生" and AssessmentAgent._hr_screening_completed(chat_history):
-            return (
-                "好的，已记录你的实习时间安排，也感谢你确认接受工作内容、工作时间和薪资待遇。"
-                "人力实习生测评到这里就结束了，后续会有高途的人事与你进行电话联系，请留意来电。"
-            )
-        return (
-            f"抱歉，刚才系统暂时没有生成{job_name}岗位的下一步问题，你刚才的回答已记录。"
-            "为了继续测评，请再确认一下是否接受岗位介绍中的工作内容、工作时间和薪资安排？"
+    async def evaluate(
+        self,
+        job_config: Dict[str, Any],
+        resume_tags: Dict[str, Any],
+        chat_history: List[Dict[str, str]],
+    ) -> Dict[str, Any]:
+        """产出：逐条确认结果 / 推进意愿 / 备选岗命中 / HR 总结。
+
+        分数不在这里出现。模型给了也会被忽略 —— rule_engine 才是唯一的分数来源。
+        """
+        check_items = iter_check_item_texts(job_config)
+        prompt = (
+            ASSESSMENT_SYSTEM_PROMPT
+            .replace("{{job_name}}", job_config.get("job_name", "该岗位"))
+            .replace("{{check_items}}", "；".join(check_items) or "（无）")
+            .replace("{{resume_tags}}", render_resume_tags(resume_tags))
+            .replace("{{transcript}}", format_transcript(chat_history))
+            .replace("{{alternate_role_mapping}}", _render_backups(job_config))
         )
 
-    @staticmethod
-    def _hr_screening_completed(chat_history: str) -> bool:
-        turns = []
-        lines = chat_history.splitlines()
-        for index, line in enumerate(lines[:-1]):
-            if line.startswith("小助手:") and lines[index + 1].startswith("候选人:"):
-                turns.append((line.removeprefix("小助手:").strip(), lines[index + 1].removeprefix("候选人:").strip()))
+        raw: Dict[str, Any] = {}
+        try:
+            raw = await self.client.chat_json(
+                prompt, "请基于以上信息输出评估 JSON。"
+            )
+        except Exception:
+            logger.exception("收尾评估失败，job=%s", job_config.get("job_key"))
 
-        def accepted_topic(*markers: str) -> bool:
-            for question, answer in turns:
-                if any(marker in question for marker in markers):
-                    if any(word in answer for word in ("不接受", "不能", "不可以", "不愿意")):
-                        continue
-                    if any(word in answer for word in ("可以", "接受", "没问题", "愿意")):
-                        return True
-            return False
+        subject = await self.traits.extract(
+            format_transcript(chat_history), job_config
+        )
 
-        availability_confirmed = False
-        day_values = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7,
-                      "一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7}
-        for question, answer in turns:
-            if "每周" not in question or "实习" not in question:
+        return _merge_assessment(raw, subject, check_items, job_config)
+
+    async def match_alternate_role_mapping(
+        self,
+        job_config: Dict[str, Any],
+        resume_tags: Dict[str, Any],
+        traits: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        """逐个备选岗独立判定。
+
+        与 prompt 里的批量判断分开：批量判断容易互相串味，
+        单独一次调用每次只看一个备选岗，隔离性更好，也便于留痕。
+        """
+        hits: List[Dict[str, Any]] = []
+        summary = trait_summary(traits)
+        context = {**resume_tags, "trait_summary": summary}
+
+        for backup in job_config.get("alternate_role_mapping") or []:
+            if not isinstance(backup, dict):
                 continue
-            day_match = re.search(r"([1-7一二三四五六七])\s*天", answer)
-            duration_match = re.search(r"([3-9三四五六七八九])\s*个?月|半年|一年", answer)
-            if day_match and day_values[day_match.group(1)] >= 4 and duration_match:
-                availability_confirmed = True
-                break
+            conditions = [str(c) for c in (backup.get("match_condition") or []) if str(c).strip()]
+            condition_text = "；".join(conditions)
+            # 字面佐证逐条算，不合并。合并后只剩一个词袋，
+            # 报告里就分不清是"这条条件有线索"还是"那条条件有线索"。
+            condition_hints = [
+                {"condition": condition, "keywords": keyword_hints(condition, context)}
+                for condition in conditions
+            ]
+            hints = [word for row in condition_hints for word in row["keywords"]]
 
-        return (
-            availability_confirmed
-            and accepted_topic("工作内容")
-            and accepted_topic("时间安排", "工作时间", "时间和休息")
-            and accepted_topic("待遇", "薪资")
-        )
-
-    @staticmethod
-    def initial_question(candidate_summary: dict) -> str:
-        name = candidate_summary.get("name") or "候选人"
-        job_name = candidate_summary.get("job_name") or "初中学习顾问"
-        graduation_status = candidate_summary.get("graduation_status", "未知")
-        greeting = f"你好，{name}，我是智能测评小助手途途，接下来就{job_name}岗位跟你做几个简单沟通，你按实际情况回答就好。"
-
-        if graduation_status == "已毕业":
-            return f"{greeting}正式介绍前先问一下，你之前了解咱们{job_name}主要是做什么工作的吗？"
-        if graduation_status == "未毕业":
-            graduation_year = candidate_summary.get("graduation_year")
-            cohort = f"{graduation_year}届" if graduation_year else ""
-            if job_name == "人力实习生":
-                return (
-                    f"{greeting}这边看到你是{cohort}，想先确认一下，"
-                    "你是计划以实习为主，还是希望后续争取实习转正机会呢？"
-                )
-            return f"{greeting}这边看到你是{cohort}，想先确认一下，你是考虑先来公司实习，还是想走校招、通过实习争取转正机会呢？"
-        return f"{greeting}为了确定后续沟通方向，想先确认一下，你目前已经毕业了吗？"
-
-    async def generate_question(self, candidate_summary: dict, job_intro: str, screening_rules: str, chat_history: str = "") -> str:
-        job_name = candidate_summary.get("job_name", "")
-        education = candidate_summary.get("education")
-        if candidate_summary.get("graduation_status") == "未毕业":
-            job_intro = _personalize_internship_salary(job_intro, job_name, education)
-            screening_rules = _personalize_internship_salary(
-                screening_rules, job_name, education
+            prompt = (
+                BACKUP_MATCH_SYSTEM_PROMPT
+                .replace("{{backup_job_name}}", backup.get("backup_job_name", "备选岗位"))
+                .replace("{{match_conditions}}", condition_text)
+                .replace("{{resume_tags}}", render_resume_tags(resume_tags))
+                .replace("{{trait_summary}}", summary or "（对话中未表达明确偏好）")
             )
-        prompt = QUESTION_PROMPT.format(
-            candidate_summary=str(candidate_summary),
-            job_intro=job_intro,
-            screening_rules=screening_rules,
-            chat_history=chat_history if chat_history else "（刚开始对话，还没有历史记录）",
-        )
-        try:
-            return await self.client.chat(SYSTEM_PROMPT, prompt)
-        except Exception:
-            logger.exception("Question generation failed for job %s", candidate_summary.get("job_name"))
-            return self.fallback_question(candidate_summary, chat_history)
+            if hints:
+                # 明确标注这只是字面线索，不能当命中依据（约束在 prompt 里也写了）
+                prompt += f"\n\n系统提供的字面佐证线索（仅供参考，不构成命中依据）：{'、'.join(hints)}"
 
-    async def generate_screening_rules(self, job_name: str, job_intro: str) -> str:
-        system_prompt = (
-            "你是招聘测评规则设计助手。只根据提供的岗位介绍生成可执行的候选人筛选规则。"
-            "不得杜撰学历、年龄、经验、薪资、工作时间或硬性门槛；未说明的信息标为“需HR确认”，"
-            "不要把它写成淘汰条件。输出中文 Markdown，包含简历静默筛查、测评问题顺序、"
-            "岗位介绍/工作时间/薪资确认、通过与不通过条件及结束语。"
-        )
-        user_prompt = f"岗位名称：{job_name}\n\n岗位介绍：\n{job_intro}"
-        return await self.client.chat(system_prompt, user_prompt)
+            try:
+                result = await self.client.chat_json(prompt, "请判断是否命中，只输出 JSON。")
+            except Exception:
+                logger.exception("备选岗匹配失败：%s", backup.get("backup_job_key"))
+                continue
 
-    async def summarize(self, candidate_summary: dict, job_intro: str, answers: str) -> dict:
-        prompt = SUMMARY_PROMPT.format(
-            candidate_summary=str(candidate_summary),
-            job_intro=job_intro,
-            answers=answers,
+            if result.get("hit") is True:
+                hits.append(
+                    {
+                        "backup_job_key": backup.get("backup_job_key", ""),
+                        "backup_job_name": backup.get("backup_job_name", ""),
+                        "reason": str(result.get("reason", ""))[:300],
+                        # 条件原文带下去：报告层要逐条展开匹配点，
+                        # 而它拿不到 job-config，就只能靠这份拷贝。
+                        "match_condition": conditions,
+                        "condition_hints": condition_hints,
+                        "match_points": result.get("match_points") or [],
+                        "evidence": result.get("evidence") or [],
+                        "keyword_hints": hints,
+                    }
+                )
+        return hits
+
+
+def _render_backups(job_config: Dict[str, Any]) -> str:
+    backups = job_config.get("alternate_role_mapping") or []
+    if not backups:
+        return "（本岗位未配置备选储备岗位）"
+    lines = []
+    for backup in backups:
+        if isinstance(backup, dict):
+            conditions = "；".join(str(c) for c in (backup.get("match_condition") or []))
+            lines.append(f"- {backup.get('backup_job_key', '')}：{backup.get('backup_job_name', '')}；命中条件：{conditions}")
+    return "\n".join(lines)
+
+
+def _merge_assessment(
+    raw: Any,
+    subject: Dict[str, Any],
+    check_items: List[str],
+    job_config: Dict[str, Any],
+) -> Dict[str, Any]:
+    """合并模型评估与偏好抽取结果。
+
+    willing_for_target_job 优先取偏好抽取模块的判定 —— 那个 prompt 是专门为
+    「意愿」设计的，通用评估 prompt 在同一件事上更容易被简历匹配度带偏。
+    """
+    raw = raw if isinstance(raw, dict) else {}
+
+    willing = subject.get("willing_for_target_job")
+    if not isinstance(willing, bool):
+        willing = raw.get("willing_for_target_job")
+    if not isinstance(willing, bool):
+        willing = None
+
+    switch = job_config.get("backup_show_switch")
+    hits = raw.get("hit_alternate_role_mapping") or []
+    if not isinstance(hits, list):
+        hits = []
+
+    # 只有明确拒绝主岗才推备选。未表态不自动推，交给人工复核。
+    # 判定实现在 app/report.py，这里只透出结果 —— 决策逻辑单一实现点。
+    roles_visible, roles_reason = should_recommend_alternates(willing, switch)
+
+    return {
+        # traits 原样透出：报告组装层要读完整的 conversation_traits 结构
+        # （含 check_results、reason），不能只拿到拍平的数组。
+        "traits": {**subject, "willing_for_target_job": willing},
+        "check_results": subject.get("check_results") or [],
+        "conversation_traits": subject.get("conversation_traits") or [],
+        "willing_for_target_job": willing,
+        "hit_alternate_role_mapping": [h for h in hits if isinstance(h, dict)],
+        "hr_summary": str(raw.get("hr_summary", "")).strip(),
+        "backup_visible": roles_visible,
+        "backup_reason": roles_reason,
+    }
+
+
+# ---------------------------------------------------------------------------
+# 候选人侧回访（物理隔离）
+# ---------------------------------------------------------------------------
+
+class CandidateMsgAgent:
+    """生成给候选人看的结语。
+
+    只接收：岗位名、逐条确认结果、是否愿意。job_config、备选岗、分数一律不传。
+    """
+
+    def __init__(self):
+        self.client = LLMClient(temperature=0.4)
+
+    async def generate(
+        self,
+        job_name: str,
+        check_results: List[Dict[str, Any]],
+        willing: Optional[bool],
+        *,
+        fallback: str = "好的，感谢你今天的沟通，后续结果会由 HR 同步给你。",
+    ) -> str:
+        accepted = sum(
+            1 for item in check_results
+            if isinstance(item, dict) and item.get("accepted") is True
         )
+        total = len(check_results)
+
+        prompt = (
+            CANDIDATE_MSG_SYSTEM_PROMPT
+            .replace("{{job_name}}", job_name or "该岗位")
+            .replace("{{check_results_text}}", f"共确认 {total} 项，其中确认接受 {accepted} 项")
+            .replace("{{willing_text}}", {
+                True: "候选人明确表示愿意继续",
+                False: "候选人明确表示不接受",
+            }.get(willing, "候选人未明确表态"))
+        )
+
         try:
-            content = await self.client.chat(SYSTEM_PROMPT, prompt)
+            return (await self.client.chat(prompt, "请生成结语。")).strip() or fallback
         except Exception:
-            logger.exception("Summarize failed for job %s", candidate_summary.get("job_name"))
-            content = "模型调用失败，已启用本地演示摘要模式。"
-        return {"raw_output": content}
+            logger.exception("候选人结语生成失败，job=%s", job_name)
+            return fallback

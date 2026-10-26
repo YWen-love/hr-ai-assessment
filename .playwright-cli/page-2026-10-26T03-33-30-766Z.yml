@@ -1,0 +1,474 @@
+- generic [active] [ref=f7e1]:
+  - generic [ref=f7e7]:
+    - textbox "搜CSDN" [ref=f7e9]
+    - button
+  - complementary [ref=f7e11]:
+    - generic [ref=f7e12]:
+      - link [ref=f7e15] [cursor=pointer]:
+        - /url: https://www.csdn.net/
+        - img "CSDN首页" [ref=f7e16]
+      - generic [ref=f7e17]:
+        - generic [ref=f7e19]:
+          - generic [ref=f7e21]:
+            - link "首页" [ref=f7e24] [cursor=pointer]:
+              - /url: https://www.csdn.net
+            - link "博客" [ref=f7e30] [cursor=pointer]:
+              - /url: https://blog.csdn.net
+            - link "下载" [ref=f7e36] [cursor=pointer]:
+              - /url: https://download.csdn.net
+            - link "学习" [ref=f7e42] [cursor=pointer]:
+              - /url: https://edu.csdn.net?utm_source=zhuzhantoolbar
+            - link "社区" [ref=f7e48] [cursor=pointer]:
+              - /url: https://devpress.csdn.net/
+          - generic [ref=f7e54]:
+            - link "模型市场" [ref=f7e57] [cursor=pointer]:
+              - /url: https://ai.csdn.net/coding-plan?utm_source=xt_csdn_home_leftbar
+            - link "AI搜索" [ref=f7e63] [cursor=pointer]:
+              - /url: https://ai.csdn.net/chat?utm_source=cknow_pc_homeleft
+            - link "AtomGit" [ref=f7e69] [cursor=pointer]:
+              - /url: https://link.csdn.net?target=https%3A%2F%2Fgitcode.com%3Futm_source%3Dcsdn_toolbar
+            - link "InsCode" [ref=f7e75] [cursor=pointer]:
+              - /url: https://agent.inscode.net/?utm_source=sidebar
+            - link "技术会议" [ref=f7e81] [cursor=pointer]:
+              - /url: https://summit.csdn.net/
+            - link "墨衍 MoGrow" [ref=f7e87] [cursor=pointer]:
+              - /url: https://mp.csdn.net/creation_overview?utm_source=csdn_home_bar
+              - generic [ref=f7e90]:
+                - generic [ref=f7e91]: 墨衍
+                - generic [ref=f7e92]: MoGrow
+          - generic [ref=f7e95]:
+            - link "收藏" [ref=f7e98] [cursor=pointer]:
+              - /url: https://www.csdn.net/i/collections
+            - link "历史" [ref=f7e104] [cursor=pointer]:
+              - /url: https://www.csdn.net/i/history
+            - link "会员中心" [ref=f7e110] [cursor=pointer]:
+              - /url: https://mall.csdn.net/vip?utm_source=vip_toolbarhyzx_hy&firstTemplateId=4&templateId=4
+            - link "创作中心" [ref=f7e116] [cursor=pointer]:
+              - /url: https://mp.csdn.net/
+        - generic [ref=f7e120] [cursor=pointer]
+  - generic [ref=f7e122]:
+    - main [ref=f7e123]:
+      - generic [ref=f7e124]:
+        - generic [ref=f7e126]:
+          - heading "从笔经到面经：一位工行科技菁英岗候选人的实战复盘与心得" [level=1] [ref=f7e128]
+          - generic [ref=f7e129]:
+            - generic [ref=f7e130]:
+              - generic [ref=f7e131]:
+                - link "江啾 江啾 博客等级" [ref=f7e132] [cursor=pointer]:
+                  - /url: https://blog.csdn.net/weixin_27219587
+                  - img "江啾" [ref=f7e134]
+                  - generic "江啾" [ref=f7e135]
+                  - img "博客等级" [ref=f7e136]
+                - link "墨衍会员 · AI 创作全网分发" [ref=f7e138] [cursor=pointer]:
+                  - /url: https://mp.csdn.net/vip?spm=1001.2101.3001.11990&firstTemplateId=4&templateId=4
+                  - generic [ref=f7e143]: 墨衍会员
+                  - generic [ref=f7e144]: ·
+                  - generic [ref=f7e145]: AI 创作全网分发
+                - generic [ref=f7e146]:
+                  - text: ·
+                  - generic [ref=f7e147]: 码龄10年
+              - link "+ 关注" [ref=f7e148] [cursor=pointer]:
+                - /url: javascript:;
+            - generic [ref=f7e149]:
+              - link "VIP免费" [ref=f7e150] [cursor=pointer]:
+                - /url: https://mall.csdn.net/vip?firstTemplateId=4&templateId=4
+              - generic [ref=f7e151]: · 原创
+              - generic [ref=f7e152]: · 2026-04-19 09:13:27
+              - generic [ref=f7e153]: · 274 阅读
+              - link "AI 写同款 · GEO 优化 ›" [ref=f7e154] [cursor=pointer]:
+                - /url: https://mp.csdn.net/creation_topic?spm=1001.2101.3001.11779
+                - generic [ref=f7e155]:
+                  - generic [ref=f7e160]: AI 写同款
+                  - generic [ref=f7e161]: ·
+                  - generic [ref=f7e162]: GEO 优化
+                  - generic [ref=f7e164]: ›
+        - link "中国工商银行云南省分行科技箐英计划面试 工商银行招聘采取统一的流程，全国统一考试，地方自行组织各自的面试，然后体检签约，正常的流程。 我报名的是2020年的科技箐英计划，今年的招录已经结束了，已顺利拿到offer。记得当时各种找面经，网上竟然没人写相关的，后来才看到这是这个方向的招录的第一年，提前考试，提前录取。本人在这过程中遭遇了很多迷茫，也很无助。基于此写下这个博客，留下这段经历，同时想为进入工行做金融开发的各位同仁带来一些启发... 阅读详情 >" [ref=f7e165] [cursor=pointer]:
+          - /url: https://blog.csdn.net/qq_38149046/article/details/103627623
+          - generic [ref=f7e166]:
+            - generic [ref=f7e167]:
+              - text: 中国工商
+              - emphasis [ref=f7e168]: 银行
+              - text: 云南省分行
+              - emphasis [ref=f7e169]: 科技
+              - text: 箐英计划
+              - emphasis [ref=f7e170]: 面试
+            - generic [ref=f7e171]:
+              - text: 工商
+              - emphasis [ref=f7e172]: 银行
+              - text: 招聘采取统一的流程，全国统一考试，地方自行组织各自的
+              - emphasis [ref=f7e173]: 面试
+              - text: ，然后体检签约，正常的流程。 我报名的是2020年的
+              - emphasis [ref=f7e174]: 科技
+              - text: 箐英计划，今年的招录已经结束了，已顺利拿到offer。记得当时各种找
+              - emphasis [ref=f7e175]: 面
+              - text: 经，网上竟然没人写相关的，后来才看到这是这个方向的招录的第一年，提前考试，提前录取。本人在这过程中遭遇了很多迷茫，也很无助。基于此写下这个博客，留下这段经历，同时想为进入
+              - emphasis [ref=f7e176]: 工行
+              - text: 做金融开发的各位同仁带来一些启发...
+          - generic [ref=f7e177]: 阅读详情 >
+        - article [ref=f7e178]:
+          - generic [ref=f7e180]:
+            - heading "1. 投递前的准备：从岗位选择到简历打磨" [level=3] [ref=f7e181]
+            - paragraph [ref=f7e182]: 记得去年夏天，我在工行官网看到科技菁英岗的招聘信息时，第一反应是"这个岗位简直是为我量身定做的"。但冷静下来后，我发现需要先解决几个关键问题：岗位方向选择、简历优化和投递策略。
+            - paragraph [ref=f7e183]:
+              - strong [ref=f7e184]: 岗位选择
+              - text: 上，工行科技菁英岗分为多个技术方向。我最终选择了珠海的后端开发岗，主要基于三个考虑：一是珠海的生活成本相对一线城市更低，二是大湾区的发展前景，三是岗位要求与我的技术栈高度匹配。这里建议大家在投递前，一定要仔细研究不同分行的岗位描述，有些分行的技术栈要求会明确写"Java/Spring Cloud"，有些则更偏向大数据方向。
+            - paragraph [ref=f7e185]:
+              - strong [ref=f7e186]: 简历打磨
+              - text: 花了我整整三天时间。我参考了牛客网上多位大神的建议，采用"STAR法则"（情境-任务-行动-结果）来描述
+              - generic [ref=f7e187] [cursor=pointer]: 项目
+              - text: 经历。比如原来写"参与电商系统开发"，后来改为"主导Spring Cloud微服务架构设计，通过引入Redis缓存使QPS提升300%"。技术栈部分，我把掌握程度分为"精通"、"熟练"和"了解"三个层级，确保不给自己挖坑。
+            - blockquote [ref=f7e189]:
+              - paragraph [ref=f7e190]: 提示：简历上的每个技术点都可能成为面试问题，我在"熟练使用MySQL"旁边特意标注了"索引优化、事务隔离级别"，这后来果然成为面试官追问的方向。
+            - paragraph [ref=f7e191]: 投递渠道我选择了官网直投，时间卡在截止前3天。太早投怕被淹没在简历海里，太晚又担心系统问题。事实证明这个策略很有效，我在投递后第14天收到了笔试通知。
+            - heading "2. 笔试备战：三周突击计划" [level=3] [ref=f7e192]
+            - paragraph [ref=f7e193]: 收到笔试通知时，距离正式考试还有7天。我立即制定了"3+3+1"复习计划：3天专业知识、3天行测英语、1天全真模拟。
+            - paragraph [ref=f7e194]:
+              - strong [ref=f7e195]: 专业知识
+              - text: 部分覆盖面极广，我的应对策略是：
+            - list [ref=f7e196]:
+              - listitem [ref=f7e197]: 计算机基础：重点复习操作系统进程线程、网络TCP/IP三次握手
+              - listitem [ref=f7e198]: 开发框架：Spring IOC/AOP原理、MyBatis缓存机制
+              - listitem [ref=f7e199]: 数据库：MySQL索引原理、Redis持久化方案
+              - listitem [ref=f7e200]: 安全法规：《个人信息保护法》要点、等保2.
+      - generic [ref=f7e201]: 最低0.47元/天 解锁文章
+      - generic [ref=f7e204]:
+        - generic [ref=f7e205]:
+          - text: ：
+          - generic [ref=f7e208]:
+            - generic [ref=f7e209]: 标签：
+            - generic [ref=f7e210]:
+              - link "#银行科技岗" [ref=f7e211] [cursor=pointer]:
+                - /url: https://so.csdn.net/so/search/s.do?q=%E9%93%B6%E8%A1%8C%E7%A7%91%E6%8A%80%E5%B2%97&t=all&o=vip&s=&l=&f=&viparticle=&from_tracking_code=tag_word&from_code=app_blog_art
+              - link "#求职攻略" [ref=f7e212] [cursor=pointer]:
+                - /url: https://so.csdn.net/so/search/s.do?q=%E6%B1%82%E8%81%8C%E6%94%BB%E7%95%A5&t=all&o=vip&s=&l=&f=&viparticle=&from_tracking_code=tag_word&from_code=app_blog_art
+              - link "#面试技巧" [ref=f7e213] [cursor=pointer]:
+                - /url: https://so.csdn.net/so/search/s.do?q=%E9%9D%A2%E8%AF%95%E6%8A%80%E5%B7%A7&t=all&o=vip&s=&l=&f=&viparticle=&from_tracking_code=tag_word&from_code=app_blog_art
+        - link "基于8051控制LCD12864B(ST7920控制器)液晶屏，分别用字库调用和图片调用方式显示《七律·长征》和《十六字令三首》 1.运行环境Proteus 8.9.根据安装的路径，先将动态链接库和库文件拷到对应目录下。举例：我的Proteus 8 Professional是安装在D盘；把“LCD12864B.dll”拷贝到D:\\Program Files (x86)\\Labcenter Electronics\\Proteus 8 Professional\\DATA\\MODELS目录下；把“LCD7920.IDX”、“LCD7920.LIB”这两个文件拷贝到D:\\Program Files (x86)\\Labcenter Electronics\\Proteus 8 Professional\\DATA\\LIBRARY目录下。 2.8051的工程可用KEILC51完全汉化版编译生成目标代码 3.12864字模工具.exe是取字模软件，一屏信息以图片形式取模，形成数据 4.IC_DAT生成器.exe也是取字模软件，输入汉字，可生成基于字库调用的数据 5.以上例程，用硬件开发板调试正常 6.LCD12864B.dll是基于LCD12864a.dll修改后生成的，解决仿真时字符显示有残留的问题 立即下载" [ref=f7e214] [cursor=pointer]:
+          - /url: javascript:;
+          - generic [ref=f7e215]:
+            - generic [ref=f7e216]: 基于8051控制LCD12864B(ST7920控制器)液晶屏，分别用字库调用和图片调用方式显示《七律·长征》和《十六字令三首》
+            - generic [ref=f7e217]:
+              - text: 1.运行环境Proteus 8.9.根据安装的路径，先将动态链接库和库文件拷到对应目录下。举例：我的Proteus 8 Professional是安装在D盘；把“LCD12864B.dll”拷贝到D
+              - emphasis [ref=f7e218]: ":"
+              - text: \Program Files (x86)\Labcenter Electronics\Proteus 8 Professional\DATA\MODELS目录下；把“LCD7920.IDX”、“LCD7920.LIB”这两个文件拷贝到D
+              - emphasis [ref=f7e219]: ":"
+              - text: \Program Files (x86)\Labcenter Electronics\Proteus 8 Professional\DATA\LIBRARY目录下。 2.8051的工程可用KEILC51完全汉化版编译生成目标代码 3.12864字模工具.exe是取字模软件，一屏信息以图片形式取模，形成数据 4.IC_DAT生成器.exe也是取字模软件，输入汉字，可生成基于字库调用的数据 5.以上例程，用硬件开发板调试正常 6.LCD12864B.dll是基于LCD12864a.dll修改后生成的，解决仿真时字符显示有残留的问题
+          - generic [ref=f7e220]: 立即下载
+        - generic [ref=f7e221]:
+          - generic [ref=f7e222]:
+            - heading "相关推荐" [level=3] [ref=f7e223]
+            - button "换一换" [ref=f7e224] [cursor=pointer]
+          - generic [ref=f7e227]:
+            - link [ref=f7e228] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/weixin_44820777/93752074
+              - paragraph [ref=f7e229]:
+                - text: 不依赖HBM和CoWoS！d-Matrix揭秘SRAM、3D DRAM
+                - emphasis [ref=f7e230]: 与
+                - text: 下一代AI推理芯片架构.pdf
+              - paragraph [ref=f7e231]:
+                - text: 不依赖HBM和CoWoS！d-Matrix揭秘SRAM、3D DRAM
+                - emphasis [ref=f7e232]: 与
+                - text: 下一代AI推理芯片架构.pdf
+            - link [ref=f7e233] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/qq_41701956/93751724
+              - paragraph [ref=f7e234]:
+                - text: 是由开放原子开源基金会(OpenAtom Foundation)孵化及运营的开源项目 基于Blockly构建一套全新的、
+                - emphasis [ref=f7e235]: 面
+                - text: 向业务的编程语言 对使用者尽可能隐藏技术细节
+              - paragraph [ref=f7e236]:
+                - text: 是由开放原子开源基金会(OpenAtom Foundation)孵化及运营的开源项目。基于Blockly构建一套全新的、
+                - emphasis [ref=f7e237]: 面
+                - text: 向业务的编程语言。对使用者尽可能隐藏技术细节。 项目遵循开放、协作、共建的原则，
+                - emphasis [ref=f7e238]: 面
+                - text: 向开发者、企业及生态伙伴，持续推进技术演进
+                - emphasis [ref=f7e239]: 与
+                - text: 社区建设。狮偶编程语言主工程 包含编辑器、编译和链接 js运行时
+            - link [ref=f7e240] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/2401_84445501/93749808
+              - paragraph [ref=f7e241]:
+                - emphasis [ref=f7e242]: 求职
+                - text: 简历模板30套（Word可编辑）
+              - paragraph [ref=f7e243]:
+                - text: 【内容概要】
+                - emphasis [ref=f7e244]: 求职
+                - text: 简历模板30套（Word可编辑）。本资源为可编辑源文件，含配套模板
+                - emphasis [ref=f7e245]: 与
+                - text: 实操指引，覆盖
+                - emphasis [ref=f7e246]: 求职
+                - text: 者的核心使用场景，拿到即可直接修改使用。 【适用人群】
+                - emphasis [ref=f7e247]: 求职
+                - text: 者。 【使用场景及目标】快速套用，节省从零搭建的时间成本。 【其他说明】文件为可编辑格式，无软件依赖，下载后可直接使用。
+            - link [ref=f7e248] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/Feng_wwf/93747689
+              - paragraph [ref=f7e249]: 网页自动刷新器.exe
+              - paragraph [ref=f7e250]:
+                - text: 功能对照你截图里的实现： 管理窗口 单个输入回车添加，或批量粘贴很多链接（自动识别换行、空格、中英文逗号分隔），自动去重 一键读取剪贴板添加 链接列表带勾选框（启用/停用），支持 全部启用/停用、编辑、删除、清空 导入 TXT / JSON、导出 TXT 刷新周期可设置（默认 60 秒 = 1 分钟） 可勾选「下次启动软件时自动打开并刷新」 保存 / 启动刷新 / 保存并启动 / 退出 刷新窗口 所有启用的链接各开一个标签页（真实浏览器，可正常登录、看内容） 工具栏：立即刷新（F5）、暂停/继续、后退、前进、刷新当前页（Ctrl+R）、返回链接管理 状态栏实时显示「刷新周期：1 分钟 | 距下次刷新：00
+                - emphasis [ref=f7e251]: ":"
+                - text: 37」倒计时，到点自动刷新所有标签 标签可单独关闭，暂停时倒计时停止 配置保存在 exe 同目录的 config.json，重装或换目录时拷走这个文件即可保留链接列表。 一点说明：首次启动会有几秒解压等待（单文件打包的通病），属正常现象；之后每次启动也建议固定在同一个文件夹里使用，避免重复生成配置文件。
+            - link [ref=f7e252] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/weixin_66784080/93751839
+              - paragraph [ref=f7e253]: springboot+vue家具仓库管理系统（代码+数据库+LW）
+              - paragraph [ref=f7e254]:
+                - text: 摘要 目前家具市场规模持续扩大
+                - emphasis [ref=f7e255]: 与
+                - text: 产品品类日益丰富，传统手工仓库管理模式
+                - emphasis [ref=f7e256]: 面
+                - text: 临流程割裂、权限模糊、数据滞后、定制化不足等突出问题，严重制约企业运营效率
+                - emphasis [ref=f7e257]: 与
+                - text: 数字化转型进程。为解决痛点，本研究设计并实现了一套基于SpringBoot+Vue+MySQL技术栈的家具仓库管理系统。通过文献研究法系统梳理国内外仓库管理系统研究现状，明确家具行业在全生命周期管理、大件存储适配、多角色协同等方
+                - emphasis [ref=f7e258]: 面
+                - text: 的特殊需求；采用系统开发法完成需求分析
+                - emphasis [ref=f7e259]: 与
+                - text: 架构设计，构建涵盖采购入库、库存管理、出库配送、售后维修四大核心业务模块，以及权限管理、报表决策、系统配置三大支撑模块的完整体系；针对家具产品特性，创新设计“品类-货位-批次”三维库存管理模型
+                - emphasis [ref=f7e260]: 与
+                - text: “权限-流程”协同管控机制，实现全链路数据实时联动
+                - emphasis [ref=f7e261]: 与
+                - text: 智能风险预警；通过单元测试、集成测试
+                - emphasis [ref=f7e262]: 与
+                - text: 用户验收测试验证系统可行性
+                - emphasis [ref=f7e263]: 与
+                - text: 实用性。系统具备技术成熟、操作便捷、成本可控等优势，研究成果不仅填补了家具行业定制化仓库管理系统的理论
+                - emphasis [ref=f7e264]: 与
+                - text: 实践缺口，为企业提供高效数字化管理解决方案，也为传统制造业垂直领域的系统开发提供了可复制的技术范式
+                - emphasis [ref=f7e265]: 与
+                - text: 实施路径，对推动行业智能化转型具有重要参考价值。 关键词：家具仓库管理系统；SpringBoot框架；全流程管理；库存精准管理；Vue框架
+            - link [ref=f7e266] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/weixin_61181717/93751070
+              - paragraph [ref=f7e267]: 【无人车路径跟踪】基于神经网络的数据驱动迭代学习控制(ILC)算法，用于具有未知模型和重复任务的非线性单输入单输出(SISO)离散时间系统的无人车的路径跟踪（Matlab代码实现）
+              - paragraph [ref=f7e268]:
+                - text: 内容概要：本文系统解读了一套用于多机器人路径规划（MAPF）的MATLAB代码库，聚焦于优先级规划算法的设计
+                - emphasis [ref=f7e269]: 与
+                - text: 实现。该框架采用四层架构——几何解析、拓扑构建、调度规划
+                - emphasis [ref=f7e270]: 与
+                - text: 可视化呈现，有效分离空间路径搜索
+                - emphasis [ref=f7e271]: 与
+                - text: 时间冲突消解过程，提升算法效率
+                - emphasis [ref=f7e272]: 与
+                - text: 可扩展性。核心机制包括动态边权膨胀、节点预留历史
+                - emphasis [ref=f7e273]: 与
+                - text: 几何惩罚驱动的局部同步策略，前者通过软惩罚引导后续智能体绕行而非硬封锁路径，后者利用哈希结构
+                - emphasis [ref=f7e274]: 与
+                - text: 前向信息传递优化冲突检测效率。同时引入Petri网建模方法，将路径冲突问题转化为整数规划中的容量约束问题，支持对解的存在性
+                - emphasis [ref=f7e275]: 与
+                - text: 最优性进行形式化分析。文章详述了优先级启发式策略（如路径长度、冲突程度排序）、冲突检测
+                - emphasis [ref=f7e276]: 与
+                - text: 消解机制，并提供完整的仿真
+                - emphasis [ref=f7e277]: 与
+                - text: 动画输出功能，便于算法验证
+                - emphasis [ref=f7e278]: 与
+                - text: 教学演示。; 适合人群：具备一定编程基础和算法知识，从事机器人路径规划、智能交通、自动化调度等相关领域的研究人员、研究生及工程技术人员（尤其适合有MATLAB使用经验者）。; 使用场景及目标：①用于仓储物流、无人机编队、自动驾驶等多智能体系统的路径规划研究
+                - emphasis [ref=f7e279]: 与
+                - text: 仿真验证；②作为MAPF教学案例，帮助理解优先级规划、冲突消解、Petri网建模等核心概念；③为复杂调度系统开发提供模块化设计参考。; 阅读建议：建议结合文中提供的代码结构
+                - emphasis [ref=f7e280]: 与
+                - text: 流程图逐步实现各模块功能，重点关注动态边权膨胀
+                - emphasis [ref=f7e281]: 与
+                - text: 时间同步机制的设计逻辑，可通过调整启发式策略
+                - emphasis [ref=f7e282]: 与
+                - text: 地图参数进行实验对比，深入理解算法性能
+                - emphasis [ref=f7e283]: 与
+                - text: 局限性。
+            - link [ref=f7e284] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/ssswww56/93749282
+              - paragraph [ref=f7e285]:
+                - text: 光伏+储能+并网逆变+发电系统【含建模
+                - emphasis [ref=f7e286]: 笔
+                - text: 记＋参考文献等】
+              - paragraph [ref=f7e287]:
+                - text: 内容概要：本文档围绕“光伏+储能+并网逆变+发电系统”的建模
+                - emphasis [ref=f7e288]: 与
+                - text: 仿真展开，系统性地涵盖了光伏发电最大功率点跟踪（MPPT）、储能系统能量管理、并网逆变控制及多源协调运行等关键技术环节。基于Matlab/Simulink平台，实现了从光伏阵列、储能单元到并网逆变器的整体系统建模，重点展示了三闭环矢量控制、PID控制、模型预测控制（MPC）等多种先进控制策略在新能源发电系统中的应用
+                - emphasis [ref=f7e289]: 与
+                - text: 对比。文档不仅聚焦于单一组件的建模，更强调系统级的协同控制
+                - emphasis [ref=f7e290]: 与
+                - text: 稳定性分析，整合了微电网优化调度、电力电子变换器控制、状态估计、卡尔曼滤波、车间调度算法等多领域技术资源，形成了一份内容详实、覆盖
+                - emphasis [ref=f7e291]: 面
+                - text: 广的综合性技术资料，为新能源领域的科研、教学
+                - emphasis [ref=f7e292]: 与
+                - text: 工程实践提供有力支撑。; 适合人群：具备电力电子、自动控制、新能源发电或电气工程等相关专业背景，从事相关领域研究的研究生、高校教师、科研人员及电力系统工程技术人员。; 使用场景及目标：①深入学习并掌握光伏-储能-并网发电系统的全流程建模
+                - emphasis [ref=f7e293]: 与
+                - text: 仿真技术；②理解并应用矢量控制、MPC等先进控制算法解决实际电力系统中的动态响应
+                - emphasis [ref=f7e294]: 与
+                - text: 稳定性问题；③获取丰富的Matlab/Simulink仿真模型、代码及参考文献，用于完成科研课题、学位论文、课程设计或工程项目开发。; 阅读建议：此资源内容丰富且涵盖多个独立技术主题，建议读者根据自身的研究方向和实际需求，选择性地深入学习特定章节。应重点研读系统建模方法、控制算法的设计原理
+                - emphasis [ref=f7e295]: 与
+                - text: 参数整定过程，并务必结合所提供的仿真代码进行动手实践、调试
+                - emphasis [ref=f7e296]: 与
+                - text: 结果分析，以深化对理论知识的理解并提升工程应用能力。
+            - link [ref=f7e297] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/Ke_Yan_She/93748497
+              - paragraph [ref=f7e298]: LLC谐振DC-DC变换器的控制策略研究（Simulink仿真实现）
+              - paragraph [ref=f7e299]:
+                - text: 内容概要：本文系统研究了LLC谐振DC-DC变换器的多种先进控制策略，并基于Simulink平台实现了全
+                - emphasis [ref=f7e300]: 面
+                - text: 的建模
+                - emphasis [ref=f7e301]: 与
+                - text: 仿真验证。研究涵盖全桥LLC变换器的混合式控制、变频
+                - emphasis [ref=f7e302]: 与
+                - text: 移相协同控制下的模式切换优化、欠谐振工作区间的动态性能分析、双三相LLC变换器的宽输入范围运行特性及软启动技术等关键技术。针对实际工程需求，采用了电压电流双闭环控制、降频软启动、恒压恒流控制等方法以提升系统稳定性、效率
+                - emphasis [ref=f7e303]: 与
+                - text: 动态响应能力。文中深入探讨了不同控制策略下的谐振参数设计、软开关实现条件、模式切换平滑性等问题，并通过高精度仿真模型对各类方案进行了对比分析
+                - emphasis [ref=f7e304]: 与
+                - text: 性能评估，为高性能LLC变换器的设计
+                - emphasis [ref=f7e305]: 与
+                - text: 优化提供了理论支撑
+                - emphasis [ref=f7e306]: 与
+                - text: 实践指导。; 适合人群：具备电力电子技术
+                - emphasis [ref=f7e307]: 与
+                - text: 自动控制理论基础，从事DC-DC变换器研发、电源系统设计或相关领域研究的研究生、科研人员及工程技术人员。; 使用场景及目标：①深入理解LLC谐振变换器的工作原理及其在不同控制策略下的动态行为差异；②掌握在Simulink中构建高保真LLC变换器仿真模型的方法，并实现复杂控制算法的集成
+                - emphasis [ref=f7e308]: 与
+                - text: 调试；③为学术论文复现、毕业课题开发或工业级电源产品设计提供可复用的技术路线
+                - emphasis [ref=f7e309]: 与
+                - text: 仿真资源支持。; 阅读建议：建议结合文中提供的仿真模型、参考文献及关键技术说明进行同步学习，重点关注控制策略的设计逻辑、关键参数的整定方法以及仿真结果的分析过程，通过动手实践仿真操作以深化对系统非线性特性和控制机理的理解，并可根据具体应用场景对模型进行二次开发
+                - emphasis [ref=f7e310]: 与
+                - text: 性能优化。
+            - link [ref=f7e311] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/2604_97005219/93750538
+              - paragraph [ref=f7e312]: gcc安装所有依赖-下载即用.zip
+              - paragraph [ref=f7e313]:
+                - text: 打开链接下载源码： https
+                - emphasis [ref=f7e314]: ":"
+                - text: //pan.quark.cn/s/a4b39357ea24 在Linux操作系统中，GCC（GNU Compiler Collection）作为一个核心的开源编译工具集，其主要功能是将源代码转化为可执行文件。GCC能够支持多种编程语言，涵盖了C、C++、Fortran、Objective-C等语言类型。当在RHEL（Red Hat Enterprise Linux）6.0 x86_64环境中部署GCC时，由于其复杂的特性以及多重的依赖关系，必须确认所有相关的依赖软件包都已正确地配置。Oracle 11g数据库可能
+                - emphasis [ref=f7e315]: 与
+                - text: 这一流程相关联，因为有时候开发者需要借助GCC来编译
+                - emphasis [ref=f7e316]: 与
+                - text: Oracle数据库相衔接的应用程序或驱动程序。 我们必须对RHEL 6.0的软件仓库有深入的了解。RHEL采用的是Yum包管理器，因此安装GCC及其相关依赖通常涉及到使用Yum命令进行操作。以下是一些关键的依赖软件包： 1. **binutils**：作为构建工具链的一部分，它提供了诸如ld链接器、as汇编器等基础工具。 2. **glibc**：GNU C库是大多数Linux程序的基础，它提供了大量的系统调用和库函数。 3. **cpp**：预处理器，负责处理C/C++源代码中的宏和条件编译指令。 4. **gcc-core**：它包含了C语言编译器以及其他基本组件。 5. **gcc-c++**：专用于C++编译的组件。 6. **make**：一种构建工具，用于依据Makefile文件来编译和链接项目。 7. **autoconf** 和 **automake**：它们是自动化配置脚本生成工具，有助于构建跨平台的原生代码包。 8. **libtool**：负责管理共...
+            - link [ref=f7e317] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/2604_97005219/93749758
+              - paragraph [ref=f7e318]: DOS基本启动文件COMMAND.COM MS-DOS.SYS IO.SYS DOS引导文件Boot.rar sys.c
+              - paragraph [ref=f7e319]:
+                - text: 下载代码方式：https
+                - emphasis [ref=f7e320]: ":"
+                - text: //pan.quark.cn/s/b84554d4f9e3 本人长期收藏的 config.sys、SMARTDRV.EXE、HIMEM.SYS、diskgen.exe 以及 DOS 的四个核心启动文件 COMMAND.COM、MS-DOS.SYS、IO.SYS，这些都是启动 DOS 所必需的文件。描述如下：IO.SYS 是用于 DOS 环境下控制输入输出的文件，其不可或缺性毋庸置疑。COMMAND.COM 则是 Windows 9X 中的 DOS 外壳程序（SHELL），相较于 DOS 6.22 仅增加了部分内部命令，并无其他显著更新。IO.SYS 对 COMMAND.COM 的处理方式发生了根本性变革，当 Win 9X 在 CONFIG.SYS 中加载 EMM386.EXE 驱动以提供UMB时，COMMAND.COM 的常驻部分会被装入 HMA，而暂驻部分则会被放置在 UMB 中（在 DOS 6.22 中，COMMAND.COM 仅能将其常驻部分装入 HMA），这样的设计为 DOS 程序提供了更大的常规内存空间，同时也避免了频繁地从磁盘读取暂驻部分，从而显著提升了系统性能。当然，如果未加载 EMM386.EXE，系统将不会提供UMB，此时 COMMAND.COM 的暂驻部分只能像 DOS 6.22 那样放置在常规内存的高端区域。DOS 内部命令的程序代码存储于 command.com 文件中，该文件在 DOS 系统启动时
+                - emphasis [ref=f7e321]: 与
+                - text: DOS 的启动模块一同被加载到计算机内存中。MSDOS.SYS 作为 DOS 的三个核心文件之一，另外两个分别是 command.com 和 IO.SYS，它是微软非 NT 内核操作系统中常见的文件，通常具有只读...
+            - link [ref=f7e322] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/2604_97005219/93751433
+              - paragraph [ref=f7e323]: word2vec.tar.gz 源码 安装包
+              - paragraph [ref=f7e324]:
+                - text: 代码下载链接： https
+                - emphasis [ref=f7e325]: ":"
+                - text: //pan.quark.cn/s/a4b39357ea24 访问 https
+                - emphasis [ref=f7e326]: ":"
+                - text: //code.google.com/p/word2vec/ 有时可能会遇到访问限制。word2vec.tar.gz 文件包含了该项目的源代码以及安装所需的文件。
+            - link [ref=f7e327] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/2604_97005219/93751343
+              - paragraph [ref=f7e328]: 数据结构实用教程第二版答案
+              - paragraph [ref=f7e329]:
+                - text: 代码转载自：https
+                - emphasis [ref=f7e330]: ":"
+                - text: //pan.quark.cn/s/a4b39357ea24 Data-Structres 我的博客 ：叫我皮卡丘 Stargazers over time 前言 中国大学MOOC上浙大的《数据结构》广受好评，原因有二，一是基础，简单易懂，老师讲得也清楚，另一大优点就是配套的每周相应知识点的编程题了，有难有易，容易题帮助巩固知识点，难题开阔视野。
+                - emphasis [ref=f7e331]: 笔
+                - text: 记加入了一些自己的想法，题解也有思路说明 课程地址：https
+                - emphasis [ref=f7e332]: ":"
+                - text: //www.icourse163.org/course/ZJU-93001 现将
+                - emphasis [ref=f7e333]: 笔
+                - text: 记和题解记录如下 基本概念 基本概念 线性结构 线性表 堆栈 队列 树 树的定义 二叉树的遍历 二叉搜索树 平衡二叉树 堆 哈夫曼树 并查集的实现和优化 图 图的定义 图的遍历 最短路径 最小生成树 排序 排序 散列查找 散列查找 KMP 注：Saving James Bond - Hard Version 和 关键活动 实在没时间做了... 完结撒花，弱弱求个 star~
+            - link [ref=f7e334] [cursor=pointer]:
+              - /url: https://download.csdn.net/download/2604_97005219/93751838
+              - paragraph [ref=f7e335]:
+                - text: javax.naming.NamingException
+                - emphasis [ref=f7e336]: ":"
+                - text: Resource instance creation failure
+              - paragraph [ref=f7e337]:
+                - text: 代码转载自：https
+                - emphasis [ref=f7e338]: ":"
+                - text: //pan.quark.cn/s/9c73bd78623b javax.naming.NamingException
+                - emphasis [ref=f7e339]: ":"
+                - text: 无法建立资源实例，涉及类加载问题，期望能为遭遇相似状况的个体提供支持。
+            - link "DMTF相关协议（一）：Redfish和SMBIOS Redfish 是一种管理标准，使用超媒体 RESTful 接口中的数据模型表示。该模型以标准的、机器可读的模式表示，消息的有效负载以 JSON 表示。该协议本身利用了 OData v4。由于它是一个超媒体 API，因此能够通过一致的接口表示各种实现。它具有管理数据中心资源、处理事件、长时间任务和发现的机制。 weixin_44032634的博客 2250" [ref=f7e340] [cursor=pointer]:
+              - /url: https://blog.csdn.net/weixin_44032634/article/details/145596635
+              - paragraph [ref=f7e341]: DMTF相关协议（一）：Redfish和SMBIOS
+              - paragraph [ref=f7e342]: Redfish 是一种管理标准，使用超媒体 RESTful 接口中的数据模型表示。该模型以标准的、机器可读的模式表示，消息的有效负载以 JSON 表示。该协议本身利用了 OData v4。由于它是一个超媒体 API，因此能够通过一致的接口表示各种实现。它具有管理数据中心资源、处理事件、长时间任务和发现的机制。
+              - generic [ref=f7e343]:
+                - generic [ref=f7e344]: weixin_44032634的博客
+                - generic [ref=f7e345]: "2250"
+            - link "Cursor概述及环境配置 Cursor 是一款基于 AI 的代码编辑器，支持 VS Code 配置迁移和 Java 开发环境配置。主要功能分为 Cursor Settings（AI 相关设置）和 Editor Settings（基础编辑器设置）。用户可通过一键导入或手动方式迁移 VS Code 配置，配置包括主题、扩展和快捷键等。对于 Java 开发，需配置 JDK 和 Maven 路径，并安装 Java 扩展插件以获得完整开发体验，如代码补全、调试和 Maven 项目管理。此外，Cursor 支持汉化配置，用户可安装中文语言包切换 Knight 3534" [ref=f7e349] [cursor=pointer]:
+              - /url: https://blog.csdn.net/qq_46548855/article/details/150766403
+              - paragraph [ref=f7e350]: Cursor概述及环境配置
+              - paragraph [ref=f7e351]: Cursor 是一款基于 AI 的代码编辑器，支持 VS Code 配置迁移和 Java 开发环境配置。主要功能分为 Cursor Settings（AI 相关设置）和 Editor Settings（基础编辑器设置）。用户可通过一键导入或手动方式迁移 VS Code 配置，配置包括主题、扩展和快捷键等。对于 Java 开发，需配置 JDK 和 Maven 路径，并安装 Java 扩展插件以获得完整开发体验，如代码补全、调试和 Maven 项目管理。此外，Cursor 支持汉化配置，用户可安装中文语言包切换
+              - generic [ref=f7e352]:
+                - generic [ref=f7e353]: Knight
+                - generic [ref=f7e354]: "3534"
+            - link "自建智能算力中心与第三方算力租赁的深度分析 自建智算中心和第三方算力租赁的主要区别如下：对比维度自建算力中心第三方算力租赁初期成本数千万至数亿元硬件采购+机房基建零硬件投入，按需付费（如1元/卡时）部署速度6-12个月（采购、部署、调试）即时开通，分钟级资源调度运维难度需专业IT团队，承担断电、故障等风险服务商全托管，SLA保障99.95%可用性弹性扩展扩容需重新采购硬件，周期长、成本高支持秒级弹性伸缩，应对流量峰值技术迭代硬件更新周期长，易被淘汰自动升级。 2501_90999758的博客 2333" [ref=f7e358] [cursor=pointer]:
+              - /url: https://blog.csdn.net/2501_90999758/article/details/146340653
+              - paragraph [ref=f7e359]:
+                - text: 自建智能算力中心
+                - emphasis [ref=f7e360]: 与
+                - text: 第三方算力租赁的深度分析
+              - paragraph [ref=f7e361]: 自建智算中心和第三方算力租赁的主要区别如下：对比维度自建算力中心第三方算力租赁初期成本数千万至数亿元硬件采购+机房基建零硬件投入，按需付费（如1元/卡时）部署速度6-12个月（采购、部署、调试）即时开通，分钟级资源调度运维难度需专业IT团队，承担断电、故障等风险服务商全托管，SLA保障99.95%可用性弹性扩展扩容需重新采购硬件，周期长、成本高支持秒级弹性伸缩，应对流量峰值技术迭代硬件更新周期长，易被淘汰自动升级。
+              - generic [ref=f7e362]:
+                - generic [ref=f7e363]: 2501_90999758的博客
+                - generic [ref=f7e364]: "2333"
+            - link "ANSYS MAXWELL内置式永磁同步电机(IPMSM)转矩最大时输入电流相位的确定 1.在转子转速为零时看一个周期内的转矩变化 qq_41752507的博客 6504" [ref=f7e368] [cursor=pointer]:
+              - /url: https://blog.csdn.net/qq_41752507/article/details/123636584
+              - paragraph [ref=f7e369]: ANSYS MAXWELL内置式永磁同步电机(IPMSM)转矩最大时输入电流相位的确定
+              - paragraph [ref=f7e370]: 1.在转子转速为零时看一个周期内的转矩变化
+              - generic [ref=f7e371]:
+                - generic [ref=f7e372]: qq_41752507的博客
+                - generic [ref=f7e373]: "6504"
+            - link "pgAdmin4备份恢复实战：从安装到避坑指南 本文提供了一份详尽的pgAdmin4备份恢复实战指南，涵盖从安装配置到执行备份恢复的全流程。针对Windows环境下的浏览器兼容性、二进制路径配置等常见问题，给出了具体解决方案。重点强调了使用pgAdmin4进行备份恢复的可靠性，特别是在处理包含PostGIS等扩展的数据库时，能有效避免数据类型和权限错误，确保数据迁移的完整性与安全性。 weixin_29266007的博客 436" [ref=f7e377] [cursor=pointer]:
+              - /url: https://blog.csdn.net/weixin_29266007/article/details/158552785
+              - paragraph [ref=f7e378]:
+                - text: pgAdmin4备份恢复
+                - emphasis [ref=f7e379]: 实战
+                - text: ：从安装到避坑指南
+              - paragraph [ref=f7e380]:
+                - text: 本文提供了一份详尽的pgAdmin4备份恢复
+                - emphasis [ref=f7e381]: 实战
+                - text: 指南，涵盖从安装配置到执行备份恢复的全流程。针对Windows环境下的浏览器兼容性、二进制路径配置等常见问题，给出了具体解决方案。重点强调了使用pgAdmin4进行备份恢复的可靠性，特别是在处理包含PostGIS等扩展的数据库时，能有效避免数据类型和权限错误，确保数据迁移的完整性
+                - emphasis [ref=f7e382]: 与
+                - text: 安全性。
+              - generic [ref=f7e383]:
+                - generic [ref=f7e384]: weixin_29266007的博客
+                - generic [ref=f7e385]: "436"
+            - link "大漠多线程增强版：解决窗口消失、坐标错乱与识别卡死 多线程环境下窗口自动化面临的核心挑战，本质是GDI资源非线程安全、HWND生命周期失控及图像引擎状态污染三大底层问题。Windows GUI编程中，跨线程共享hDC、缓存失效的窗口句柄、OpenCV静态Mat等设计缺陷，导致FindPic失败、GetCursorPos异常、坐标跳变等典型故障。本方案通过线程局部存储（TLS）重构资源生命周期、WinEventHook+心跳探测构建实时窗口状态链、ABI对齐的多语言内存契约，实现稳定低延迟的并发UI识别与控制。适用于游戏多开监控、电商RPA、后台UI状态采集等 weixin_30561177的博客 470" [ref=f7e389] [cursor=pointer]:
+              - /url: https://blog.csdn.net/weixin_30561177/article/details/98890163
+              - paragraph [ref=f7e390]:
+                - text: 大漠多线程增强版：解决窗口消失、坐标错乱
+                - emphasis [ref=f7e391]: 与
+                - text: 识别卡死
+              - paragraph [ref=f7e392]:
+                - text: 多线程环境下窗口自动化
+                - emphasis [ref=f7e393]: 面
+                - text: 临的核心挑战，本质是GDI资源非线程安全、HWND生命周期失控及图像引擎状态污染三大底层问题。Windows GUI编程中，跨线程共享hDC、缓存失效的窗口句柄、OpenCV静态Mat等设计缺陷，导致FindPic失败、GetCursorPos异常、坐标跳变等典型故障。本方案通过线程局部存储（TLS）重构资源生命周期、WinEventHook+心跳探测构建实时窗口状态链、ABI对齐的多语言内存契约，实现稳定低延迟的并发UI识别
+                - emphasis [ref=f7e394]: 与
+                - text: 控制。适用于游戏多开监控、电商RPA、后台UI状态采集等
+              - generic [ref=f7e395]:
+                - generic [ref=f7e396]: weixin_30561177的博客
+                - generic [ref=f7e397]: "470"
+            - link "Android 13 系统定制：实现第三方Launcher预置与原生Launcher3的共存切换 本文详细介绍了在Android 13系统中实现第三方Launcher预置与原生Launcher3共存切换的技术方案。通过修改ResolverActivity逻辑、处理首次启动设置以及优化用户切换机制，开发者可以灵活定制默认Launcher，同时保留用户自由选择权。文章还提供了常见问题排查指南和性能优化建议，帮助提升双Launcher方案的稳定性和用户体验。 weixin_30275415的博客 119" [ref=f7e401] [cursor=pointer]:
+              - /url: https://blog.csdn.net/weixin_30275415/article/details/159377855
+              - paragraph [ref=f7e402]:
+                - text: Android 13 系统定制：实现第三方Launcher预置
+                - emphasis [ref=f7e403]: 与
+                - text: 原生Launcher3的共存切换
+              - paragraph [ref=f7e404]:
+                - text: 本文详细介绍了在Android 13系统中实现第三方Launcher预置
+                - emphasis [ref=f7e405]: 与
+                - text: 原生Launcher3共存切换的技术方案。通过修改ResolverActivity逻辑、处理首次启动设置以及优化用户切换机制，开发者可以灵活定制默认Launcher，同时保留用户自由选择权。文章还提供了常见问题排查指南和性能优化建议，帮助提升双Launcher方案的稳定性和用户体验。
+              - generic [ref=f7e406]:
+                - generic [ref=f7e407]: weixin_30275415的博客
+                - generic [ref=f7e408]: "119"
+        - generic [ref=f7e412]:
+          - generic [ref=f7e413]:
+            - generic [ref=f7e414]: 上一篇：
+            - link "别再让SonarLint报的32个常见问题困扰你！Java开发者实战避坑指南" [ref=f7e415] [cursor=pointer]:
+              - /url: https://blog.csdn.net/weixin_27219587/article/details/160294478
+          - generic [ref=f7e416]:
+            - generic [ref=f7e417]: 下一篇：
+            - link "手把手教你用Simulink S-函数搭建三电平逆变器模型（附完整代码与避坑指南）" [ref=f7e418] [cursor=pointer]:
+              - /url: https://blog.csdn.net/weixin_27219587/article/details/160295090
+    - generic [ref=f7e420]:
+      - generic [ref=f7e421] [cursor=pointer]:
+        - img "目录" [ref=f7e422]
+        - paragraph [ref=f7e423]: 目录
+      - generic [ref=f7e424] [cursor=pointer]:
+        - img "点赞" [ref=f7e425]
+        - generic [ref=f7e426]: "6"
+      - generic [ref=f7e427] [cursor=pointer]:
+        - img "评论" [ref=f7e428]
+        - generic [ref=f7e429]: "0"
+      - img "书签" [ref=f7e431] [cursor=pointer]
+      - img "分享" [ref=f7e433] [cursor=pointer]
+      - img "更多" [ref=f7e435] [cursor=pointer]
+    - link "1024 程序员节 Coding Plan 限时秒杀，查看活动（新窗口）" [ref=f7e437] [cursor=pointer]:
+      - /url: https://taotoken.net/coding-plan?utm_source=blogbackground
