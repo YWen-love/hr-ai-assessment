@@ -1,245 +1,287 @@
 # HR 简历评测智能体（hr-ai-assessment）
 
-基于大模型的简历解析 + 一对一意向沟通测评 Demo，面向 HR 场景的候选人初筛。
+基于大模型的简历解析 + 一对一意向沟通测评系统，面向 HR 场景的候选人初筛与岗位意向确认。
 
-## 📂 目录结构
-
-```
-hr-ai-assessment/
-├── .env.example              # 环境变量模板（拷贝为 .env 后填写真实值）
-├── README.md                 # 本文档
-├── requirements.txt          # Python 依赖清单
-│
-├── app.py                    # 魔搭默认启动入口（Gradio 主页面）
-├── main.py                   # FastAPI 后端（提供 REST 接口 + 内嵌 Gradio）
-│
-├── config.py                 # 应用配置（API Key、Base URL 等）
-├── prompts.py                # 测评 Agent 的 prompt 模板
-├── resume_parser.py          # 简历文本解析（含 CandidateProfile 模型）
-├── rule_engine.py            # 候选人筛选规则引擎
-│
-├── job_intro.md               # 各岗位介绍（===岗位名=== 分隔，供 RAG 检索）
-├── screen_rules.md           # 各岗位筛选规则（同上）
-│
-└── app/                      # 后端子包（支持模块）
-    ├── __init__.py
-    ├── paths.py              # 路径解析（兼容源码 / PyInstaller 打包）
-    ├── schemas.py            # Pydantic 数据模型
-    ├── gradio_ui.py          # Gradio HR 工作台（被 app.py 调用）
-    ├── assessment_agent.py   # 测评 Agent（生成问题 / 总结）
-    ├── assessment_service.py # 测评流程编排
-    ├── deepseek_client.py    # DeepSeek / 火山方舟 API 客户端
-    ├── job_reader.py         # 岗位知识库读取
-    ├── knowledge_base.py     # SQLite RAG 知识库（岗位介绍 + 筛选规则）
-    ├── resume_reader.py      # PDF / DOCX / TXT 文本抽取
-    └── session_store.py      # 候选人测评会话持久化（SQLite）
-```
-
-## 🔓 公网演示账号
-
-> ⚠️ **这是公开在 GitHub 仓库的演示账号，禁止在演示项目里上传真实候选人简历。**
-
-部署到魔搭的实例使用以下共享账号供 HR 团队 / 访客访问：
-
-| 字段 | 值 |
-|---|---|
-| HR 工作台地址 | `https://<your-space>.ms.show/hr` |
-| 用户名 | `HR01` |
-| 密码 | `HR01-123456` |
-
-打开上方的 HR 工作台地址，按提示输入用户名 / 密码即可进入。
-
-**重要说明**
-
-- 该账号是公开 demo 凭证（已写入本仓库），**任何拿到魔搭链接的人都能登录**。
-- 请只在演示项目里**放合成测试数据**，不要上传真实简历。
-- 若需正式部署（接入真实候选人数据）：删除本节，并在魔搭控制台 → 环境变量里**重设** `HR_ADMIN_USERNAME` / `HR_ADMIN_PASSWORD`，然后**私下把新账号密码发给你信任的人**。
+**一句话核心：模型负责对话，代码负责判定。** 分数、分级、备选岗推荐全部由确定性规则引擎计算，模型只生成对话文本，输出再过红线清洗后才下发给候选人。
 
 ---
 
-## 🚀 快速开始
+## 核心特性
+
+- **对话式意向测评**：AI 与候选人多轮沟通，自动确认岗位、工时、薪资接受度，结束后自动生成总结与报告
+- **三层数据隔离**：HR 看分数 + 备选岗；候选人只看结语，物理上拿不到内部信息
+- **岗位配置驱动**：每个岗位一份 `job_config`（打分维度、红线、备选岗映射），支持从 JD 自动生成
+- **旁路 RAG 答疑**：候选人反问的非意向类问题走独立 RAG 通道，不污染主线对话上下文
+- **多模型切换**：MiniMax 主线 / 火山方舟备用，改 `LLM_PROVIDER` 一项即可切换
+- **HR 工作台**：Gradio 岗位管理 + 候选人列表，FastAPI 候选人测评页
+
+---
+
+## 快速开始
 
 ```bash
-# 1. 安装依赖
+# 1. 安装依赖（Python 3.10+）
 pip install -r requirements.txt
 
-# 2. 配置环境变量
+# 2. 配置环境变量（密钥放在项目外层目录的 .env，仓库内只保留 .env.example）
 cp .env.example .env
-# 编辑 .env，填入 DEEPSEEK_API_KEY 等真实值
+# 编辑 .env，填入 LLM_API_KEY 等
 
-# 3. 启动 FastAPI 后端（含 Gradio HR 工作台挂载在 /hr，本地调试用）
+# 3. 启动（FastAPI + 内嵌 Gradio）
 uvicorn main:app --host 0.0.0.0 --port 8011
-# 本地浏览器： http://127.0.0.1:8011/hr
-# 部署到魔搭后直接访问公网入口（见下文"部署到魔搭"）
-
-# 4. 或仅启动 Gradio（魔搭部署模式用 7860）
-python app.py
-# 本地浏览器： http://127.0.0.1:7860
-# 部署到魔搭后直接访问公网入口（见下文"部署到魔搭"）
+# 本地浏览器： http://127.0.0.1:8011/hr  （HR 工作台）
+#             http://127.0.0.1:8011/login （登录页）
 ```
 
-## 🌐 部署到魔搭（ModelScope Space）
+首次启动会自动：建表（3 个 SQLite 库）、从 `job_configs/*.json` 种子化岗位配置、从 `job_intro.md`/`screen_rules.md` 构建 RAG 知识库。
 
-### 1. 创建 Space 时选对 SDK
+---
 
-**SDK 必须选 `python`（或 `None` / 自定义），不能选 `gradio`。**
+## 目录结构
 
-本项目是 FastAPI + Gradio 混合架构（候选人页走 FastAPI，HR 工作台走 Gradio），不是纯 Gradio app。如果选 `sdk=gradio`，魔搭 launcher 会按纯 Gradio 模式调 `POST /invoke` 健康检查，必然 404 启动失败。
-
-- 选 sdk=python → 魔搭直接 `python app.py`，由我们自己的 uvicorn 启动 FastAPI+Gradio
-- 入口文件：`app.py`
-- 端口：7860（魔搭自动注入 `GRADIO_SERVER_PORT=7860` 环境变量）
-
-### 2. 数据持久化（关键）
-
-魔搭容器默认是**临时存储**，容器重启 SQLite 会被清空，导致所有候选人 session 丢失。
-
-代码已经自动处理：检测到 `/data` 目录可写时，SQLite 和上传文件会写到 `/data/hr-ai-assessment/`（持久化）。本地开发无 `/data`，回退到 `app/data/`。
-
-```python
-# app/paths.py 自动选择
-def data_root():
-    if APP_DATA_DIR 环境变量: 用环境变量
-    elif /data 可写（魔搭容器）: 用 /data/hr-ai-assessment/  ← 持久化
-    else: 用 app/data/  ← 本地
+```
+hr-ai-assessment/
+├── main.py                    # FastAPI 入口：路由 + 鉴权中间件 + Gradio 挂载
+├── app.py                     # Gradio 启动器（魔搭模式用）
+├── config.py                  # 配置：多模型切换、HR 账号、Session
+├── prompts.py                 # 5 个主线 Prompt 模板（对话/测评/候选人结语/JD生成/备选匹配）
+├── resume_parser.py           # 简历解析 + 经验标签（岗位驱动的封闭词表）
+├── rule_engine.py             # ★ 规则引擎：打分的唯一实现点
+│
+├── job_intro.md               # 岗位介绍（===岗位名=== 分隔）
+├── screen_rules.md            # 岗位筛选规则（同上）
+├── job_configs/               # ★ 岗位配置种子（*.json，启动时导入 SQLite）
+│
+├── app/
+│   ├── llm_client.py          # LLM 客户端 + 多提供方 + JSON 重试
+│   ├── assessment_agent.py    # 主线对话 Agent（生成追问 / 收尾）
+│   ├── assessment_service.py  # 测评编排：取配置 → 起会话 → 每轮 → 收尾
+│   ├── traits.py              # 意向抽取（对话 → 结构化意向结论）
+│   ├── redline.py             # ★ 红线清洗：协议标记剥离 + 禁词拦截
+│   ├── rag_bypass.py          # 旁路 RAG：候选人反问答疑，不进主线上下文
+│   ├── rule_engine.py         # 分数重算（job_config 驱动）
+│   ├── text_match.py          # 结构化字段标准化（薪资/工时/教育）
+│   ├── job_schema.py          # ★ 岗位配置 Schema：字段定义 + 校验
+│   ├── job_generator.py       # JD → job_config 自动生成
+│   ├── job_config_store.py    # 岗位配置 CRUD（SQLite）
+│   ├── knowledge_base.py      # RAG 知识库（岗位介绍 + 筛选规则）
+│   ├── resume_reader.py       # PDF / DOCX / TXT 文本抽取
+│   ├── session_store.py       # 会话持久化（3 层数据 + 视图隔离）
+│   ├── hr_auth.py             # HR 账号（bcrypt + SQLite）
+│   ├── login_page.py          # 登录/注册页渲染
+│   ├── gradio_ui.py           # HR 工作台（岗位管理 + 候选人列表）
+│   ├── paths.py               # 路径解析（本地 / 魔搭 / 打包）
+│   └── schemas.py             # Pydantic 数据模型
+│
+└── tests/                     # 测试
 ```
 
-### 3. 公网链接（base_url 自动跟随）
+### 依赖方向
 
-候选人测评链接的域名不需要硬编码，代码会自动从请求头里取：
-
-- **公网入口**：魔搭部署后，HR 在 `https://ywen666-hr-ai-assessment.ms.show/hr` 操作 → 给候选人发的链接变成 `https://ywen666-hr-ai-assessment.ms.show/candidate/xxx`（自动读 `X-Forwarded-Proto` / `X-Forwarded-Host`）
-- **项目展示页**（Studio 元信息、说明文档）：`https://www.modelscope.cn/studios/YWen666/hr-ai-assessment`
-- **本地开发**（裸跑 uvicorn，无反代）：在 `.env` 设 `PUBLIC_BASE_URL=http://127.0.0.1:7860` 后，链接变成 `http://127.0.0.1:7860/candidate/xxx`
-
-不用再设 `PUBLIC_BASE_URL` 环境变量。
-
-### 4. 部署流程
-
-1. 魔搭控制台 → 新建 Space → SDK 选 **python**（不是 gradio）
-2. 把整个 `hr-ai-assessment` 目录推上去
-3. 在 Space 的"环境变量"里设（必填，AI 测评要）：
-   ```
-   DEEPSEEK_API_KEY=你的key
-   DEEPSEEK_BASE_URL=https://ark.cn-beijing.volces.com/api/v1
-   DEEPSEEK_MODEL=ep-xxxxx
-   ```
-4. 等启动成功（看日志：应看到 `Uvicorn running on http://0.0.0.0:7860`）
-5. 访问 `https://你的空间名.ms.show/hr` → HR 工作台
-6. 访问 `https://你的空间名.ms.show/` → 简化版 HTML 上传页（备选）
-7. 候选人测评页 = `https://你的空间名.ms.show/candidate/{session_id}`（由 HR 工作台生成）
-
-### 5. 关于 Gradio 自带的 query 参数
-
-候选人测评链接可能带 Gradio client 自动注入的 query 参数：
 ```
-/candidate/02e49844-.../?__theme=light&backend_url=%2F&t=...&web_env=other
+main.py → { gradio_ui, hr_auth, assessment_service, job_config_store, ... }
+assessment_service → { assessment_agent, traits, rule_engine, rag_bypass, redline, session_store, resume_parser }
+
+rule_engine 不 import 任何 LLM —— 分数必须能在没网的环境里复现
+redline 在 assessment_agent 和 session_store 之间，是下发给候选人前的最后一道关
 ```
 
-这些参数（`__theme`、`backend_url`、`t`、`web_env`）是 Gradio 维护客户端状态用的，**对后端无影响**——FastAPI 路由只匹配 path 部分（`/candidate/{session_id}`），自动忽略 query。候选人页面是普通 HTML+JS，**不依赖** Gradio client，所以即使带这些参数也能正常打开。
+---
 
-## 🧠 岗位知识库
+## 核心机制
 
-- 岗位介绍维护在 `job_intro.md`，筛选规则维护在 `screen_rules.md`
-- 用 `===岗位名称===` 分隔不同岗位
-- 首次启动会自动构建 SQLite RAG 知识库到 `app/data/rag_knowledge.db`
-- 新增 / 修改岗位后，**重启服务**即可同步
+### 1. 提示词架构：三层 + 多模板
 
-## 📊 运行数据
+三级提示词工程，编排主体是代码而非模型：
 
-- 候选人会话库：`app/data/resume_sessions.db`
-- 岗位 RAG 库：`app/data/rag_knowledge.db`
-- 上传的简历：`app/data/uploads/`
+| 层 | 内容 | 实现 |
+|---|---|---|
+| L1 静态角色模板 | 8 个独立模板，各自定义角色、禁止项、输出格式 | `prompts.py`（5）+ `traits.py` / `resume_parser.py` / `rag_bypass.py`（各 1） |
+| L2 运行时注入 | 用 `.replace("{{...}}")` 把 job_config、简历标签、对话历史、封闭词表填入 | `llm_client.py` 合并成一条 system 消息 |
+| L3 单次任务指令 | user message，通常一句 + 大块载荷（简历原文、JD、transcript） | 各 service 调用处 |
 
-> 这些目录和数据库由程序自动创建，无需手动初始化。
+8 个模板按场景物理隔离：简历解析、主线对话、意向抽取、JD 生成、备选岗匹配、RAG 旁路等，互不串扰。
 
-## ⚙️ 关键配置（.env）
+### 2. 数据流物理隔离（不依赖提示词约束）
+
+关键约束不靠 prompt 叮嘱，靠数据流上根本没有那个字段：
+
+- **主线对话 Agent 不注入 `alternate_role_mapping`** —— 模型不知道备选岗存在，就不可能说漏
+- **候选人侧结语由独立一次调用生成** —— 上下文里连 `job_config` 都没有
+- **候选人 API 只返回 `candidate_msg`** —— 分数、备选岗、HR 总结物理上不存在于响应体
+
+[redline.py](app/redline.py) 的四道防线（结构层 / 词法层 / 协议层 / 收敛层）是对这个隔离的纵深防御，而不是主要依赖。
+
+### 3. 规则引擎：分数不来自模型
+
+`rule_engine.py` 是打分的唯一实现点。模型可以自评一个 `model_score`，但那只作为对照留档——**入库的分数永远是后端按 `job_config` 重算的结果**。
+
+每次测评保存一份 `job_config_snapshot`，保证历史报告可还原（即使后来岗位配置改了，旧报告的分数也对得上当时的规则）。
+
+### 4. 会话协议：`[DONE]` / `[NEED_RAG]`
+
+模型用协议标记驱动流程，不靠关键词猜：
+
+| 标记 | 含义 | 处理 |
+|---|---|---|
+| `[DONE]` | 面试结束 | 触发收尾：意向抽取 → 规则打分 → 生成 HR 总结 + 候选人结语 |
+| `[NEED_RAG]问句` | 候选人反问需要查知识库 | 走旁路 RAG 通道，**不进主线对话历史** |
+| 无标记 | 正常追问 | 直接下发给候选人 |
+
+`MAX_TURNS=20` 作为兜底，防止模型永远不收尾。
+
+### 5. 旁路 RAG：候选人反问不污染主线
+
+候选人问「这个岗位晋升空间大吗」，答案不该出现在主线对话里（否则会干扰后续意向判断）。`rag_bypass.py` 独立处理：
+
+1. 解析 `[NEED_RAG]` 标记，剥离后只把正文下发给候选人
+2. 用岗位知识库（`screening_rules`）做 TF-IDF 检索
+3. 调独立 LLM 生成答疑
+4. 答疑再过 `rag_answer_is_offline` 红线检查（不含备选岗名、不含评分、不含转岗建议）
+5. 直接返回给候选人，**不写入 `chat_history`**
+
+### 6. 红线清洗（redline.py）
+
+下发给候选人前的最后一道关，四道防线：
+
+1. **结构层**：剥离 `[DONE]` / `[NEED_RAG]` 协议标记
+2. **词法层**：禁词表只收备选岗名与 `backup_job_key`，主岗名绝不进禁词表
+3. **协议层**：含 `[NEED_RAG]` 的内容绝不下发
+4. **收敛层**：命中红线时返回兜底话术「好的，我这边先记录下来…」，宁可兜底不给残句
+
+### 7. 岗位配置 Schema（job_schema.py）
+
+`job_config` 是整个测评的配置真源，结构：
+
+```
+job_key / job_name
+├── experience_requirements   # 经验要求 + 封闭词表
+├── education_requirements    # 学历要求
+├── score_rules[]             # 打分维度（权重 + 各档分值）
+├── redline_conditions[]      # 一票否决条件
+├── alternate_role_mapping[]  # 备选岗映射（不向候选人暴露）
+└── rag_doc_id                # 一岗一库，RAG 隔离
+```
+
+`validate_job_config` 区分「必须修」和「建议确认」两类问题——带 `[警告]` 前缀的是建议项，不拦截保存，否则 HR 只能手改 JSON 才能把岗位建起来。
+
+### 8. JD → 配置自动生成
+
+`job_generator.py` 把 JD 文本丢给 LLM，配合 `JD_TO_CONFIG` 模板输出 job_config 草稿。关键设计：
+
+- **字段表 / 操作符表从 `FIELD_TYPES` 常量渲染进 prompt**，不手写第二份——杜绝「Prompt 说 A、引擎只认 B」的静默漂移
+- 生成结果只做预览，**不落库**；HR 改完预览里的分值/阈值，再调 `/api/job/save` 落库
+- 落库默认 `pending`，还要再调 `/api/job/{key}/review` 标记复核——「AI 生成的配置」和「HR 确认过的配置」必须分得开
+
+### 9. 多层 LLM 调用
+
+不同场景用不同模型（在 `llm_client.py` 按用途配置）：
+
+- 简历解析：快速模型
+- 主线对话：对话模型
+- 意向抽取：reasoning 模型（结构化输出要求高）
+- 报告生成：对话模型
+
+`llm_client.py` 内建 JSON 解析失败重试：追加更严格的格式指令后重试，最多 2 次。
+
+### 10. 数据库（3 个 SQLite，一业务一库）
+
+| 库 | 表 | 用途 |
+|---|---|---|
+| `resume_sessions.db` | `sessions` | 候选人会话：简历标签 / 对话历史 / 分数 / 意向 / HR总结 / 候选人结语（视图隔离） |
+| `rag_knowledge.db` | `jobs` / `knowledge_documents` | 岗位介绍 + 筛选规则（RAG 检索源） |
+| `job_config_table`（同 sessions 库） | `job_config_table` | 岗位配置 |
+| `hr_users.db` | `hr_users` | HR 账号（bcrypt） |
+
+`session_store` 用 `_ensure_columns` 幂等补列 + 改名迁移，不引入迁移框架。
+
+---
+
+## 关键配置（.env）
+
+密钥只放项目**外层目录**的 `.env`（`hr-ai-assessment/` 的父目录），仓库内只保留 `.env.example`。线上由平台注入环境变量，不依赖 `.env`。
 
 | 变量 | 说明 |
 |---|---|
-| `DEEPSEEK_API_KEY` | 火山方舟 / DeepSeek API Key（**必填**，否则 AI 测评不可用） |
-| `DEEPSEEK_BASE_URL` | 默认 `https://ark.cn-beijing.volces.com/api/v1` |
-| `DEEPSEEK_MODEL` | 模型端点 ID |
-| `PUBLIC_BASE_URL` | 候选人访问链接前缀（默认空，会自动取当前请求地址；魔搭部署时填魔搭公网地址） |
-| `APP_DATA_DIR` | 自定义数据目录（不填则用 `app/data/`） |
-| `SESSION_SECRET` | Session 签名密钥（**首次部署必填**，否则每次重启所有 HR 都会被迫重新登录） |
+| `LLM_PROVIDER` | `minimax`（默认）或 `volcengine`，改这一项切换模型 |
+| `MINIMAX_API_KEY` | MiniMax API Key |
+| `MINIMAX_BASE_URL` | 默认 `https://api.minimax.chat/v1` |
+| `MINIMAX_MODEL` | MiniMax 模型 |
+| `DEEPSEEK_API_KEY` | 火山方舟 API Key（备用） |
+| `DEEPSEEK_BASE_URL` / `DEEPSEEK_MODEL` / `DEEPSEEK_REASONING_MODEL` | 火山方舟配置 |
 | `HR_ADMIN_USERNAME` | HR 管理员账号（默认 `admin`） |
-| `HR_ADMIN_PASSWORD` | HR 管理员密码（**首次部署强烈建议设置**；留空则启动时随机生成并打印到日志） |
+| `HR_ADMIN_PASSWORD` | HR 管理员密码（留空则启动时随机生成并打印日志） |
+| `PUBLIC_BASE_URL` | 候选人链接前缀（默认空，自动取请求头 `X-Forwarded-Host`） |
+| `SESSION_SECRET` | Session 签名密钥（不配则每次启动随机，重启后旧 cookie 失效） |
+| `SESSION_MAX_AGE` | cookie 有效期秒数（默认空 = 浏览器关闭即失效） |
+| `APP_DATA_DIR` | 自定义数据目录 |
+| `BACKGROUND_IMAGE_NAME` | 背景图文件名（默认 `bg.jpg`） |
 
-## 🔐 HR 工作台登录
+---
 
-HR 工作台（`/hr`）强制登录后才能访问，未登录会被 302 到 `/login`。
+## API 概览
 
-### 默认账号
+### HR 侧（需登录）
 
-- 首次启动时，`hr_users` 表为空 → 程序自动创建默认账号：
-  - 用户名：`HR_ADMIN_USERNAME`（默认 `admin`）
-  - 密码：若 `HR_ADMIN_PASSWORD` 已设 → 用该密码；否则随机生成，**WARNING 级别打印到日志**（仅启动时一次）
-- 后续重启 → 表里若已有用户，会按 .env 同步默认 admin（改名 / 改密 / 跳过，详见 `seed_default_admin`）
-- 数据库位置：`<data_root>/hr_users.db`（与候选人会话库分开）
-- 密码存储：bcrypt 散列（不是明文）
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/login` / `/api/logout` | 登录 / 登出 |
+| POST | `/hr/parse-link` | 上传简历 → 生成候选人测评链接 |
+| GET | `/hr/sessions` | 候选人列表 |
+| GET | `/hr/result/{session_id}` | 测评结果（分数 + 总结） |
+| GET | `/hr/report/{session_id}` | 完整报告（静态分 + 意向 + 备选岗） |
+| GET/POST | `/api/job/list` `/api/job/{key}` | 岗位配置 CRUD |
+| POST | `/api/job/generate` | JD → 配置预览（不落库） |
+| POST | `/api/job/save` | 保存配置 |
+| POST | `/api/job/{key}/review` | 标记复核 |
+| POST | `/api/job/{key}/copy` | 复制岗位（复制品必换 `rag_doc_id`） |
+| DELETE | `/api/job/{key}` | 软删岗位 |
 
-### 自注册
+### 候选人侧（公开，session_id 即令牌）
 
-- 注册页：部署到魔搭后访问 `https://ywen666-hr-ai-assessment.ms.show/register`
-- 登录页底部有「还没有账号？立即注册」入口
-- 表单：账号 / 密码 / 确认密码
-- 验证规则：
-  - 用户名：3-32 字符，字母开头，可含字母、数字、下划线、连字符
-  - 密码：至少 6 位
-  - 两次密码必须一致
-- 注册成功 → **自动登录** → 跳回原请求页
-- 重名 → 400 + "该用户名已被注册"
-- 依赖 `username UNIQUE` 约束兜底，避开先 SELECT 后 INSERT 的竞态
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/candidate/{session_id}` | 测评页面 |
+| POST | `/assessment/start` | 开始测评（上传简历） |
+| POST | `/assessment/next` | 候选人回答一句话（自动判断是否收尾 / 走 RAG） |
+| GET | `/candidate/result/{session_id}` | 候选人侧结果（只含结语，不含分数） |
 
-### 登录/登出
+---
 
-- 登录页：部署到魔搭后访问 `https://ywen666-hr-ai-assessment.ms.show/login`
-- 登录后跳回原请求页（如 `/hr`、`/hr/sessions`）
-- 登出：`POST /api/logout`（当前 Gradio 工作台未挂登出按钮，可手动调接口或清 cookie）
-- Session cookie 名：`hr_session`，有效期 `SESSION_MAX_AGE` 秒（默认 86400 = 24 小时）
+## HR 工作台登录
 
-### 公开路径（无需登录）
+- 登录页：`/login`，注册页：`/register`
+- 密码存储：bcrypt（rounds=12）
+- 默认管理员：启动时按 `HR_ADMIN_USERNAME` / `HR_ADMIN_PASSWORD` 同步到库；密码留空则随机生成并 WARNING 打印
+- 自注册：用户名 3-32 字符字母开头，密码至少 6 位；重名靠 `username UNIQUE` 约束兜底
+- 关闭标签页自动登出（`pagehide` + `sendBeacon`）
 
-- `/`（根，简化版 HTML 上传页）
-- `/login`、`/register`
-- `/api/login`、`/api/register`、`/api/logout`
-- `/static/*`（背景图等静态资源）
-- `/candidate/{session_id}`（候选人测评页，session_id 本身即访问令牌）
+## 背景图
 
-## 🖼 三页统一背景图
+三页（登录 / HR 工作台 / 候选人）共用一张背景图，放 `<data_root>/static/bg.jpg`。图片缺失时渐变 overlay 仍生效，页面正常显示。
 
-登录页、HR 工作台、候选人测评页**共用一张背景图**。
+## 运行数据
 
-### 放置位置
+- 候选人会话：`<data_root>/resume_sessions.db`
+- RAG 知识库：`<data_root>/rag_knowledge.db`
+- HR 账号：`<data_root>/hr_users.db`
+- 上传简历：`<data_root>/uploads/`
 
-把图片放到 `<data_root>/static/bg.jpg`：
+> `data_root()`：魔搭容器用 `/mnt/workspace/hr-ai-assessment/`，本地用 `app/data/`，可被 `APP_DATA_DIR` 覆盖。
 
-| 部署环境 | 实际路径 |
-|---|---|
-| 本地开发 | `<本地仓库根目录>/app/data/static/bg.jpg` |
-| 魔搭部署 | `/data/hr-ai-assessment/static/bg.jpg` |
+## 测试
 
-> 目录不存在也没关系，程序启动时会自动 `mkdir -p`。
-> `data_root()` 的解析逻辑见 `app/paths.py`（魔搭用 `/data/hr-ai-assessment/`，本地用 `app/data/`）。
+```bash
+pytest tests/ -q
+```
 
-### 支持的格式
+覆盖岗位配置 Schema 校验、JD 生成的分值规则、规则引擎打分、红线清洗、简历解析、意向抽取、报告组装、E2E 测评流程、HR 工作台 UI 等。
 
-默认引用 `/static/bg.jpg`。如换 PNG/WebP/SVG：
+## 部署到魔搭（ModelScope）
 
-1. 把图片放到 `<data_root>/static/bg.png`（或 `bg.webp`、`bg.svg`）
-2. 改两处代码里的扩展名：
-   - `app/login_page.py` 第 12 行：`BG_URL = "/static/bg.<ext>"`
-   - `app/gradio_ui.py` 第 48 行：`url('/static/bg.<ext>')`
-   - `main.py` 的 `render_candidate_page()` `<style>` 中：`url('/static/bg.<ext>')`
-
-### 图片缺失的降级
-
-图片不存在时 `url('/static/bg.jpg')` 会 404，但**渐变 overlay 仍生效**，三页都能正常显示（只是没有照片做底）。建议至少放一张浅色图保证视觉效果。
-
-## 📁 文件清单（按本版本）
-
-`app/hr_auth.py` — HR 账号数据库（SQLite + bcrypt）  
-`app/login_page.py` — 登录页 HTML 渲染  
-`main.py` — FastAPI 后端（含登录中间件 + `/static` 静态资源）  
-`app/gradio_ui.py` — Gradio HR 工作台（`HR_UI_CSS` 顶部含背景图 CSS）
+1. Space SDK 选 **python**（不是 gradio）—— 本项目是 FastAPI + Gradio 混合架构
+2. 入口文件：`app.py`，端口 7860
+3. 环境变量设 `LLM_PROVIDER` + 对应 API Key / Base URL / Model
+4. 数据自动持久化到 `/mnt/workspace/hr-ai-assessment/`（容器重启不丢）
+5. 候选人链接域名自动从 `X-Forwarded-Proto` / `X-Forwarded-Host` 取，无需硬编码
+test 
