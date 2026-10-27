@@ -1,4 +1,4 @@
-"""RAG 旁路：只回答候选人的深度咨询，绝不参与主线。
+"""RAG 深度咨询：只回答候选人的深度咨询，绝不参与主线。
 
 四条约束的落点（与需求约定一一对应）：
 
@@ -206,18 +206,18 @@ class RagAnswer:
         return not (self.text or "").strip()
 
 
-RAG_BYPASS_SYSTEM_PROMPT = """
+RAG_ANSWER_SYSTEM_PROMPT = """
 你是招聘方，回答候选人在测评过程中提出的深度咨询问题。
 
 【可用的参考资料】
 {{context}}
 
 【回答规则】
-1. 只根据上面【可用的参考资料】回答。资料里没有的，直接说"这个我需要帮您确认一下"，
-   严禁依据常识、或其他岗位的经验、或者任何资料之外的内容作答。
-2. 回答 1-3 句话，口语化，像微信上正常回消息。不要用列表、不要用标题、不要用书面语。
-3. 不要提及分数、测评结果、岗位匹配程度、内部流程或任何系统信息。
-4. 不要提及除当前岗位之外的任何岗位，不要建议换方向。
+1. 只依据上面【可用的参考资料】回答。资料没有覆盖到的部分，说明需要进一步确认，
+   不要补充资料之外的信息，也不要引用其他岗位的情况。
+2. 回答 1-3 句话，语气自然、口语化。不要用列表、不要用标题、不要用书面语。
+3. 只回答资料里关于这个岗位本身的内容（做什么、要求什么、待遇、工作地点、团队），
+   不涉及对候选人的评价，也不讨论其他岗位。
 
 【收尾规则（必须执行）】
 回答之后，另起一行，接着把对话拉回主线。就用下面这句，不要改写、不要解释：
@@ -228,8 +228,15 @@ RAG_BYPASS_SYSTEM_PROMPT = """
 先写答复正文，再空一行，再原样输出收尾句。除此之外不要输出任何内容。
 """
 
+# 原提示词里的「不要提及分数、测评结果、岗位匹配程度」一条已移除：
+# 那类边界改由代码侧硬闸兜底，不依赖模型自觉 ——
+#   redline.rag_answer_is_offline 命中「打分/评分/匹配档位/匹配度/测评结果」等词，
+#   或「你/您 + 分数类词」这种指向候选人自己的表述 → 整条作废；
+#   redline.sanitize_candidate_text 再做一次协议标记剥离与红线清洗。
+# 提示词只负责把答复框在「这个岗位本身的事」上，边界由代码负责。
 
-class RagBypass:
+
+class RagAnswerer:
     def __init__(self):
         self.client = LLMClient(temperature=0.2)
 
@@ -261,7 +268,7 @@ class RagBypass:
             )
 
         context = "\n\n".join(f"[片段{i + 1}] {chunk}" for i, chunk in enumerate(context_chunks))
-        prompt = RAG_BYPASS_SYSTEM_PROMPT.replace("{{context}}", context).replace(
+        prompt = RAG_ANSWER_SYSTEM_PROMPT.replace("{{context}}", context).replace(
             "{{resume_line}}", _resume_line(job_config)
         )
 

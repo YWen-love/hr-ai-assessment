@@ -28,5 +28,6 @@ logs/
 .idea/
 *.swp
 .DS_Store
-Thumbs.dbms_deploy.json
+Thumbs.db
+ms_deploy.json
 *.png

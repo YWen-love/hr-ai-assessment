@@ -58,7 +58,7 @@ hr-ai-assessment/
 │   ├── assessment_service.py  # 测评编排：取配置 → 起会话 → 每轮 → 收尾
 │   ├── traits.py              # 意向抽取（对话 → 结构化意向结论）
 │   ├── redline.py             # ★ 红线清洗：协议标记剥离 + 禁词拦截
-│   ├── rag_bypass.py          # 旁路 RAG：候选人反问答疑，不进主线上下文
+│   ├── rag_service.py          # 旁路 RAG：候选人反问答疑，不进主线上下文
 │   ├── rule_engine.py         # 分数重算（job_config 驱动）
 │   ├── text_match.py          # 结构化字段标准化（薪资/工时/教育）
 │   ├── job_schema.py          # ★ 岗位配置 Schema：字段定义 + 校验
@@ -80,7 +80,7 @@ hr-ai-assessment/
 
 ```
 main.py → { gradio_ui, hr_auth, assessment_service, job_config_store, ... }
-assessment_service → { assessment_agent, traits, rule_engine, rag_bypass, redline, session_store, resume_parser }
+assessment_service → { assessment_agent, traits, rule_engine, rag_service, redline, session_store, resume_parser }
 
 rule_engine 不 import 任何 LLM —— 分数必须能在没网的环境里复现
 redline 在 assessment_agent 和 session_store 之间，是下发给候选人前的最后一道关
@@ -96,7 +96,7 @@ redline 在 assessment_agent 和 session_store 之间，是下发给候选人前
 
 | 层 | 内容 | 实现 |
 |---|---|---|
-| L1 静态角色模板 | 8 个独立模板，各自定义角色、禁止项、输出格式 | `prompts.py`（5）+ `traits.py` / `resume_parser.py` / `rag_bypass.py`（各 1） |
+| L1 静态角色模板 | 8 个独立模板，各自定义角色、禁止项、输出格式 | `prompts.py`（5）+ `traits.py` / `resume_parser.py` / `rag_service.py`（各 1） |
 | L2 运行时注入 | 用 `.replace("{{...}}")` 把 job_config、简历标签、对话历史、封闭词表填入 | `llm_client.py` 合并成一条 system 消息 |
 | L3 单次任务指令 | user message，通常一句 + 大块载荷（简历原文、JD、transcript） | 各 service 调用处 |
 
@@ -132,7 +132,7 @@ redline 在 assessment_agent 和 session_store 之间，是下发给候选人前
 
 ### 5. 旁路 RAG：候选人反问不污染主线
 
-候选人问「这个岗位晋升空间大吗」，答案不该出现在主线对话里（否则会干扰后续意向判断）。`rag_bypass.py` 独立处理：
+候选人问「这个岗位晋升空间大吗」，答案不该出现在主线对话里（否则会干扰后续意向判断）。`rag_service.py` 独立处理：
 
 1. 解析 `[NEED_RAG]` 标记，剥离后只把正文下发给候选人
 2. 用岗位知识库（`screening_rules`）做 TF-IDF 检索
@@ -284,3 +284,4 @@ pytest tests/ -q
 3. 环境变量设 `LLM_PROVIDER` + 对应 API Key / Base URL / Model
 4. 数据自动持久化到 `/mnt/workspace/hr-ai-assessment/`（容器重启不丢）
 5. 候选人链接域名自动从 `X-Forwarded-Proto` / `X-Forwarded-Host` 取，无需硬编码
+test 

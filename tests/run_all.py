@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 TESTS = [
+    "test_import_smoke.py",            # import 链：改名/删文件后不留悬空 import
     "test_scoring_engine_generic.py",  # 打分引擎通用性
     "test_resume_parser.py",           # 简历解析 + 标签封闭词表
     "test_e2e_learning_consultant.py", # 真实岗位配置端到端

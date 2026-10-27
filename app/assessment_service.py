@@ -32,7 +32,7 @@ from app.assessment_agent import (
     config_hash,
 )
 from app.job_config_store import get_job_config_object
-from app.rag_bypass import RagBypass
+from app.rag_service import RagAnswerer
 from app.report import assemble_report, render_report_text
 from app.redline import build_forbidden_terms
 from app.session_store import (
@@ -73,7 +73,7 @@ class AssessmentService:
         self.assessment = AssessmentAgent()
         self.candidate_msg = CandidateMsgAgent()
         self.resume_parser = ResumeParser()
-        self.rag = RagBypass()
+        self.rag = RagAnswerer()
 
     # -- 建会话 ---------------------------------------------------------
 

@@ -30,6 +30,14 @@ _TRANSFER_PATTERNS = (
 # 主岗自己的介绍里就高频出现这些词，泛化正则必然误杀，正常对话直接崩。
 # 真正需要拦的岗位名由调用方从 job_config.alternate_role_mapping 精确提供。
 
+# 指向【候选人自己】的分数/评估结论。
+# 裸的「分数」不进这张表 —— 教育类岗位的知识库里「中考分数 500」是正常内容，
+# 泛化拦截会误杀。只有出现「你/您 + 分数类词」才判定为泄漏自己的评估结果。
+_CANDIDATE_SCORE_RE = re.compile(
+    r"(你|您|自己)\s*(的)?\s*"
+    r"(分数|得分|评分|打分|分值|测评结果|测评得分|匹配度|匹配分|匹配程度|档位|评级)"
+)
+
 
 @dataclass
 class ChatMessage:
@@ -149,11 +157,15 @@ def rag_answer_is_offline(
     *,
     forbidden_terms: Optional[List[str]] = None,
 ) -> bool:
-    """RAG 旁路回答的额外校验。
+    """RAG 深度咨询回答的额外校验。
 
     RAG 资料不得反向影响主线：它只能回答候选人的那一个提问，
     不得包含任何岗位切换、备选岗位、评分相关内容。若检索内容越界，
     宁可只回一句客套话，也不能让旁路把主线带偏。
+
+    这道闸是 fail-closed 的：命中即整条作废，换成兜底话术。
+    它同时兜住了提示词里被删掉的那几条约束（原「不要提及分数、测评结果、
+    岗位匹配程度」）—— 边界写在代码里，不依赖模型自觉。
     """
     text = (rag_text or "").strip()
     if not text:
@@ -165,5 +177,12 @@ def rag_answer_is_offline(
     off_topic = (
         "匹配档位", "高匹配", "中匹配", "低匹配", "总分", "打分", "评分",
         "推荐你", "建议你去", "更适合",
+        # 匹配度/匹配程度/测评结果：这三组是「评估结论」的常见说法，
+        # 补上之后「你匹配度 85%」「测评结果已出」这类话才拦得住。
+        "匹配度", "匹配程度", "测评结果",
     )
-    return any(keyword in text for keyword in off_topic)
+    if any(keyword in text for keyword in off_topic):
+        return True
+
+    # 「你的分数/你的匹配度/您的测评结果」—— 指向候选人自己的评估结论
+    return bool(_CANDIDATE_SCORE_RE.search(text))

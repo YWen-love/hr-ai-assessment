@@ -33,7 +33,7 @@ from app.job_config_store import (
 from app.job_generator import JobConfigGenerator, JobGenerationError
 from app.job_schema import is_valid_job_key
 from app.knowledge_base import get_job_knowledge, initialize_knowledge_base, list_jobs
-from app.rag_bypass import init_rag_store
+from app.rag_service import init_rag_store
 from app.resume_reader import read_resume_text
 from app.session_store import create_session, get_candidate_view, get_session, init_db, list_sessions
 

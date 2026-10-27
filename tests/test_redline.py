@@ -124,6 +124,21 @@ check("含转岗建议的答疑拦截",
       rag_answer_is_offline("我建议你转岗来做二讲。", forbidden_terms=TERMS), True)
 check("空回答拦截", rag_answer_is_offline("", forbidden_terms=TERMS), True)
 
+# 提示词里原有的「不要提及分数/测评结果/岗位匹配程度」已改由代码兜底，
+# 这里锁住代码闸真的能接住这几类 —— 提示词删了，闸不能跟着变松。
+check("提到匹配度拦截",
+      rag_answer_is_offline("你匹配度有 85%，很适合这个岗位。", forbidden_terms=TERMS), True)
+check("提到测评结果拦截",
+      rag_answer_is_offline("你的测评结果已经出来了，档位是高匹配。", forbidden_terms=TERMS), True)
+check("告知候选人自己的分数拦截",
+      rag_answer_is_offline("你的分数是 78 分。", forbidden_terms=TERMS), True)
+check("「您的得分」这种客套说法也拦",
+      rag_answer_is_offline("您的得分达到了 92 分，可以进入下一轮。", forbidden_terms=TERMS), True)
+check("岗位介绍里提到薪资档位不拦（不是评估结论）",
+      rag_answer_is_offline("这个岗位的薪资档位按经验分三档，详情可以面聊。", forbidden_terms=TERMS), False)
+check("教育类知识库里的「中考分数」不拦（不是候选人自己的评估）",
+      rag_answer_is_offline("我们主要服务中考分数 500 分左右的学生。", forbidden_terms=TERMS), False)
+
 print()
 print("=" * 68)
 print(f"结论：{'全部通过' if not failures else f'{len(failures)} 项失败 -> {failures}'}")
