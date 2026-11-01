@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from app.job_schema import normalize_job_config, split_issues, validate_job_config
-from app.paths import data_root
+from app.paths import data_root, resource_path
 
 VALID_SOURCE_TYPES = ("auto_llm", "manual")
 VALID_REVIEW_STATUS = ("pending", "reviewed")
@@ -208,8 +208,11 @@ def get_job_config_by_name(job_name: str) -> Optional[Dict[str, Any]]:
 
 def list_job_configs(*, include_deleted: bool = False) -> List[Dict[str, Any]]:
     init_db()
+    # raw_jd 必须在这里查出来：岗位管理页面要显示每个岗位的 JD 原文，
+    # 之前这里没查，页面只能显示一个空列，HR 看到的永远是「JD 为空」。
     sql = (
-        "SELECT id, job_key, job_name, source_type, review_status, create_time, update_time "
+        "SELECT id, job_key, job_name, source_type, raw_jd, review_status, "
+        "create_time, update_time "
         "FROM job_config_table"
     )
     if not include_deleted:
@@ -269,10 +272,92 @@ def update_job_config_meta(job_key: str, *, review_status: Optional[str] = None)
     return get_job_config(job_key)
 
 
+def _load_jd_sections(config_dir) -> Dict[str, str]:
+    """读 job_intro.md，按 ===岗位名=== 切成 {岗位名: JD 正文}。
+
+    JD 原文的权威来源就是仓库里的 job_intro.md —— 岗位配置本来就是从它
+    种出来的，让配置表回填同一份 JD，才能保证「岗位管理里看到的 JD」
+    和「测评端读到的岗位介绍」是同一份东西，不会各说各话。
+
+    读不到就返回空字典：JD 回填是补齐信息，不是启动的前提条件，
+    不能因为这个文件缺失就把整个服务搞崩。
+    """
+    candidates: List[Path] = []
+    try:
+        candidates.append(Path(resource_path("job_intro.md")))
+    except (OSError, TypeError, ValueError):
+        pass
+    try:
+        candidates.append(Path(config_dir).parent / "job_intro.md")
+    except (TypeError, ValueError):
+        pass
+
+    for path in candidates:
+        try:
+            if not path.is_file():
+                continue
+            content = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        try:
+            # 延迟 import：knowledge_base 模块顶层会碰数据库，
+            # 放在函数里 import 才不会和这里的读写逻辑搅在一起。
+            from app.knowledge_base import _parse_marked_sections
+
+            sections = _parse_marked_sections(content)
+        except Exception:  # noqa: BLE001 - 解析器缺失/改动都不能影响启动
+            return {}
+        if sections:
+            return sections
+    return {}
+
+
+def _pick_jd(sections: Dict[str, str], *names: str) -> str:
+    """按候选岗位名依次找 JD 原文，第一个非空命中就返回。
+
+    候选顺序：库里存的名字在前（HR 可能在后台改过岗位名），
+    配置文件里的名字在后。
+    """
+    for name in names:
+        if not name:
+            continue
+        text = (sections.get(name) or "").strip()
+        if text:
+            return text
+    return ""
+
+
+def _backfill_raw_jd(job_key: str, jd_text: str) -> bool:
+    """只补 raw_jd 一列，不碰 config_json。返回是否真的补上了。
+
+    已经有 JD 的行不动 —— HR 亲手传上去的 JD 原文优先级最高，
+    job_intro.md 只负责补空。
+    """
+    if not jd_text:
+        return False
+    with _connect() as conn:
+        cursor = conn.execute(
+            """
+            UPDATE job_config_table
+            SET raw_jd = ?, update_time = ?
+            WHERE job_key = ? AND deleted_at IS NULL
+              AND (raw_jd IS NULL OR TRIM(raw_jd) = '')
+            """,
+            (jd_text, _now(), job_key),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+
+
 def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
     """把配置目录下的 *.json 导入库。默认幂等：已存在则跳过。
 
     用于把 job_configs/ 里手工维护的配置（含教培两份初始实例）灌进库。
+
+    JD 原文的来源分三级，优先级从高到低：
+      1. JSON 文件里的 raw_jd 字段（人工在文件里显式写的，最权威）；
+      2. job_intro.md 里对应岗位那一节（岗位介绍原文）；
+      3. 空 —— 没有就空着，HR 可以在后台补。
 
     overwrite=True 会用文件内容覆盖库里的同名配置并重置为 reviewed。
     只在「改了 job_configs/*.json 想让它生效」时用 —— 默认跳过是为了
@@ -282,18 +367,50 @@ def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
     from pathlib import Path
 
     imported: List[str] = []
+    jd_sections = _load_jd_sections(config_dir)
     for path in sorted(Path(config_dir).glob("*.json")):
         try:
             config = json.loads(path.read_text(encoding="utf-8"))
         except (ValueError, OSError):
             continue
-        job_key = config.get("job_key") if isinstance(config, dict) else None
+        if not isinstance(config, dict):
+            continue
+        job_key = config.get("job_key")
         if not job_key:
             continue
-        if get_job_config(job_key) and not overwrite:
+
+        # raw_jd 只存原文，不进 config_json —— 配置本体是给打分链路用的
+        # 结构化数据，往里塞一整段 JD 原文会污染它。
+        file_jd = config.pop("raw_jd", None)
+        file_jd = file_jd.strip() if isinstance(file_jd, str) else ""
+
+        existing = get_job_config(job_key)
+        intro_jd = _pick_jd(
+            jd_sections,
+            (existing or {}).get("job_name"),
+            config.get("job_name"),
+        )
+
+        if existing and not overwrite:
+            # 已经在库里了：不能用文件里的 config_json 覆盖 HR 在后台改过的东西，
+            # 但 JD 原文是空的话可以顺手补上 —— 只动 raw_jd 一列。
+            _backfill_raw_jd(job_key, file_jd or intro_jd)
             continue
+
+        if existing and not file_jd:
+            # 强制覆盖配置时，不用岗位介绍去盖掉 HR 亲手维护的 JD 原文。
+            # raw_jd 传 None 表示「这次不动 JD」。
+            jd_to_write = None
+        else:
+            jd_to_write = file_jd or intro_jd or None
+
         # 文件里的配置视为人工维护，默认直接生效
-        save_job_config(config, source_type="manual", review_status="reviewed")
+        save_job_config(
+            config,
+            source_type="manual",
+            review_status="reviewed",
+            raw_jd=jd_to_write,
+        )
         imported.append(job_key)
     return imported
 

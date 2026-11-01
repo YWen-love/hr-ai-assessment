@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0",
+  "job_key": "hr_recruitment_intern",
+  "job_name": "人力实习生",
+
+  "job_profile": {
+    "industry": "企业人力资源",
+    "responsibilities": [
+      "协助制定和优化人力资源相关流程与政策",
+      "配合业务部门需求，进行人员招聘",
+      "参与面试全流程工作，包括邀约、面试等环节",
+      "负责归属校招渠道的维护和管理，完成公司安排的交付任务"
+    ],
+    "nature": ["职能支持岗，无销售性质", "以招聘辅助和事务性工作为主"],
+    "work_time": ["周一至周五 9:00-18:30", "午休 1.5 小时", "周末双休，法定节假日正常休息"],
+    "rest_schedule": ["周末双休", "法定节假日正常休息"],
+    "salary": [
+      "实习期日底薪按简历最高学历计算：本科每日底薪 110 元；硕士研究生每日底薪 150 元",
+      "简历同时列出本科和硕士研究生经历时，按硕士研究生标准计算",
+      "转正机会：表现优秀者可获得实习转正机会",
+      "无交通补贴（坐班制）",
+      "实习期不缴纳社保"
+    ],
+    "hard_gates": [
+      "每周可实习 4 天以上，持续 3 个月以上"
+    ],
+    "soft_traits": [
+      "工作细心、有耐心，能处理重复性工作",
+      "具备良好的电话沟通能力",
+      "人力资源管理、行政管理等相关专业背景优先",
+      "有校园招聘、简历筛选或面试协助经验优先"
+    ]
+  },
+
+  "dialog_check_items": [
+    {
+      "id": "check_availability",
+      "text": "候选人每周可实习天数与持续周期是否满足每周 4 天以上、持续 3 个月以上的要求"
+    },
+    {
+      "id": "check_on_site",
+      "text": "候选人是否接受周一至周五 9:00-18:30 坐班制工作，且无交通补贴"
+    },
+    {
+      "id": "check_social_insurance",
+      "text": "候选人是否接受实习期不缴纳社保、底薪按最高学历计算"
+    },
+    {
+      "id": "check_detail",
+      "text": "候选人对招聘渠道维护、简历筛选、邀约等重复性事务性工作的细致程度和耐心"
+    }
+  ],
+
+  "exp_keywords": [
+    "人力资源", "招聘", "校园招聘", "校招", "招聘助理", "简历筛选",
+    "简历", "邀约", "面试", "人事", "行政", "HR"
+  ],
+
+  "score_rules": {
+    "add_score": [
+      {
+        "id": "major_hr_related",
+        "field": "major",
+        "op": "contains_any",
+        "value": [
+          "人力资源管理", "人力资源", "劳动与社会保障", "行政管理",
+          "工商管理", "组织管理", "公共管理", "社会工作"
+        ],
+        "score": 1,
+        "desc": "专业为人力资源 / 劳动社保 / 行政 / 管理类相关专业"
+      },
+      {
+        "id": "exp_recruiting",
+        "field": "exp_tags",
+        "op": "has_any",
+        "value": ["招聘", "校园招聘", "校招", "招聘助理", "简历筛选", "邀约", "面试"],
+        "score": 2,
+        "desc": "有招聘 / 校园招聘 / 简历筛选 / 邀约 / 面试等招聘相关经历"
+      },
+      {
+        "id": "exp_hr_support",
+        "field": "exp_tags",
+        "op": "has_any",
+        "value": ["人力资源", "HR", "人事", "行政"],
+        "score": 1,
+        "desc": "有人力资源 / 人事 / 行政等职能支持经历"
+      },
+      {
+        "id": "intent_hr",
+        "field": "resume_intention",
+        "op": "contains_any",
+        "value": ["人力资源", "招聘", "人事", "行政", "HR"],
+        "score": 1,
+        "desc": "求职意向为人力资源 / 招聘 / 人事 / 行政方向"
+      }
+    ],
+    "minus_score": []
+  },
+
+  "level_threshold": {
+    "high_min": 3,
+    "mid_min": 1
+  },
+
+  "alternate_role_mapping": [],
+
+  "backup_show_switch": {
+    "when_reject_main_job": true
+  },
+
+  "rag_doc_id": "hr_recruitment_intern"
+}

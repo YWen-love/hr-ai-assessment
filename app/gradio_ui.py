@@ -16,6 +16,7 @@ from __future__ import annotations
 import html
 import json
 import logging
+import re
 from pathlib import Path
 
 import gradio as gr
@@ -46,7 +47,7 @@ _SOURCE_LABELS = {"auto_llm": "AI 生成", "manual": "手动"}
 
 # 岗位列表的列序。操作列靠下标区分，所以这个顺序是契约，改了要同步改
 # _job_table() 和 select_job_action()。
-COL_NAME, COL_SOURCE, COL_CREATED, COL_EDIT, COL_DELETE = range(5)
+COL_NAME, COL_JD, COL_SOURCE, COL_CREATED, COL_EDIT, COL_DELETE = range(6)
 
 WORKBENCH_PATH = "/hr"
 # 尾斜杠不能省。Starlette 的 Mount 正则是 ^/hr/jobs/(?P<path>.*)$，
@@ -582,6 +583,24 @@ def build_workbench_ui() -> gr.Blocks:
 # 只会静默不命中，提示一句足够了。
 
 
+def _jd_preview(raw_jd: str | None, *, limit: int = 36) -> str:
+    """列表里那一格 JD 的摘要。
+
+    只给开头 —— 全量 JD 塞进表格会把版面撑爆，想看全文得点【JD】那格，
+    弹窗里的文本框是完整原文。
+
+    一个 JD 都没有的岗位画一个破折号，HR 一眼能看出「这岗位还没录 JD」，
+    而不是被一段空白骗过去。
+    """
+    text = (raw_jd or "").strip()
+    if not text:
+        return "—"
+    flat = re.sub(r"\s+", " ", text)
+    if len(flat) > limit:
+        flat = flat[:limit] + "…"
+    return f"{flat}（{len(text)} 字）"
+
+
 def _job_table(
     configs: list[dict] | None = None,
 ) -> tuple[list[list[str]], list[str]]:
@@ -593,6 +612,9 @@ def _job_table(
 
     表格里**不放 job_key** —— 那是后端内部标识，HR 用不上，
     看到一列看不懂的英文反而要多问一句。
+
+    JD 列放摘要：HR 在列表上就能看出「这个岗位有没有录 JD、录了大概什么」，
+    想看全文点那一格。
     """
     rows: list[list[str]] = []
     keys: list[str] = []
@@ -603,6 +625,7 @@ def _job_table(
         keys.append(key)
         rows.append([
             config.get("job_name") or key,
+            _jd_preview(config.get("raw_jd")),
             _SOURCE_LABELS.get(config.get("source_type"), config.get("source_type") or ""),
             config.get("create_time") or "",
             "编辑",
@@ -992,7 +1015,8 @@ def select_job_action(
     config = get_job_config_object(job_key) or {}
     job_name = config.get("job_name") or job_key
 
-    if col == COL_EDIT:
+    # 点【JD】那格和点【编辑】是同一件事：都是打开编辑弹窗看/改这个岗位。
+    if col in (COL_JD, COL_EDIT):
         raw_jd = record.get("raw_jd") or ""
         info = _edit_info_html(job_name, raw_jd)
         return (
@@ -1094,13 +1118,13 @@ def build_job_manager_ui() -> gr.Blocks:
             )
 
         job_table = gr.Dataframe(
-            headers=["岗位名称", "来源", "创建时间", "编辑", "删除"],
-            datatype=["str"] * 5,
+            headers=["岗位名称", "JD", "来源", "创建时间", "编辑", "删除"],
+            datatype=["str"] * 6,
             value=rows,
             interactive=False,
             wrap=True,
             max_height=320,
-            label="岗位列表（点【编辑】或【删除】所在的那一格）",
+            label="岗位列表（点【JD】【编辑】或【删除】所在的那一格）",
             elem_id="job-table",
         )
 

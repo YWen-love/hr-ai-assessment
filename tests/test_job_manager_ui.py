@@ -493,13 +493,15 @@ def test_job_table() -> None:
 
             rows, keys = ui._job_table()
             check("行数与 key 数一致", len(rows) == len(keys), f"{len(rows)} vs {len(keys)}")
-            check("表头没有 job_key", "job_key" not in ["岗位名称", "来源", "创建时间", "编辑", "删除"])
+            check("表头没有 job_key", "job_key" not in ["岗位名称", "JD", "来源", "创建时间", "编辑", "删除"])
             check("job_key 不出现在任何一格里", all(key not in str(row) for key in keys for row in rows))
-            check("AI 来源显示为中文", rows[keys.index("t_ai")][1] == "AI 生成", rows[keys.index("t_ai")][1])
-            check("手动来源显示为中文", rows[keys.index("t_manual")][1] == "手动", rows[keys.index("t_manual")][1])
-            check("岗位名取自 job_name", rows[keys.index("t_manual")][0] == "课程顾问")
-            check("编辑列有可点内容", rows[0][3] == "编辑")
-            check("删除列有可点内容", rows[0][4] == "删除")
+            check("AI 来源显示为中文", rows[keys.index("t_ai")][ui.COL_SOURCE] == "AI 生成", rows[keys.index("t_ai")][ui.COL_SOURCE])
+            check("手动来源显示为中文", rows[keys.index("t_manual")][ui.COL_SOURCE] == "手动", rows[keys.index("t_manual")][ui.COL_SOURCE])
+            check("岗位名取自 job_name", rows[keys.index("t_manual")][ui.COL_NAME] == "课程顾问")
+            check("编辑列有可点内容", rows[0][ui.COL_EDIT] == "编辑")
+            check("删除列有可点内容", rows[0][ui.COL_DELETE] == "删除")
+            check("没有 JD 的岗位在 JD 列画破折号", rows[keys.index("t_manual")][ui.COL_JD] == "—",
+                  rows[keys.index("t_manual")][ui.COL_JD])
             check("软删的岗位不在列表里", "t_gone" not in keys, str(keys))
 
 
@@ -536,6 +538,21 @@ def test_select_job_action() -> None:
             check("点编辑 → 编辑器预填现有配置", json.loads(editor)["job_key"] == keys[0])
             check("点编辑 → 状态区清空", status == "")
             check("点编辑 → JD 与规则一致时提示一致", "一致" in sync_hint, sync_hint[:200])
+
+            # 点【JD】列：和点【编辑】一样打开编辑弹窗，JD 全文进文本框
+            job_key, raw_jd, edit_vis, info, jd_box, _, _, _, sync_hint, del_vis, _ = select(
+                0, ui.COL_JD
+            )
+            check("点 JD → 返回该行 job_key", job_key == keys[0], f"{job_key} vs {keys}")
+            check("点 JD → 编辑弹窗打开", _visible(edit_vis))
+            check("点 JD → 删除弹窗不开", not _visible(del_vis))
+            check("点 JD → JD 全文进文本框", jd_box == "甲方原始 JD 内容", jd_box[:80])
+
+            # JD 列在列表上就能看出这个岗位有没有录 JD
+            jd_cell = rows[0][ui.COL_JD]
+            check("JD 列显示 JD 摘要", "甲方原始 JD 内容" in jd_cell, jd_cell)
+            check("JD 列标出字数", "字）" in jd_cell, jd_cell)
+            check("没录 JD 的岗位在 JD 列画破折号", rows[1][ui.COL_JD] == "—", rows[1][ui.COL_JD])
 
             # 点【删除】列
             job_key, _, edit_vis, _, _, _, _, _, _, del_vis, del_info = select(1, ui.COL_DELETE)
