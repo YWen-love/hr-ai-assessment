@@ -27,6 +27,7 @@ TESTS = [
     "test_candidate_page.py",          # 候选人页：服务端渲染头部 / 不出 undefined / 岗位配置缺失降级
     "test_job_config_migration.py",    # 岗位配置拆库迁移：启动自动搬 / 幂等 / 非破坏 / 容错
     "test_job_config_seed.py",         # 岗位配置种子化 + JD 回填：可见 / 有源 / 不丢 / 两表对齐
+    "test_dead_code_removed.py",       # 死代码清理：job_reader / render_hr_page 不许复活
 ]
 
 HERE = Path(__file__).resolve().parent

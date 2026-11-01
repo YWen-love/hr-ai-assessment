@@ -1,4 +1,3 @@
-import html
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -35,7 +34,7 @@ from app.job_config_store import (
 )
 from app.job_generator import JobConfigGenerator, JobGenerationError
 from app.job_schema import is_valid_job_key
-from app.knowledge_base import get_job_knowledge, initialize_knowledge_base, list_jobs
+from app.knowledge_base import get_job_knowledge, initialize_knowledge_base
 from app.rag_bypass import init_rag_store
 from app.resume_reader import read_resume_text
 from app.session_policy import (
@@ -231,145 +230,6 @@ def resolve_public_base_url(request: Request | None = None) -> str:
             return f"{proto}://{host}"
         return str(request.base_url).rstrip("/")
     return ""
-
-
-def render_hr_page() -> str:
-    job_options = "\n".join(
-        f"<option>{html.escape(job_name)}</option>"
-        for job_name in list_jobs(ready_only=True)
-    )
-    return """
-    <!doctype html>
-    <html lang="zh-CN">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>HR 上传简历</title>
-        <style>
-            body { font-family: Arial, sans-serif; background: linear-gradient(180deg, #f4f7ff, #eef5ff); margin: 0; padding: 32px; }
-            .layout { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; }
-            .card { background: white; border-radius: 18px; padding: 28px; box-shadow: 0 12px 28px rgba(26,42,73,0.08); }
-            h1 { margin-top: 0; }
-            form { display: grid; gap: 16px; }
-            label { display: grid; gap: 8px; font-weight: 600; }
-            input, select, button { font-size: 16px; padding: 12px 14px; border-radius: 10px; border: 1px solid #d9deeb; }
-            button { background: linear-gradient(135deg, #2858ff, #1d4ed8); color: white; border: none; cursor: pointer; }
-            .result { margin-top: 20px; padding: 18px; background: #eef3ff; border-radius: 12px; display:none; }
-            a { color: #2457f5; word-break: break-all; }
-            table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-            th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #edf0f7; }
-            .status { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-            .running { background: #fff5da; color: #9a6700; }
-            .done { background: #e8f9ef; color: #0d7a4d; cursor: pointer; }
-            .done:hover { opacity: 0.8; }
-            .empty { color: #75829a; }
-            .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
-            .modal-content { background: white; max-width: 700px; margin: 50px auto; border-radius: 16px; padding: 24px; max-height: 80vh; overflow-y: auto; }
-            .modal-close { float: right; cursor: pointer; font-size: 20px; }
-        </style>
-    </head>
-    <body>
-      <div class="layout">
-        <div class="card">
-          <h1>简历评测 HR 上传</h1>
-          <form id="hr-form">
-            <label>候选人姓名 <input name="candidate_name" required placeholder="例如：张三" /></label>
-            <label>岗位名称 <select name="job_name">""" + job_options + """</select></label>
-            <label>上传简历 <input type="file" name="file" accept=".pdf,.doc,.docx,.txt" required /></label>
-            <button type="submit">生成候选人链接</button>
-          </form>
-          <div id="result" class="result"></div>
-        </div>
-
-        <div class="card">
-          <h2>候选人筛选列表</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>候选人</th>
-                <th>岗位</th>
-                <th>状态</th>
-              </tr>
-            </thead>
-            <tbody id="sessions-body"></tbody>
-          </table>
-        </div>
-      </div>
-      
-      <!-- 结果弹窗 -->
-      <div id="resultModal" class="modal">
-        <div class="modal-content">
-          <span class="modal-close" onclick="closeModal()">&times;</span>
-          <h3>测评结果</h3>
-          <div id="modal-body"></div>
-        </div>
-      </div>
-      
-      <script>
-        const form = document.getElementById('hr-form');
-        const resultBox = document.getElementById('result');
-        const sessionsBody = document.getElementById('sessions-body');
-        const modal = document.getElementById('resultModal');
-
-        async function loadSessions() {
-          const resp = await fetch('/hr/sessions');
-          const data = await resp.json();
-          if (!data.length) {
-            sessionsBody.innerHTML = '<tr><td colspan="3" class="empty">暂无候选人数据</td></tr>';
-            return;
-          }
-          sessionsBody.innerHTML = data.map(item => {
-            const isDone = item.status === 'finished';
-            const nameHtml = isDone 
-              ? `<span style="color:#333">${item.candidate_name || '未知'}</span>`
-              : `<a href="/candidate/${item.session_id}" target="_blank">${item.candidate_name || '未知'}</a>`;
-            const statusHtml = isDone
-              ? `<span class="status done" onclick="viewResult('${item.session_id}')">已完成</span>`
-              : `<span class="status running">进行中</span>`;
-            return `<tr><td>${nameHtml}</td><td>${item.job_name || '未填写'}</td><td>${statusHtml}</td></tr>`;
-          }).join('');
-        }
-        
-        async function viewResult(sessionId) {
-          const resp = await fetch(`/hr/result/${sessionId}`);
-          const data = await resp.json();
-          document.getElementById('modal-body').innerHTML = `
-            <p><strong>候选人：</strong>${data.candidate_name}</p>
-            <p><strong>岗位：</strong>${data.job_name}</p>
-            <p><strong>最终结论：</strong>${data.final_decision}</p>
-            <p><strong>总结理由：</strong></p>
-            <p style="white-space:pre-wrap; background:#f5f7fa; padding:12px; border-radius:8px;">${data.summary}</p>
-          `;
-          modal.style.display = 'block';
-        }
-        
-        function closeModal() {
-          modal.style.display = 'none';
-        }
-        
-        window.onclick = function(event) {
-          if (event.target == modal) closeModal();
-        }
-
-        form.addEventListener('submit', async (event) => {
-          event.preventDefault();
-          const formData = new FormData(form);
-          const resp = await fetch('/hr/parse-link', { method: 'POST', body: formData });
-          const data = await resp.json();
-          resultBox.style.display = 'block';
-          resultBox.innerHTML = `
-            <div><strong>session_id:</strong> ${data.session_id}</div>
-            <div><strong>候选人链接:</strong> <a href="${data.public_link}" target="_blank">${data.public_link}</a></div>
-            <div><strong>岗位:</strong> ${data.job_name}</div>
-          `;
-          await loadSessions();
-        });
-
-        loadSessions();
-      </script>
-    </body>
-    </html>
-    """
 
 
 @app.get("/")
