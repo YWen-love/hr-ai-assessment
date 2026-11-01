@@ -166,6 +166,10 @@ button.nav-link {
     margin-bottom: 0;
 }
 .result-empty {min-height: 220px; box-sizing: border-box;}
+#result-panel .result-card {
+    max-height: 60vh;
+    overflow-y: auto;
+}
 #sessions-table .table-wrap {
     max-height: 240px !important;
     overflow-y: auto !important;
@@ -401,6 +405,21 @@ def show_assessment_result(session_id: str | None) -> str:
     return result
 
 
+def toggle_assessment_result(
+    session_id: str | None, shown: bool
+) -> tuple[str, bool]:
+    """切换测评结果区的展开/收起。
+
+    - 当前已展开（shown=True）：收起，返回空结果
+    - 当前未展开（shown=False）：展开，返回测评结果
+
+    按钮文字保持"查看测评结果"不变，靠状态切换内容。
+    """
+    if shown:
+        return _empty_result(), False
+    return show_assessment_result(session_id), True
+
+
 def select_candidate(session_id: str | None, request: gr.Request) -> tuple[str, str]:
     link = show_candidate_link(session_id, request)
     return link, _empty_result()
@@ -520,7 +539,8 @@ def build_workbench_ui() -> gr.Blocks:
                         )
                     selected_link = gr.HTML()
                     result_button = gr.Button("查看测评结果")
-                    result_panel = gr.HTML(value=_empty_result())
+                    result_panel = gr.HTML(value=_empty_result(), elem_id="result-panel")
+                    result_shown = gr.State(False)
 
         create_button.click(
             create_candidate,
@@ -531,22 +551,22 @@ def build_workbench_ui() -> gr.Blocks:
             select_candidate,
             inputs=selected_session,
             outputs=[selected_link, result_panel],
-        )
+        ).then(lambda: False, outputs=result_shown)
         result_button.click(
-            show_assessment_result,
-            inputs=selected_session,
-            outputs=result_panel,
+            toggle_assessment_result,
+            inputs=[selected_session, result_shown],
+            outputs=[result_panel, result_shown],
         )
         refresh_button.click(
             refresh_workbench,
             inputs=[selected_session, job_picker],
             outputs=[sessions_table, selected_session, job_picker, selected_link, result_panel],
-        )
+        ).then(lambda: False, outputs=result_shown)
         demo.load(
             refresh_workbench,
             inputs=[selected_session, job_picker],
             outputs=[sessions_table, selected_session, job_picker, selected_link, result_panel],
-        )
+        ).then(lambda: False, outputs=result_shown)
     return demo
 
 
