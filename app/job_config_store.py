@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,6 +26,8 @@ VALID_SOURCE_TYPES = ("auto_llm", "manual")
 VALID_REVIEW_STATUS = ("pending", "reviewed")
 
 TABLE_NAME = "job_config_table"
+
+logger = logging.getLogger(__name__)
 
 DB_PATH = data_root() / "job_configs.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -240,6 +243,30 @@ def delete_job_config(job_key: str, *, hard: bool = False) -> bool:
         return cursor.rowcount > 0
 
 
+def is_job_soft_deleted(job_key: str) -> bool:
+    """这个 job_key 是不是被 HR 删过（当前只剩软删除的行）。
+
+    软删的行 deleted_at 非空，但表上可能同时还活着一个同名 key ——
+    唯一索引 idx_job_config_key_alive 只约束 alive 行，所以「删掉之后
+    HR 又手工重建」是允许的，这种情况岗位不算被删。
+
+    判断口径因此是「有没有活着的行」：
+      - 有活行 → 没删，走正常更新；
+      - 只有死行 → 删过，种子化不许把它复活。
+    """
+    init_db()
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) AS total, "
+            "SUM(CASE WHEN deleted_at IS NULL THEN 1 ELSE 0 END) AS alive "
+            "FROM job_config_table WHERE job_key = ?",
+            (job_key,),
+        ).fetchone()
+    if not row or not row["total"]:
+        return False
+    return not row["alive"]
+
+
 def update_job_config_meta(job_key: str, *, review_status: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """只改元信息（目前只有复核状态）。人工复核动作走这里。"""
     init_db()
@@ -362,11 +389,15 @@ def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
     overwrite=True 会用文件内容覆盖库里的同名配置并重置为 reviewed。
     只在「改了 job_configs/*.json 想让它生效」时用 —— 默认跳过是为了
     避免覆盖 HR 在后台做过的调整。
+
+    被 HR 软删过的岗位不会被种子化复活：删了就是删了，要恢复得 HR
+    自己在后台重新新增（见 is_job_soft_deleted）。
     """
     init_db()
     from pathlib import Path
 
     imported: List[str] = []
+    skipped_deleted: List[str] = []
     jd_sections = _load_jd_sections(config_dir)
     for path in sorted(Path(config_dir).glob("*.json")):
         try:
@@ -385,6 +416,14 @@ def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
         file_jd = file_jd.strip() if isinstance(file_jd, str) else ""
 
         existing = get_job_config(job_key)
+        if existing is None and is_job_soft_deleted(job_key):
+            # HR 在岗位管理里删过这个岗位。删除是软删（历史测评记录还按 job_key
+            # 指着它，物理删会留悬空引用），但对 HR 来说「删了就是删了」——
+            # 之前这里看不见软删的行，save_job_config() 会 INSERT 一条同名活行，
+            # 于是重启一次岗位就诈尸，重新出现在测评端的下拉里。
+            skipped_deleted.append(job_key)
+            continue
+
         intro_jd = _pick_jd(
             jd_sections,
             (existing or {}).get("job_name"),
@@ -412,6 +451,11 @@ def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
             raw_jd=jd_to_write,
         )
         imported.append(job_key)
+
+    if skipped_deleted:
+        logger.info(
+            "跳过的已删除岗位（HR 曾删除，种子化不复活）：%s", ", ".join(skipped_deleted)
+        )
     return imported
 
 
