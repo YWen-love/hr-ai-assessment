@@ -29,6 +29,7 @@ TESTS = [
     "test_job_config_seed.py",         # 岗位配置种子化 + JD 回填：可见 / 有源 / 不丢 / 两表对齐
     "test_job_config_soft_delete.py",  # 软删的岗位不被种子化复活：删了就真删了
     "test_dead_code_removed.py",       # 死代码清理：job_reader / render_hr_page 不许复活
+    "test_job_picker_refresh.py",      # 工作台岗位下拉自动刷新：指纹 / 跳过 / 兜底提示
 ]
 
 HERE = Path(__file__).resolve().parent

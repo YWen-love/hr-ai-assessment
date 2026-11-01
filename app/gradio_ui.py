@@ -331,11 +331,23 @@ async def create_candidate(
             gr.update(),
         )
 
-    job_config = get_job_config_object(job_key)
-    if job_config is None:
+    if not job_key:
         return (
             '<div class="result-card" style="background:#fef2f2;color:#dc2626">'
-            "请选择有效岗位。</div>",
+            "请先选择岗位。</div>",
+            gr.update(),
+            gr.update(),
+        )
+
+    job_config = get_job_config_object(job_key)
+    if job_config is None:
+        # 走到这里说明下拉里那个岗位在库里已经没了 —— 多半是另一个标签页
+        # 的岗位管理里把它删了。这边下拉还没来得及刷新，说清楚比「请选择
+        # 有效岗位」有用：HR 知道要重新选一次，而不是以为自己操作错了。
+        return (
+            '<div class="result-card" style="background:#fef2f2;color:#dc2626">'
+            "所选岗位已不存在，可能刚被删除。下拉框会自动刷新，请重新选择后再生成链接。"
+            "</div>",
             gr.update(),
             gr.update(),
         )
@@ -439,6 +451,18 @@ def _job_choices() -> list[tuple[str, str]]:
     ]
 
 
+def _job_choices_signature(choices: list[tuple[str, str]]) -> str:
+    """岗位下拉选项的「指纹」。
+
+    回答一个问题：下拉里现在这份选项，和上一次比有没有变？
+    变了才需要往下推更新，没变就别动 —— 每隔几秒把同样的选项再推一遍，
+    会把 HR 正在点的下拉菜单重绘掉，正在选的人会踩空。
+
+    指纹只认 (岗位名, job_key)：这两项变了，HR 看到的下拉就变了。
+    """
+    return json.dumps(choices, ensure_ascii=False)
+
+
 def _empty_result() -> str:
     return '<div class="result-card result-empty"></div>'
 
@@ -447,8 +471,12 @@ def refresh_workbench(
     selected_session_id: str | None,
     selected_job_key: str | None,
     request: gr.Request,
-) -> tuple[list[list[str]], dict, dict, str, str]:
-    """刷新工作台：候选人列表、候选人下拉、岗位下拉、链接、结果区。"""
+) -> tuple[list[list[str]], dict, dict, str, str, str]:
+    """刷新工作台：候选人列表、候选人下拉、岗位下拉、链接、结果区、岗位指纹。
+
+    最后一个返回值是岗位下拉的指纹（_job_choices_signature），
+    供定时刷新比对用 —— 详见 refresh_job_picker。
+    """
     sessions = list_sessions()
     session_ids = {session["session_id"] for session in sessions}
     selected_session_id = (
@@ -466,7 +494,42 @@ def refresh_workbench(
         ),
         show_candidate_link(selected_session_id, request),
         _empty_result(),
+        _job_choices_signature(choices),
     )
+
+
+def refresh_job_picker(
+    selected_job_key: str | None,
+    known_signature: str | None,
+) -> tuple[dict, str]:
+    """只刷新岗位下拉，不碰工作台的其他部件。
+
+    为什么要轮询：岗位管理和测评工作台是两个各自挂载的 Gradio 应用
+    （见模块开头），页面之间没有推送机制。HR 在另一个标签页新增、改名、
+    删掉岗位，这边根本收不到通知，下拉框就一直停在旧快照上 ——
+    最坑的是「岗位已经被删了，这边还能拿它生成测评链接」。
+
+    所以工作台每隔几秒自己探一次：指纹没变就 gr.skip() 什么都不推，
+    变了才把新的选项推下去，并保证当前选中项要么还在、要么退回第一项。
+
+    返回 (岗位下拉更新, 新指纹)。
+    """
+    try:
+        choices = _job_choices()
+    except Exception:  # noqa: BLE001 - 探一次失败不该把整个工作台带崩
+        logger.exception("刷新岗位下拉失败，本次跳过")
+        return gr.skip(), known_signature
+
+    signature = _job_choices_signature(choices)
+    if signature == known_signature:
+        return gr.skip(), signature
+
+    keys = [key for _, key in choices]
+    value = (
+        selected_job_key if selected_job_key in keys
+        else keys[0] if keys else None
+    )
+    return gr.update(choices=choices, value=value), signature
 
 
 # ===========================================================================
@@ -505,6 +568,9 @@ def build_workbench_ui() -> gr.Blocks:
                         value=job_choices[0][1] if job_choices else None,
                         label="岗位名称",
                     )
+                    # 岗位下拉的当前快照指纹，只给定时刷新比对用。
+                    # 看不见的 State，HR 不用管它。
+                    job_signature = gr.State("")
                     resume_file = gr.File(
                         label="上传简历（PDF / DOC / DOCX / TXT）",
                         file_types=[".pdf", ".doc", ".docx", ".txt"],
@@ -561,13 +627,37 @@ def build_workbench_ui() -> gr.Blocks:
         refresh_button.click(
             refresh_workbench,
             inputs=[selected_session, job_picker],
-            outputs=[sessions_table, selected_session, job_picker, selected_link, result_panel],
+            outputs=[
+                sessions_table,
+                selected_session,
+                job_picker,
+                selected_link,
+                result_panel,
+                job_signature,
+            ],
         ).then(lambda: False, outputs=result_shown)
         demo.load(
             refresh_workbench,
             inputs=[selected_session, job_picker],
-            outputs=[sessions_table, selected_session, job_picker, selected_link, result_panel],
+            outputs=[
+                sessions_table,
+                selected_session,
+                job_picker,
+                selected_link,
+                result_panel,
+                job_signature,
+            ],
         ).then(lambda: False, outputs=result_shown)
+
+        # 岗位下拉定时刷新：岗位管理在另一个标签页改了岗位，这边收不到通知。
+        # 详见 refresh_job_picker 的说明。定时器只是探针，列表没变就跳过。
+        # Gradio 6 的 Timer 用 value 表示间隔秒数（没有 interval 参数）。
+        job_timer = gr.Timer(value=5)
+        job_timer.tick(
+            refresh_job_picker,
+            inputs=[job_picker, job_signature],
+            outputs=[job_picker, job_signature],
+        )
     return demo
 
 
