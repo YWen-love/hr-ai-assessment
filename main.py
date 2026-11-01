@@ -28,6 +28,7 @@ from app.job_config_store import (
     get_job_config_by_name,
     get_job_config_object,
     list_job_configs,
+    migrate_legacy_configs,
     save_job_config,
     seed_from_files,
     update_job_config_meta,
@@ -53,6 +54,12 @@ async def lifespan(app: FastAPI):
     init_hr_db()
     seed_default_admin()
     initialize_knowledge_base()
+    # 岗位配置拆库后，先把老库 resume_sessions.db 里的 job_config_table 搬过来，
+    # 否则 HR 在后台配过的岗位在 HR 后台会「凭空消失」（老库还在，数据没丢）。
+    # 幂等 + 非破坏，跑多少次都一样。
+    migrated = migrate_legacy_configs()
+    if migrated["migrated"]:
+        logger.info("已从旧库迁移岗位配置 %s 条", migrated["migrated"])
     # 岗位配置从 job_configs/*.json 种子化入库；HR 在后台改的是数据库，文件是初值
     seeded = seed_from_files(resource_path("job_configs"))
     if seeded:

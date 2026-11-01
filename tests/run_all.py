@@ -25,6 +25,7 @@ TESTS = [
     "test_session_policy.py",          # session cookie 策略 / CSRF 拦截 / 登出宽限期
     "test_report.py",                  # 报告组装：静态分 / 意愿 / 推荐
     "test_candidate_page.py",          # 候选人页：服务端渲染头部 / 不出 undefined / 岗位配置缺失降级
+    "test_job_config_migration.py",    # 岗位配置拆库迁移：启动自动搬 / 幂等 / 非破坏 / 容错
 ]
 
 HERE = Path(__file__).resolve().parent

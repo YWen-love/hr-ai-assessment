@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from app.job_schema import normalize_job_config, split_issues, validate_job_config
@@ -22,6 +23,8 @@ from app.paths import data_root
 
 VALID_SOURCE_TYPES = ("auto_llm", "manual")
 VALID_REVIEW_STATUS = ("pending", "reviewed")
+
+TABLE_NAME = "job_config_table"
 
 DB_PATH = data_root() / "job_configs.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -293,3 +296,86 @@ def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
         save_job_config(config, source_type="manual", review_status="reviewed")
         imported.append(job_key)
     return imported
+
+
+def migrate_legacy_configs(*, source_db: Optional[str] = None) -> Dict[str, Any]:
+    """把旧库 resume_sessions.db 里的 job_config_table 搬到本库。
+
+    背景：岗位配置原先和候选人会话共用 resume_sessions.db，后来拆到
+    独立的 job_configs.db。老库里可能还躺着 HR 在后台配好的岗位。
+
+    这个函数在服务启动时自动跑一次（见 main.py 的 lifespan），
+    免得「换了代码忘了跑迁移脚本」→ HR 打开后台发现岗位全没了。
+
+    设计原则（与 scripts/migrate_job_configs_db.py 一致）：
+    1. 幂等：按 job_key 去重，已在目标库的直接跳过，可重复执行。
+    2. 非破坏：只读源库，不删源库任何数据。
+    3. 静默容错：源库不存在 / 没有这张表 / 结构对不上，都不影响服务启动。
+
+    Returns:
+        {"migrated": 新增条数, "skipped": 已存在跳过条数, "source": 源库路径}
+    """
+    # 延迟 import：源库路径以 session_store 的 DB_PATH 为准，
+    # 这样测试改 ss.DB_PATH 就能把迁移指向临时库。
+    from app.session_store import DB_PATH as SESSION_DB_PATH
+
+    source = Path(source_db) if source_db else Path(SESSION_DB_PATH)
+    result: Dict[str, Any] = {"migrated": 0, "skipped": 0, "source": str(source)}
+
+    if not source.exists() or source.resolve() == Path(DB_PATH).resolve():
+        return result
+
+    try:
+        src = sqlite3.connect(f"file:{source}?mode=ro", uri=True)
+    except sqlite3.Error:
+        return result
+
+    try:
+        src.row_factory = sqlite3.Row
+        has_table = src.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+            (TABLE_NAME,),
+        ).fetchone()
+        if has_table is None:
+            return result
+
+        source_cols = [r[1] for r in src.execute(f"PRAGMA table_info({TABLE_NAME})")]
+        if "job_key" not in source_cols:
+            return result
+
+        init_db()
+        with _connect() as dst:
+            target_cols = {r[1] for r in dst.execute(f"PRAGMA table_info({TABLE_NAME})")}
+            # 只搬两边都有的列：老库将来若加了新列，不会把启动搞崩
+            cols = [c for c in source_cols if c in target_cols]
+            if not cols:
+                return result
+            col_list = ", ".join(cols)
+            placeholders = ", ".join("?" for _ in cols)
+
+            for row in src.execute(f"SELECT {col_list} FROM {TABLE_NAME}").fetchall():
+                job_key = row["job_key"]
+                if not job_key:
+                    continue
+                exists = dst.execute(
+                    f"SELECT 1 FROM {TABLE_NAME} WHERE job_key = ?", (job_key,)
+                ).fetchone()
+                if exists:
+                    result["skipped"] += 1
+                    continue
+                try:
+                    dst.execute(
+                        f"INSERT INTO {TABLE_NAME} ({col_list}) VALUES ({placeholders})",
+                        [row[c] for c in cols],
+                    )
+                    result["migrated"] += 1
+                except sqlite3.IntegrityError:
+                    # 并发启动或唯一索引打架：跳过即可，不影响服务
+                    result["skipped"] += 1
+            dst.commit()
+    except sqlite3.Error:
+        return result
+    finally:
+        src.close()
+
+    return result
