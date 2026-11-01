@@ -24,6 +24,7 @@ TESTS = [
     "test_job_manager_ui.py",          # HR 后台岗位管理 Tab 的 handler
     "test_session_policy.py",          # session cookie 策略 / CSRF 拦截 / 登出宽限期
     "test_report.py",                  # 报告组装：静态分 / 意愿 / 推荐
+    "test_candidate_page.py",          # 候选人页：服务端渲染头部 / 不出 undefined / 岗位配置缺失降级
 ]
 
 HERE = Path(__file__).resolve().parent

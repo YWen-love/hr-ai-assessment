@@ -116,12 +116,17 @@ class AssessmentService:
 
         幂等：如果 chat_history 里已有开场白（候选人刷新页面），直接返回已存的，
         不重新调模型 —— 刷新一次就换一套开场白会让对话前言不搭后语。
+
+        **岗位配置缺失时不能整个抛错。** 候选人 / 岗位这两个字段本来就在会话行里，
+        整包抛 404 会让页面头部一起拿不到，渲染成"候选人: undefined"。
+        这里退化成：照常返回姓名与岗位，把问题写进 error 字段。
         """
         session = get_session(session_id)
         if session is None:
             raise AssessmentError(f"会话不存在：{session_id}")
 
-        job_config = self._load_config(session.get("job_key") or "")
+        candidate_name = session.get("candidate_name") or "候选人"
+        job_name = session.get("job_name") or ""
         resume_tags = session.get("resume_tags") or session.get("resume_json") or {}
         chat_history = list(session.get("chat_history") or [])
 
@@ -134,6 +139,21 @@ class AssessmentService:
                     break
 
         if not first_question:
+            try:
+                job_config = self._load_config(session.get("job_key") or "")
+            except AssessmentError as exc:
+                # 开场白生成不了，但头部信息还在 —— 返回姓名与岗位，把错误带上。
+                logger.warning("会话 %s 无法生成开场白：%s", session_id, exc)
+                return {
+                    "session_id": session_id,
+                    "candidate_name": candidate_name,
+                    "job_name": job_name,
+                    "first_question": "",
+                    "status": session.get("status") or "in_progress",
+                    "error": f"{exc}，暂时无法开始测评，请联系 HR。",
+                }
+
+            job_name = job_name or job_config.get("job_name", "")
             opening = await self.chat.reply(job_config, resume_tags, [])
             first_question = opening.text
             chat_history = [{"role": "assistant", "content": first_question}]
@@ -147,8 +167,8 @@ class AssessmentService:
 
         return {
             "session_id": session_id,
-            "candidate_name": session.get("candidate_name") or "候选人",
-            "job_name": session.get("job_name") or job_config.get("job_name", ""),
+            "candidate_name": candidate_name,
+            "job_name": job_name,
             "first_question": first_question,
             "status": session.get("status") or "in_progress",
         }

@@ -18,6 +18,7 @@ from config import settings
 from app.gradio_ui import HR_UI_CSS, build_job_manager_ui, build_workbench_ui
 from app.hr_auth import init_db as init_hr_db, seed_default_admin, verify_login, create_user
 from app.login_page import render_login_page, render_register_page
+from app.candidate_page import render_candidate_page
 from app.paths import data_root, resource_path
 from app.assessment_service import AssessmentError, AssessmentService
 from app.job_config_store import (
@@ -364,105 +365,6 @@ def render_hr_page() -> str:
     """
 
 
-def render_candidate_page(session_id: str) -> str:
-    return f"""
-    <!doctype html>
-    <html lang="zh-CN">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>候选人测评</title>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 24px;
-                min-height: 100vh;
-                background:
-                    linear-gradient(rgba(255,255,255,0.82), rgba(255,255,255,0.82)),
-                    url('/static/测评端.jpg') center/cover no-repeat fixed;
-                background-attachment: fixed;
-            }}
-            .panel {{ max-width: 900px; margin: 0 auto; background: white; border-radius: 18px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }}
-            h2 {{ margin-top: 0; }}
-            .messages {{ display: grid; gap: 12px; margin: 20px 0; }}
-            .msg {{ max-width: 75%; padding: 12px 14px; border-radius: 12px; line-height: 1.6; }}
-            .assistant {{ background: #edf3ff; justify-self: start; }}
-            .user {{ background: #deffeb; justify-self: end; }}
-            form {{ display: flex; gap: 10px; margin-top: 16px; }}
-            input {{ flex: 1; padding: 12px 14px; border: 1px solid #d5dbee; border-radius: 10px; }}
-            button {{ background: #2457f5; color: white; border: none; border-radius: 10px; padding: 12px 20px; cursor: pointer; }}
-            .result-box {{ margin-top: 18px; background: #eef8f1; border-radius: 12px; padding: 16px; display: none; }}
-        </style>
-    </head>
-    <body>
-      <div class="panel">
-        <h2>途途测评</h2>
-        <div id="meta"></div>
-        <div id="messages" class="messages"></div>
-        <form id="chat-form">
-          <input id="answer" autocomplete="off" placeholder="请输入你的回答" />
-          <button type="submit">发送</button>
-        </form>
-        <div id="result-box" class="result-box"></div>
-      </div>
-      <script>
-        const sessionId = '{session_id}';
-        const messagesEl = document.getElementById('messages');
-        const metaEl = document.getElementById('meta');
-        const resultBox = document.getElementById('result-box');
-        const form = document.getElementById('chat-form');
-        const input = document.getElementById('answer');
-
-        function appendMessage(role, text) {{
-          const div = document.createElement('div');
-          div.className = 'msg ' + role;
-          div.textContent = text;
-          messagesEl.appendChild(div);
-          messagesEl.scrollTop = messagesEl.scrollHeight;
-        }}
-
-        async function startSession() {{
-          const resp = await fetch('/candidate/start', {{
-            method: 'POST',
-            headers: {{ 'Content-Type': 'application/x-www-form-urlencoded' }},
-            body: new URLSearchParams({{ session_id: sessionId }})
-          }});
-          const data = await resp.json();
-          metaEl.innerHTML = `<strong>候选人:</strong> ${{data.candidate_name}} &nbsp; <strong>岗位:</strong> ${{data.job_name}}`;
-          appendMessage('assistant', data.first_question);
-        }}
-
-        async function submitAnswer(event) {{
-          event.preventDefault();
-          const text = input.value.trim();
-          if (!text) return;
-          appendMessage('user', text);
-          input.value = '';
-
-          const resp = await fetch('/assessment/next', {{
-            method: 'POST',
-            headers: {{ 'Content-Type': 'application/x-www-form-urlencoded' }},
-            body: new URLSearchParams({{ session_id: sessionId, user_answer: text }})
-          }});
-          const data = await resp.json();
-          // /assessment/next 返回的字段是 message（与 assessment_service.handle_turn 一致）
-          appendMessage('assistant', data.message);
-
-          // 如果后端返回已结束，隐藏输入框
-          if (data.status === 'finished') {{
-            form.style.display = 'none';
-          }}
-        }}
-
-        form.addEventListener('submit', submitAnswer);
-        startSession();
-      </script>
-    </body>
-    </html>
-    """
-
-
 @app.get("/")
 async def read_root(session_id: Optional[str] = None, admin_pwd: Optional[str] = None):
     if session_id:
@@ -738,7 +640,7 @@ async def candidate_page(session_id: str) -> HTMLResponse:
         </html>
         """, media_type="text/html")
     
-    return HTMLResponse(content=render_candidate_page(session_id), media_type="text/html")
+    return HTMLResponse(content=render_candidate_page(session_id, session), media_type="text/html")
 
 
 @app.post("/resume/parse")
