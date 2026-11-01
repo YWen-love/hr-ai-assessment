@@ -41,6 +41,28 @@ class JobConfigError(ValueError):
         self.errors = errors
 
 
+class JobResolveError(Exception):
+    """按岗位名定位测评岗位失败。
+
+    reason 区分失败原因，调用方据此给 HR 不同提示（同一件事只给一种说法）：
+
+      BLANK   —— 没选岗位；
+      MISSING —— 配置表里没有这个岗位名（从没配过）；
+      DELETED —— 配置表里有，但被 HR 软删了；
+      BROKEN  —— 配置在，内容却不可用（config_json 坏了）。
+    """
+
+    BLANK = "blank"
+    MISSING = "missing"
+    DELETED = "deleted"
+    BROKEN = "broken"
+
+    def __init__(self, reason: str, job_name: str = ""):
+        super().__init__(reason)
+        self.reason = reason
+        self.job_name = job_name
+
+
 def _connect() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -192,9 +214,9 @@ def get_job_config_object(job_key: str) -> Optional[Dict[str, Any]]:
 def get_job_config_by_name(job_name: str) -> Optional[Dict[str, Any]]:
     """按岗位显示名（job_name）取配置。
 
-    HR 上传表单的下拉框显示的是中文岗位名（来自 knowledge_base.list_jobs），
-    但测评链路全程用 job_key 做内部标识。这里提供 job_name → config 的反查，
-    让 /hr/parse-link 能在创建会话时把 job_key 一并存进去。
+    HR 上传表单的下拉框显示的是中文岗位名，但测评链路全程用 job_key 做
+    内部标识。这里提供 job_name → config 的反查，让 /hr/parse-link 能在
+    创建会话时把 job_key 一并存进去。
 
     取第一条命中：job_name 在业务上应唯一，但表上没加唯一约束，
     真出现重名时取最新更新的那条，避免测评链路因脏数据整条崩掉。
@@ -207,6 +229,55 @@ def get_job_config_by_name(job_name: str) -> Optional[Dict[str, Any]]:
             (job_name,),
         ).fetchone()
     return _row_to_dict(row) if row else None
+
+
+def _find_deleted_by_name(job_name: str) -> Optional[Dict[str, Any]]:
+    """按岗位名找一条软删除的行（最近更新的那条）。"""
+    init_db()
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM job_config_table WHERE job_name = ? AND deleted_at IS NOT NULL "
+            "ORDER BY update_time DESC LIMIT 1",
+            (job_name,),
+        ).fetchone()
+    return _row_to_dict(row) if row else None
+
+
+def resolve_job_by_name(job_name: str) -> Dict[str, Any]:
+    """按岗位显示名定位「测评要用的那个岗位配置」。只认岗位配置表。
+
+    为什么只有这一张表算数：测评链路从头到尾读的就是它
+    （assessment_service → get_job_config_object → job_config_table），
+    配置表里没有的岗位一定测不了 —— 配置表里有的岗位就一定能测。
+
+    之前这里还叠了一道知识库（rag_knowledge.db）的闸：知识库里查不到这个岗位
+    就直接 400。可知识库是 job_intro.md / screen_rules.md 的静态快照，
+    岗位管理里新建的岗位永远不会出现在里面。结果是 HR 明明配好了岗位，
+    点生成链接却被拦下，提示还让他「选择知识库中的有效岗位」——
+    两份名单并存，就有两套互相打架的答案，HR 拿哪份都对不上。
+
+    失败抛 JobResolveError，reason 见类定义；调用方按 reason 给一句话，
+    不要自己再猜一套判断逻辑。
+    """
+    name = (job_name or "").strip()
+    if not name:
+        raise JobResolveError(JobResolveError.BLANK)
+
+    record = get_job_config_by_name(name)
+    if record is None:
+        # 没命中活行，看看是不是被 HR 软删了 ——
+        # 软删的行还在表里、名字也还在。HR 看到的是「我明明删了它，
+        # 怎么还在报错」，这两种情况必须分开说。
+        if _find_deleted_by_name(name) is not None:
+            raise JobResolveError(JobResolveError.DELETED, name)
+        raise JobResolveError(JobResolveError.MISSING, name)
+
+    config = record.get("config")
+    if not isinstance(config, dict) or not config.get("score_rules") or not config.get("job_profile"):
+        # 配置在，内容却不能用（多半是 config_json 写坏了）。
+        # 这种状态测出来的结果没有意义，直说比硬测一轮强。
+        raise JobResolveError(JobResolveError.BROKEN, name)
+    return record
 
 
 def list_job_configs(*, include_deleted: bool = False) -> List[Dict[str, Any]]:

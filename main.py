@@ -22,19 +22,20 @@ from app.paths import data_root, resource_path
 from app.assessment_service import AssessmentError, AssessmentService
 from app.job_config_store import (
     JobConfigError,
+    JobResolveError,
     delete_job_config,
     get_job_config,
-    get_job_config_by_name,
     get_job_config_object,
     list_job_configs,
     migrate_legacy_configs,
+    resolve_job_by_name,
     save_job_config,
     seed_from_files,
     update_job_config_meta,
 )
 from app.job_generator import JobConfigGenerator, JobGenerationError
 from app.job_schema import is_valid_job_key
-from app.knowledge_base import get_job_knowledge, initialize_knowledge_base
+from app.knowledge_base import initialize_knowledge_base
 from app.rag_bypass import init_rag_store
 from app.resume_reader import read_resume_text
 from app.session_policy import (
@@ -351,6 +352,30 @@ async def api_logout(request: Request, grace: int = 0) -> RedirectResponse:
     return RedirectResponse(url="/login", status_code=302)
 
 
+def _job_resolve_http_error(error: JobResolveError) -> HTTPException:
+    """把「岗位定位失败」的原因翻成一句 HR 看得懂的话。
+
+    每种原因只给一种说法：同一个失败不该在两处各写一套判断，
+    更不该出现「知识库里的有效岗位」这种指向另一份名单的提示。
+    """
+    if error.reason == JobResolveError.BLANK:
+        return HTTPException(status_code=400, detail="请先选择岗位。")
+    if error.reason == JobResolveError.DELETED:
+        return HTTPException(
+            status_code=400,
+            detail=f"岗位「{error.job_name}」已被删除，请先在岗位管理中重新新增。",
+        )
+    if error.reason == JobResolveError.BROKEN:
+        return HTTPException(
+            status_code=503,
+            detail=f"岗位「{error.job_name}」的配置不可用，请在岗位管理中重新生成配置。",
+        )
+    return HTTPException(
+        status_code=400,
+        detail=f"岗位「{error.job_name}」的评分配置不存在，请先在岗位管理中生成配置。",
+    )
+
+
 @app.post("/hr/parse-link")
 async def hr_parse_link(
     request: Request,
@@ -359,22 +384,18 @@ async def hr_parse_link(
     job_name: str = Form(...),
     _user: str = Depends(_require_hr_user),
 ) -> dict:
-    try:
-        get_job_knowledge(job_name)
-    except KeyError as error:
-        raise HTTPException(status_code=400, detail="请选择知识库中的有效岗位。") from error
-    except RuntimeError as error:
-        raise HTTPException(status_code=503, detail="该岗位筛选规则尚未生成，请检查模型配置并重启服务。") from error
-
+    # 岗位只认配置表。测评链路读的就是这张表（assessment_service 走
+    # get_job_config_object），知识库只是 job_intro.md 的静态快照 ——
+    # 岗位管理里新建的岗位根本不在里面，拿它当闸门等于把配好的岗位拦在门外。
+    #
     # 表单下拉传的是 job_name（中文显示名），测评链路全程用 job_key 做内部标识。
     # 必须在创建会话时把 job_key 存进去，否则候选人点开链接后 assessment_service
     # 加载岗位配置会因"缺少 job_key"直接报错，开场白都生成不出来。
-    job_record = get_job_config_by_name(job_name)
-    if job_record is None:
-        raise HTTPException(
-            status_code=400,
-            detail=f"岗位「{job_name}」的评分配置不存在，请先在岗位管理中生成配置。",
-        )
+    try:
+        job_record = resolve_job_by_name(job_name)
+    except JobResolveError as error:
+        raise _job_resolve_http_error(error) from error
+
     job_key = job_record["job_key"]
     job_config = job_record["config"]
 
