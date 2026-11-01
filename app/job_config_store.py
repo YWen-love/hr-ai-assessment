@@ -1,7 +1,13 @@
 """岗位配置表（job_config_table）的读写。
 
-与候选人会话表放在同一个 SQLite 文件里，方便 HR 后台按 job_key 联表统计。
-迁移沿用 session_store 的 _ensure_columns 模式，不引入额外迁移框架。
+与候选人会话表（resume_sessions.db）分库存储：
+- job_configs.db：岗位配置元数据（低频变更、可从 job_configs/*.json 种子化重建）
+- resume_sessions.db：候选人会话运行时数据（高频增长、不可重建）
+
+两张表通过 job_key 逻辑关联，sessions 表已冗余存储 job_name，
+统计查询不依赖 SQL 联表，因此分库不影响业务查询。
+
+迁移沿用 _ensure_columns 模式，不引入额外迁移框架。
 """
 
 from __future__ import annotations
@@ -12,10 +18,13 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from app.job_schema import normalize_job_config, split_issues, validate_job_config
-from app.session_store import DB_PATH
+from app.paths import data_root
 
 VALID_SOURCE_TYPES = ("auto_llm", "manual")
 VALID_REVIEW_STATUS = ("pending", "reviewed")
+
+DB_PATH = data_root() / "job_configs.db"
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
 class JobConfigError(ValueError):
@@ -102,11 +111,19 @@ def save_job_config(
 
     with _connect() as conn:
         existing = conn.execute(
-            "SELECT id, create_time FROM job_config_table WHERE job_key = ? AND deleted_at IS NULL",
+            "SELECT id, create_time, raw_jd FROM job_config_table "
+            "WHERE job_key = ? AND deleted_at IS NULL",
             (job_key,),
         ).fetchone()
 
         if existing:
+            # raw_jd 的三态语义：
+            #   None → 「这次不动 JD 原文」，沿用库里存着的那份
+            #   ""   → 「JD 原文改成空的」（HR 亲手清空了 JD）
+            #   文本 → 「JD 原文换成这份」
+            # 之前不管传什么都直接 SET raw_jd = ?，于是「不动」和「清空」
+            # 变成同一件事：改一次规则，原始 JD 就被抹成 NULL，再也追不回来。
+            effective_raw_jd = existing["raw_jd"] if raw_jd is None else raw_jd
             conn.execute(
                 """
                 UPDATE job_config_table
@@ -117,7 +134,7 @@ def save_job_config(
                 (
                     normalized["job_name"],
                     source_type,
-                    raw_jd,
+                    effective_raw_jd,
                     json.dumps(normalized, ensure_ascii=False),
                     review_status,
                     _now(),
@@ -164,6 +181,26 @@ def get_job_config_object(job_key: str) -> Optional[Dict[str, Any]]:
     """只要 config 本体，不要外层元信息 —— 打分/对话链路用这个，省一次解包。"""
     record = get_job_config(job_key)
     return record["config"] if record else None
+
+
+def get_job_config_by_name(job_name: str) -> Optional[Dict[str, Any]]:
+    """按岗位显示名（job_name）取配置。
+
+    HR 上传表单的下拉框显示的是中文岗位名（来自 knowledge_base.list_jobs），
+    但测评链路全程用 job_key 做内部标识。这里提供 job_name → config 的反查，
+    让 /hr/parse-link 能在创建会话时把 job_key 一并存进去。
+
+    取第一条命中：job_name 在业务上应唯一，但表上没加唯一约束，
+    真出现重名时取最新更新的那条，避免测评链路因脏数据整条崩掉。
+    """
+    init_db()
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM job_config_table WHERE job_name = ? AND deleted_at IS NULL "
+            "ORDER BY update_time DESC LIMIT 1",
+            (job_name,),
+        ).fetchone()
+    return _row_to_dict(row) if row else None
 
 
 def list_job_configs(*, include_deleted: bool = False) -> List[Dict[str, Any]]:

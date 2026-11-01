@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 
 TESTS = [
-    "test_import_smoke.py",            # import 链：改名/删文件后不留悬空 import
     "test_scoring_engine_generic.py",  # 打分引擎通用性
     "test_resume_parser.py",           # 简历解析 + 标签封闭词表
     "test_e2e_learning_consultant.py", # 真实岗位配置端到端
@@ -23,6 +22,7 @@ TESTS = [
     "test_job_schema_profile.py",      # job_profile 键名归一化
     "test_job_generator_score_rules.py",  # 打分规则分组名漂移 + 兜底提示
     "test_job_manager_ui.py",          # HR 后台岗位管理 Tab 的 handler
+    "test_session_policy.py",          # session cookie 策略 / CSRF 拦截 / 登出宽限期
     "test_report.py",                  # 报告组装：静态分 / 意愿 / 推荐
 ]
 

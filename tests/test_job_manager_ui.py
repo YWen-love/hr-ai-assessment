@@ -137,12 +137,15 @@ def test_generate() -> None:
         ui.JobConfigGenerator = FakeGenerator
         try:
             with TempDB(tmp):
-                config_json, status_html, raw_jd, clear_file = run(ui.generate_job_config(str(jd_path)))
+                config_json, status_html, raw_jd, clear_file, jd_box = run(
+                    ui.generate_job_config(str(jd_path))
+                )
 
                 parsed = json.loads(config_json)
                 check("生成结果是合法 JSON", isinstance(parsed, dict))
                 check("带回了 job_key", parsed["job_key"] == "generated_demo", str(parsed.get("job_key")))
                 check("JD 原文回传给保存步骤用", raw_jd == jd_text, raw_jd[:40])
+                check("JD 写回文本框，框里就是这份 JD", jd_box == jd_text, jd_box[:40])
                 check("模型收到的是文件里的 JD", FakeGenerator.last_jd == jd_text, FakeGenerator.last_jd[:40])
                 check("生成后自动做了 schema 校验", "校验通过" in status_html, status_html[:160])
                 check("返回了清空文件框的更新指令", isinstance(clear_file, dict), str(type(clear_file)))
@@ -150,6 +153,46 @@ def test_generate() -> None:
                 # 生成只预览，绝不落库
                 keys = [c["job_key"] for c in store.list_job_configs()]
                 check("生成不落库", "generated_demo" not in keys, str(keys))
+        finally:
+            ui.JobConfigGenerator = original_generator
+
+
+def test_generate_from_pasted_text() -> None:
+    section("1b. 不传文件，直接粘贴 JD")
+    with tempfile.TemporaryDirectory() as tmp:
+        jd_text = "岗位名称：课程顾问\n负责电话邀约与转化。"
+
+        original_generator = ui.JobConfigGenerator
+        FakeGenerator.payload = {
+            "config": valid_config("paste_demo"), "errors": [], "warnings": []
+        }
+        ui.JobConfigGenerator = FakeGenerator
+        try:
+            with TempDB(tmp):
+                # 不给文件，只给文本框里的内容
+                config_json, status_html, used_jd, clear_file, jd_box = run(
+                    ui.generate_job_config(None, jd_text)
+                )
+                check("粘贴的 JD 也能生成", json.loads(config_json)["job_key"] == "paste_demo")
+                check("模型收到的是粘贴的内容", FakeGenerator.last_jd == jd_text, FakeGenerator.last_jd[:40])
+                check("粘贴的 JD 原文回传", used_jd == jd_text, used_jd[:40])
+                check("JD 写回文本框", jd_box == jd_text, jd_box[:40])
+                check("生成后自动校验", "校验通过" in status_html, status_html[:160])
+                check("生成不落库", not store.list_job_configs(), str(store.list_job_configs()))
+
+                # 文件和文本同时给：文件优先（HR 特意传了文件就是要用这份）
+                jd_path = Path(tmp) / "jd.txt"
+                jd_path.write_text("文件里的 JD", encoding="utf-8")
+                _, _, used_jd, _, _ = run(ui.generate_job_config(str(jd_path), jd_text))
+                check("同时给时文件优先", used_jd == "文件里的 JD", used_jd[:40])
+
+                # 两样都没有 → 报错，并提示可以去文本框里粘
+                try:
+                    run(ui.generate_job_config(None, ""))
+                    check("既没文件也没文本时报错", False)
+                except gr.Error as exc:
+                    check("既没文件也没文本时报错", True)
+                    check("报错文案指向文本框", "粘贴" in str(exc), str(exc)[:200])
         finally:
             ui.JobConfigGenerator = original_generator
 
@@ -167,7 +210,7 @@ def test_generate_auto_validation() -> None:
         ui.JobConfigGenerator = FakeGenerator
         try:
             with TempDB(tmp):
-                _, status_html, _, _ = run(ui.generate_job_config(str(jd_path)))
+                _, status_html, _, _, _ = run(ui.generate_job_config(str(jd_path)))
                 check("缺必填字段当场报不通过", "校验不通过" in status_html and "job_name" in status_html, status_html[:200])
                 check("告诉 HR 会被拦截", "保存将被拦截" in status_html, status_html[:200])
                 check("告诉 HR 去哪改", "高级" in status_html, status_html[:200])
@@ -176,7 +219,7 @@ def test_generate_auto_validation() -> None:
                 soft = valid_config("soft_demo")
                 soft["exp_keywords"] = []
                 FakeGenerator.payload = {"config": soft, "errors": [], "warnings": ["规则用到了空词表"]}
-                _, status_html, _, _ = run(ui.generate_job_config(str(jd_path)))
+                _, status_html, _, _, _ = run(ui.generate_job_config(str(jd_path)))
                 check("软性坑只提示不拦", "校验通过" in status_html and "提示" in status_html, status_html[:200])
         finally:
             ui.JobConfigGenerator = original_generator
@@ -195,7 +238,7 @@ def test_generate_pins_job_key() -> None:
         try:
             with TempDB(tmp):
                 store.save_job_config(valid_config("real_key"), source_type="manual")
-                config_json, _, _, _ = run(ui.regenerate_job_config(str(jd_path), "real_key"))
+                config_json, _, _, _, _ = run(ui.regenerate_job_config(str(jd_path), "real_key"))
                 parsed = json.loads(config_json)
                 check("key 被钉回原值", parsed["job_key"] == "real_key", parsed["job_key"])
                 check("原 key 也传给了生成器", FakeGenerator.last_job_key == "real_key", FakeGenerator.last_job_key)
@@ -252,9 +295,10 @@ def test_save_new_job() -> None:
         with TempDB(tmp):
             config_json = json.dumps(valid_config("save_demo"), ensure_ascii=False)
 
-            status, modal, table, keys = ui.save_new_job(config_json, "这是 JD 原文")
+            status, page_status, modal, table, keys = ui.save_new_job(config_json, "这是 JD 原文")
             check("首次保存提示新增", "已新增岗位" in status and "save_demo" in status, status[:200])
             check("保存成功才关弹窗", not _visible(modal), str(modal))
+            check("成功提示也留在页面上（弹窗关了还看得见）", "已新增岗位" in page_status, page_status[:200])
             record = store.get_job_config("save_demo")
             check("岗位已入库", record is not None)
             check("来源记为 AI 生成", record["source_type"] == "auto_llm", record["source_type"])
@@ -265,21 +309,21 @@ def test_save_new_job() -> None:
             # 同 key 再存一次 = 覆盖，提示语换成「已更新」
             renamed = valid_config("save_demo")
             renamed["job_name"] = "教育销售顾问（改）"
-            status, _, _, _ = ui.save_new_job(json.dumps(renamed, ensure_ascii=False), None)
+            status, _, _, _, _ = ui.save_new_job(json.dumps(renamed, ensure_ascii=False), None)
             check("重复保存提示更新", "已更新岗位" in status, status[:200])
             check("配置被覆盖", store.get_job_config("save_demo")["job_name"] == "教育销售顾问（改）")
 
             # 非法配置不落库，弹窗不许关
             bad = valid_config("bad_demo")
             bad["score_rules"]["add_score"][0]["field"] = "salary"  # 不在封闭词表里
-            status, modal, _, _ = ui.save_new_job(json.dumps(bad, ensure_ascii=False), None)
+            status, _, modal, _, _ = ui.save_new_job(json.dumps(bad, ensure_ascii=False), None)
             check("非法配置提示保存失败", "保存失败" in status, status[:200])
             check("非法配置的错误逐条列出", status.count("<li>") >= 1, status[:200])
             check("非法配置没有落库", store.get_job_config("bad_demo") is None)
             check("非法配置弹窗保持打开", _visible(modal), str(modal))
 
             # 坏 JSON 同样不落库
-            status, modal, _, _ = ui.save_new_job("{not json", None)
+            status, _, modal, _, _ = ui.save_new_job("{not json", None)
             check("坏 JSON 提示失败", "不是合法 JSON" in status, status[:200])
             check("坏 JSON 弹窗保持打开", _visible(modal), str(modal))
 
@@ -298,11 +342,12 @@ def test_save_edited_job() -> None:
             edited = valid_config("edit_demo")
             edited["job_name"] = "教育销售顾问（改）"
             edited["score_rules"]["add_score"][0]["score"] = 5
-            status, modal, _, keys = ui.save_edited_job(
+            status, page_status, modal, _, keys = ui.save_edited_job(
                 json.dumps(edited, ensure_ascii=False), "新版 JD 原文", "edit_demo"
             )
             check("编辑保存提示更新", "已更新岗位" in status, status[:200])
             check("编辑保存成功才关弹窗", not _visible(modal), str(modal))
+            check("成功提示留在页面上（弹窗关了还看得见）", "已更新岗位" in page_status, page_status[:200])
             saved = store.get_job_config("edit_demo")
             check("分值已覆盖", saved["config"]["score_rules"]["add_score"][0]["score"] == 5)
             check("岗位名跟着新 JD 变", saved["job_name"] == "教育销售顾问（改）")
@@ -311,7 +356,7 @@ def test_save_edited_job() -> None:
 
             # 关键：JSON 编辑器里 key 被手滑改了，也不能新建岗位
             tampered = valid_config("model_guessed_key")
-            status, _, _, keys = ui.save_edited_job(
+            status, _, _, _, keys = ui.save_edited_job(
                 json.dumps(tampered, ensure_ascii=False), None, "edit_demo"
             )
             check("编辑时 key 被钉死", store.get_job_config("edit_demo") is not None)
@@ -319,8 +364,88 @@ def test_save_edited_job() -> None:
             check("列表仍然只有一个岗位", keys == ["edit_demo"], str(keys))
 
             # 坏 JSON 保持弹窗打开
-            _, modal, _, _ = ui.save_edited_job("{oops", None, "edit_demo")
+            _, _, modal, _, _ = ui.save_edited_job("{oops", None, "edit_demo")
             check("坏 JSON 时弹窗保持打开", _visible(modal), str(modal))
+
+
+# ---------------------------------------------------------------------------
+# 6b. JD 正文可编辑：改 JD → 重新生成规则 → 保存覆盖
+# ---------------------------------------------------------------------------
+
+def test_edit_jd_textbox_flow() -> None:
+    section("6b. JD 文本框改 JD → 重新生成 → 保存覆盖")
+    with tempfile.TemporaryDirectory() as tmp:
+        with TempDB(tmp):
+            store.save_job_config(
+                valid_config("jd_demo"), source_type="auto_llm", raw_jd="原始 JD 正文"
+            )
+
+            original_generator = ui.JobConfigGenerator
+            FakeGenerator.payload = {
+                "config": valid_config("jd_demo"), "errors": [], "warnings": []
+            }
+            ui.JobConfigGenerator = FakeGenerator
+            try:
+                # 点【编辑】→ JD 落在可编辑文本框里，不是静态展示
+                ev = gr.SelectData(target=None, data={"index": [0, ui.COL_EDIT], "value": "编辑"})
+                (
+                    job_key, baseline, _, _, jd_box, editor, _, _, sync_hint, _, _
+                ) = ui.select_job_action(ev, ["jd_demo"])
+                check("文本框里带出的是这个岗位的 JD", jd_box == "原始 JD 正文", jd_box[:80])
+                check("基准 JD 就是存着的那份", baseline == "原始 JD 正文", baseline[:80])
+                check("刚打开时提示是「一致」", "一致" in sync_hint, sync_hint[:200])
+
+                # HR 在文本框里直接改 JD（相当于打字 / 粘贴 / 删字）
+                new_jd = "原始 JD 正文\n追加：要求有招生经验"
+                hint = ui._jd_sync_hint(new_jd, baseline)
+                check("JD 改了就提示规则没跟上", "已经改动" in hint, hint[:200])
+
+                # 改了 JD 但没重新生成规则就保存 → 允许保存，但页面要提醒
+                status, page_status, modal, _, _ = ui.save_edited_job(
+                    editor, new_jd, job_key, baseline
+                )
+                check("改了 JD 也能保存（规则是给人改的，不拦）", "已更新岗位" in status, status[:200])
+                check("保存成功才关弹窗", not _visible(modal), str(modal))
+                check("JD 新原文覆盖入库",
+                      store.get_job_config("jd_demo")["raw_jd"] == new_jd,
+                      str(store.get_job_config("jd_demo")["raw_jd"]))
+                check("页面提醒 JD 与规则对不上",
+                      "JD 原文已改动" in page_status, page_status[:300])
+
+                # 按新 JD 重新生成规则 → 基准 JD 跟着更新，提示回到「一致」
+                config_json, _, used_jd, _, jd_back = run(
+                    ui.regenerate_job_config(None, job_key, new_jd)
+                )
+                check("重新生成用的是文本框里的新 JD", used_jd == new_jd, used_jd[:80])
+                check("重新生成后 JD 写回文本框", jd_back == new_jd, jd_back[:80])
+                check("重新生成后 key 不变",
+                      json.loads(config_json)["job_key"] == "jd_demo",
+                      json.loads(config_json)["job_key"])
+                check("重新生成后提示回到一致",
+                      "一致" in ui._jd_sync_hint(new_jd, used_jd),
+                      ui._jd_sync_hint(new_jd, used_jd)[:200])
+
+                # 重新生成后再保存：规则和 JD 对得上，不再提醒
+                _, page_status, _, _, _ = ui.save_edited_job(
+                    config_json, new_jd, job_key, used_jd
+                )
+                check("规则同步过就不再提醒", "JD 原文已改动" not in page_status, page_status[:300])
+
+                # 只改规则、没动 JD（传 None）：库里的 JD 原文要保住
+                tweaked = valid_config("jd_demo")
+                tweaked["score_rules"]["add_score"][0]["score"] = 4
+                ui.save_edited_job(json.dumps(tweaked, ensure_ascii=False), None, job_key)
+                check("没传 JD 时不覆盖原 JD",
+                      store.get_job_config("jd_demo")["raw_jd"] == new_jd,
+                      str(store.get_job_config("jd_demo")["raw_jd"]))
+
+                # HR 亲手把 JD 清空（传空串）：这是明确的意思，不能当成「没改」
+                ui.save_edited_job(json.dumps(tweaked, ensure_ascii=False), "", job_key)
+                check("HR 清空 JD 会真的存成空",
+                      store.get_job_config("jd_demo")["raw_jd"] == "",
+                      repr(store.get_job_config("jd_demo")["raw_jd"]))
+            finally:
+                ui.JobConfigGenerator = original_generator
 
 
 # ---------------------------------------------------------------------------
@@ -333,8 +458,9 @@ def test_delete() -> None:
         with TempDB(tmp):
             store.save_job_config(valid_config("del_demo"), source_type="auto_llm")
 
-            status, modal, table, keys = ui.delete_job_from_ui("del_demo")
+            status, page_status, modal, table, keys = ui.delete_job_from_ui("del_demo")
             check("删除成功提示", "已删除岗位" in status, status[:200])
+            check("删除提示留在页面上（弹窗关了还看得见）", "已删除岗位" in page_status, page_status[:200])
             check("删除成功才关弹窗", not _visible(modal), str(modal))
             check("默认列表里消失了", "del_demo" not in [c["job_key"] for c in store.list_job_configs()])
             check("软删：include_deleted 仍可查",
@@ -397,18 +523,22 @@ def test_select_job_action() -> None:
                 return ui.select_job_action(ev, keys)
 
             # 点【编辑】列
-            job_key, raw_jd, edit_vis, info, editor, status, _, del_vis, _ = select(0, ui.COL_EDIT)
+            job_key, raw_jd, edit_vis, info, jd_box, editor, status, _, sync_hint, del_vis, _ = select(
+                0, ui.COL_EDIT
+            )
             check("点编辑 → 返回该行 job_key", job_key == keys[0], f"{job_key} vs {keys}")
             check("点编辑 → 编辑弹窗打开", _visible(edit_vis))
             check("点编辑 → 删除弹窗不开", not _visible(del_vis))
             check("点编辑 → 带出原始 JD", raw_jd == "甲方原始 JD 内容", raw_jd)
-            check("点编辑 → 弹窗里展示原始 JD", "甲方原始 JD 内容" in info, info[:200])
+            check("点编辑 → JD 进的是可编辑文本框，不是静态展示",
+                  jd_box == "甲方原始 JD 内容", jd_box[:80])
             check("点编辑 → 说清历史分数不变", "历史测评报告的分数不会变" in info, info[:300])
             check("点编辑 → 编辑器预填现有配置", json.loads(editor)["job_key"] == keys[0])
             check("点编辑 → 状态区清空", status == "")
+            check("点编辑 → JD 与规则一致时提示一致", "一致" in sync_hint, sync_hint[:200])
 
             # 点【删除】列
-            job_key, _, edit_vis, _, _, _, _, del_vis, del_info = select(1, ui.COL_DELETE)
+            job_key, _, edit_vis, _, _, _, _, _, _, del_vis, del_info = select(1, ui.COL_DELETE)
             check("点删除 → 返回该行 job_key", job_key == keys[1], f"{job_key} vs {keys}")
             check("点删除 → 删除弹窗打开", _visible(del_vis))
             check("点删除 → 编辑弹窗不开", not _visible(edit_vis))
@@ -417,7 +547,7 @@ def test_select_job_action() -> None:
             # 点非操作列 / 行号越界：什么都不弹
             for label, args in (("点姓名列", (0, ui.COL_NAME)), ("点来源列", (1, ui.COL_SOURCE)),
                                 ("点创建时间列", (0, ui.COL_CREATED)), ("行号越界", (99, ui.COL_EDIT))):
-                job_key, _, edit_vis, _, _, _, _, del_vis, _ = select(*args)
+                job_key, _, edit_vis, _, _, _, _, _, _, del_vis, _ = select(*args)
                 check(f"{label}不弹窗", not _visible(edit_vis) and not _visible(del_vis) and job_key == "")
 
 
@@ -430,9 +560,11 @@ def test_edit_info_without_raw_jd() -> None:
             check("确认前提：老岗位确实没存 raw_jd", not record["raw_jd"], str(record["raw_jd"]))
 
             ev = gr.SelectData(target=None, data={"index": [0, ui.COL_EDIT], "value": "编辑"})
-            _, _, _, info, _, _, _, _, _ = ui.select_job_action(ev, ["legacy"])
+            _, _, _, info, jd_box, _, _, _, sync_hint, _, _ = ui.select_job_action(ev, ["legacy"])
             check("明说没有原始 JD", "没有留存原始 JD" in info, info[:200])
             check("并给出下一步指引", "请直接上传新版 JD" in info, info[:300])
+            check("JD 文本框是空的，可以直接往里粘", jd_box == "", jd_box[:80])
+            check("提示里说清可以直接往框里粘", "直接粘贴或输入" in sync_hint, sync_hint[:200])
 
 
 # ---------------------------------------------------------------------------
@@ -537,11 +669,13 @@ def main() -> int:
     print("=" * 66)
     for test in (
         test_generate,
+        test_generate_from_pasted_text,
         test_generate_auto_validation,
         test_generate_pins_job_key,
         test_generate_rejects_bad_input,
         test_save_new_job,
         test_save_edited_job,
+        test_edit_jd_textbox_flow,
         test_delete,
         test_job_table,
         test_select_job_action,

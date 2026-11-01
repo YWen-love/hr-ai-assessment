@@ -32,7 +32,7 @@ from app.assessment_agent import (
     config_hash,
 )
 from app.job_config_store import get_job_config_object
-from app.rag_service import RagAnswerer
+from app.rag_bypass import RagBypass
 from app.report import assemble_report, render_report_text
 from app.redline import build_forbidden_terms
 from app.session_store import (
@@ -73,7 +73,7 @@ class AssessmentService:
         self.assessment = AssessmentAgent()
         self.candidate_msg = CandidateMsgAgent()
         self.resume_parser = ResumeParser()
-        self.rag = RagAnswerer()
+        self.rag = RagBypass()
 
     # -- 建会话 ---------------------------------------------------------
 
@@ -106,6 +106,51 @@ class AssessmentService:
             "opening_message": opening.text,
             "resume_tags": resume_tags,
             "parse_warnings": resume_tags.get("parse_warnings", []),
+        }
+
+    async def start_candidate_session(self, session_id: str) -> Dict[str, Any]:
+        """候选人点开链接后启动测评：生成开场白并落库。
+
+        与 start() 的区别：start() 是上传简历时建会话+生成开场白一气呵成，
+        这里会话已由 HR 创建好，只负责把开场白补出来。
+
+        幂等：如果 chat_history 里已有开场白（候选人刷新页面），直接返回已存的，
+        不重新调模型 —— 刷新一次就换一套开场白会让对话前言不搭后语。
+        """
+        session = get_session(session_id)
+        if session is None:
+            raise AssessmentError(f"会话不存在：{session_id}")
+
+        job_config = self._load_config(session.get("job_key") or "")
+        resume_tags = session.get("resume_tags") or session.get("resume_json") or {}
+        chat_history = list(session.get("chat_history") or [])
+
+        first_question = ""
+        if chat_history:
+            # 取第一条 assistant 消息作为开场白
+            for msg in chat_history:
+                if msg.get("role") == "assistant":
+                    first_question = msg.get("content", "")
+                    break
+
+        if not first_question:
+            opening = await self.chat.reply(job_config, resume_tags, [])
+            first_question = opening.text
+            chat_history = [{"role": "assistant", "content": first_question}]
+            save_session_answers(
+                session_id,
+                [],
+                first_question,
+                status="in_progress",
+                chat_history=chat_history,
+            )
+
+        return {
+            "session_id": session_id,
+            "candidate_name": session.get("candidate_name") or "候选人",
+            "job_name": session.get("job_name") or job_config.get("job_name", ""),
+            "first_question": first_question,
+            "status": session.get("status") or "in_progress",
         }
 
     # -- 主循环 ---------------------------------------------------------

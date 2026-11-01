@@ -24,6 +24,7 @@ from app.job_config_store import (
     JobConfigError,
     delete_job_config,
     get_job_config,
+    get_job_config_by_name,
     get_job_config_object,
     list_job_configs,
     save_job_config,
@@ -33,8 +34,13 @@ from app.job_config_store import (
 from app.job_generator import JobConfigGenerator, JobGenerationError
 from app.job_schema import is_valid_job_key
 from app.knowledge_base import get_job_knowledge, initialize_knowledge_base, list_jobs
-from app.rag_service import init_rag_store
+from app.rag_bypass import init_rag_store
 from app.resume_reader import read_resume_text
+from app.session_policy import (
+    SameOriginGuardMiddleware,
+    SessionCookiePolicyMiddleware,
+    apply_logout_grace,
+)
 from app.session_store import create_session, get_candidate_view, get_session, init_db, list_sessions
 
 logger = logging.getLogger(__name__)
@@ -65,6 +71,8 @@ class RequireHRAuthMiddleware(BaseHTTPMiddleware):
     PUBLIC_PREFIXES = ("/login", "/register", "/api/login", "/api/register", "/api/logout", "/static", "/candidate/", "/docs", "/openapi.json")
 
     async def dispatch(self, request, call_next):
+        # 先处理「待登出」标记（页面卸载时置位，短时间内又回来就取消）
+        apply_logout_grace(request.session)
         path = request.url.path
         # 公开路径白名单
         if path in self.EXACT_PUBLIC:
@@ -82,29 +90,37 @@ class RequireHRAuthMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+# ── 会话 cookie / 跨站防护 ────────────────────────────────────────────────
+# 具体策略与理由见 app/session_policy.py 的模块文档。
+
+
+
 # 注册顺序：先注册的在内层、后注册的在更外层（包裹前一个）
-# 我们要 SessionMiddleware 在最外层（先于 auth 跑、填充 session）
-# 所以：先 add auth middleware（内层），再 add session（外层）
+# SessionMiddleware 必须包在 auth 中间件外面（先填充 session，再鉴权）
+# SessionCookiePolicy / SameOriginGuard 放在最外层：
+#   cookie 策略要在响应定型后改 Set-Cookie；跨站拦截要在进业务前拦掉
 app.add_middleware(RequireHRAuthMiddleware)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SESSION_SECRET,
     session_cookie=settings.SESSION_COOKIE_NAME,
     max_age=settings.SESSION_MAX_AGE,
-    same_site="lax",
+    same_site="lax",  # 实际值由 SessionCookiePolicyMiddleware 按请求协议改写
     https_only=False,
 )
 
 
 # HR 工作台页面注入：关闭标签页自动登出
-# 监听 pagehide（标签页关闭、浏览器关闭都触发；副作用：刷新也会登出）
+# 监听 pagehide（标签页关闭、浏览器关闭都触发；副作用：刷新、站内跳转也会触发）
 # 用 sendBeacon 在 pagehide 期间最可靠；fetch keepalive 兜底
+# 带 grace 参数：服务端只记「待登出」时间戳，短时间内又回来（刷新/站内跳转）就取消，
+# 否则刷新一下就被踢回登录页 —— 魔搭预览里 iframe 每次都被宿主页面重建，必踩这个坑。
 _AUTO_LOGOUT_SCRIPT = (
     "<script>(function(){"
     "function l(){"
     "try{"
-    "var s=navigator.sendBeacon&&navigator.sendBeacon('/api/logout');"
-    "if(!s){fetch('/api/logout',{method:'POST',keepalive:true}).catch(function(){});}"
+    "var s=navigator.sendBeacon&&navigator.sendBeacon('/api/logout?grace=30');"
+    "if(!s){fetch('/api/logout?grace=30',{method:'POST',keepalive:true}).catch(function(){});}"
     "}catch(e){}"
     "}"
     "window.addEventListener('pagehide',l);"
@@ -153,6 +169,9 @@ class InjectLogoutJSMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(InjectLogoutJSMiddleware)
+# 最外层两个：先按请求协议改 session cookie，再挡跨站写请求
+app.add_middleware(SessionCookiePolicyMiddleware, cookie_name=settings.SESSION_COOKIE_NAME)
+app.add_middleware(SameOriginGuardMiddleware)
 
 # 静态资源（背景图 bg.jpg 放在 <data_root>/static/ 下，自动随魔搭/本地路径解析）
 STATIC_DIR = data_root() / "static"
@@ -427,7 +446,8 @@ def render_candidate_page(session_id: str) -> str:
             body: new URLSearchParams({{ session_id: sessionId, user_answer: text }})
           }});
           const data = await resp.json();
-          appendMessage('assistant', data.next_question);
+          // /assessment/next 返回的字段是 message（与 assessment_service.handle_turn 一致）
+          appendMessage('assistant', data.message);
 
           // 如果后端返回已结束，隐藏输入框
           if (data.status === 'finished') {{
@@ -548,8 +568,16 @@ async def api_register(
 
 
 @app.post("/api/logout")
-async def api_logout(request: Request) -> RedirectResponse:
-    """登出：清 session，跳回登录页。"""
+async def api_logout(request: Request, grace: int = 0) -> RedirectResponse:
+    """登出：清 session，跳回登录页。
+
+    grace > 0 时不立刻清 session，只记一个「待登出」时间戳：
+    页面卸载（刷新 / 站内跳转 / 关标签页）都会触发 pagehide，直接清 session 会让
+    刷新后立刻被踢回登录页。宽限期内再有请求就取消登出，超时才真的清。
+    """
+    if grace > 0:
+        request.session["logout_at"] = time.time() + min(grace, 300)
+        return RedirectResponse(url="/login", status_code=302)
     request.session.clear()
     return RedirectResponse(url="/login", status_code=302)
 
@@ -569,6 +597,18 @@ async def hr_parse_link(
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail="该岗位筛选规则尚未生成，请检查模型配置并重启服务。") from error
 
+    # 表单下拉传的是 job_name（中文显示名），测评链路全程用 job_key 做内部标识。
+    # 必须在创建会话时把 job_key 存进去，否则候选人点开链接后 assessment_service
+    # 加载岗位配置会因"缺少 job_key"直接报错，开场白都生成不出来。
+    job_record = get_job_config_by_name(job_name)
+    if job_record is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"岗位「{job_name}」的评分配置不存在，请先在岗位管理中生成配置。",
+        )
+    job_key = job_record["job_key"]
+    job_config = job_record["config"]
+
     file_bytes = await file.read()
     upload_dir = data_root() / "uploads"
     upload_dir.mkdir(parents=True, exist_ok=True)
@@ -577,12 +617,14 @@ async def hr_parse_link(
         f.write(file_bytes)
 
     resume_text = await read_resume_text(str(temp_path))
-    profile = parse_resume_text(resume_text)
+    # 经验标签按岗位封闭词表识别，必须传 job_config（与 Gradio 工作台路径一致）
+    profile = parse_resume_text(resume_text, job_config)
     session_id = create_session(
         candidate_name=candidate_name,
         job_name=job_name,
         resume_json=profile,
         candidate_summary=resume_text[:1500],
+        job_key=job_key,
     )
 
     public_link = f"{resolve_public_base_url(request)}/candidate/{session_id}"
@@ -591,6 +633,7 @@ async def hr_parse_link(
         "session_id": session_id,
         "candidate_name": candidate_name,
         "job_name": job_name,
+        "job_key": job_key,
         "candidate_data": profile,
         "public_link": public_link,
     }
@@ -614,6 +657,19 @@ async def hr_result(session_id: str, _user: str = Depends(_require_hr_user)) -> 
         "summary": session.get("summary", "暂无总结"),
         "status": session.get("status"),
     }
+
+
+@app.post("/candidate/start")
+async def candidate_start(session_id: str = Form(...)) -> dict:
+    """候选人点开链接后启动测评：生成开场白。
+
+    返回 candidate_name / job_name / first_question，供候选人页面渲染头部信息
+    和首条消息。已生成过开场白的会话直接返回已存内容（刷新页面不重来）。
+    """
+    try:
+        return await assessment_service.start_candidate_session(session_id)
+    except AssessmentError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
 
 @app.get("/candidate/{session_id}")

@@ -130,6 +130,16 @@ main.contain {
 .nav-link:hover {background: #1d4ed8;}
 .nav-link.secondary {background: #ffffff; color: #334155 !important; border-color: #cbd5e1;}
 .nav-link.secondary:hover {background: #f1f5f9;}
+/* 登出是个 <form><button>，得把 Gradio 给 button 的默认样式压掉，看起来才像导航按钮 */
+.nav-logout {margin: 0;}
+button.nav-link {
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    min-width: 0;
+    min-height: 0;
+}
 
 #workbench-row {
     /* 扣掉的 170px = 页头标题 + 导航条。右栏底部是测评结果，
@@ -216,18 +226,6 @@ main.contain {
 .modal-panel .result-card {line-height: 1.8;}
 .modal-title {font-size: 1.15em; font-weight: 700; margin: 0 0 4px;}
 .modal-hint {color: #64748b; font-size: 13px; line-height: 1.7; margin: 0;}
-.jd-preview {
-    max-height: 260px;
-    overflow-y: auto;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 12px;
-    white-space: pre-wrap;
-    font-size: 13px;
-    line-height: 1.7;
-    color: #334155;
-}
 .modal-danger {
     background: #fef2f2;
     color: #dc2626;
@@ -240,11 +238,30 @@ main.contain {
 
 
 def _nav_link(href: str, label: str, *, secondary: bool = False) -> str:
+    """导航行里的一枚链接（不含外层容器）。"""
     cls = "nav-link secondary" if secondary else "nav-link"
     return (
-        f'<div class="page-nav"><a class="{cls}" href="{html.escape(href, quote=True)}">'
-        f"{html.escape(label)}</a></div>"
+        f'<a class="{cls}" href="{html.escape(href, quote=True)}">'
+        f"{html.escape(label)}</a>"
     )
+
+
+def _logout_form() -> str:
+    """导航行里的登出表单（POST /api/logout）。
+
+    页面卸载时的自动登出改成「宽限期」模式后（刷新 / 站内跳转不再被踢回登录页），
+    需要一个 HR 能主动点的登出入口。
+    """
+    return (
+        '<form class="nav-logout" method="post" action="/api/logout">'
+        '<button type="submit" class="nav-link secondary">退出登录</button>'
+        "</form>"
+    )
+
+
+def _nav_row(*items: str) -> str:
+    """一行导航。"""
+    return f'<div class="page-nav">{"".join(items)}</div>'
 
 
 def _candidate_url(session_id: str, request: gr.Request | None = None) -> str:
@@ -453,7 +470,7 @@ def build_workbench_ui() -> gr.Blocks:
         gr.Markdown("# 简历评测 · HR工作台", elem_classes=["page-title"])
         # 唯一的跨页入口。Gradio 没有页面跳转 API，Button 只能触发 Python 函数，
         # 所以这里直接塞一个 <a>，点了走浏览器导航。
-        gr.HTML(_nav_link(JOB_MANAGER_PATH, "岗位管理"))
+        gr.HTML(_nav_row(_nav_link(JOB_MANAGER_PATH, "岗位管理"), _logout_form()))
 
         with gr.Row(equal_height=True, elem_id="workbench-row"):
             with gr.Column(scale=5, elem_classes=["workbench-column"]):
@@ -585,6 +602,7 @@ def _notice(message: str, *, tone: str = "error") -> str:
     palette = {
         "error": "#fef2f2;color:#dc2626",
         "ok": "#eef8f1;color:#0d7a4d",
+        "warn": "#fff7e6;color:#9a6700",
     }
     return (
         f'<div class="result-card" style="background:{palette[tone]}">'
@@ -645,36 +663,46 @@ def _validate_config_text(config_text: str) -> tuple[str, dict | None]:
 
 async def _generate_from_jd(
     jd_path: str | None,
+    jd_text: str = "",
     *,
     job_key: str | None = None,
+    empty_hint: str = "请先提供岗位 JD：上传 JD 文件，或在文本框里粘贴 JD 内容。",
 ) -> tuple[str, str, str, dict]:
-    """上传的 JD → 岗位配置预览。**不落库。**
+    """JD → 岗位配置预览。**不落库。**
 
     返回 (配置 JSON, 状态卡片, JD 原文, 清空文件框的 gr.update())。
     JD 原文一并回传是为了保存时存进 raw_jd 列，事后能追回这份配置
     来自哪份 JD。末尾清空文件框，省得 HR 连传第二份时还得手动取消。
 
+    JD 有两个来源：上传的文件和直接粘贴/编辑的文本。传了文件就用文件
+    （HR 特意传了文件就是要用这一份），没传文件就用文本框里的内容。
+
     job_key 传了就锁死：生成器会自己按 JD 猜一个 key，编辑老岗位时
     猜出来的新 key 会把配置挂到另一个岗位名下，等于凭空多一个岗位、
     老岗位还是旧规则 —— 这正是需求里「job_key 不变」要防的事。
     """
-    if not jd_path:
-        raise gr.Error("请先上传岗位 JD 文件。")
+    source_jd = jd_text or ""
 
-    path = Path(jd_path)
-    if path.suffix.lower() not in SUPPORTED_FILE_EXTENSIONS:
-        raise gr.Error("JD 文件仅支持 PDF、DOC、DOCX 或 TXT 格式。")
+    if jd_path:
+        path = Path(jd_path)
+        if path.suffix.lower() not in SUPPORTED_FILE_EXTENSIONS:
+            raise gr.Error("JD 文件仅支持 PDF、DOC、DOCX 或 TXT 格式。")
+
+        try:
+            file_jd = await read_resume_text(str(path))
+        except Exception as exc:
+            raise gr.Error(f"JD 文件读取失败：{exc}") from exc
+
+        if not file_jd.strip():
+            raise gr.Error("JD 文件里没有读到任何文字。")
+
+        source_jd = file_jd
+
+    if not source_jd.strip():
+        raise gr.Error(empty_hint)
 
     try:
-        jd_text = await read_resume_text(str(path))
-    except Exception as exc:
-        raise gr.Error(f"JD 文件读取失败：{exc}") from exc
-
-    if not jd_text.strip():
-        raise gr.Error("JD 文件里没有读到任何文字。")
-
-    try:
-        result = await JobConfigGenerator().generate(jd_text, job_key=job_key)
+        result = await JobConfigGenerator().generate(source_jd, job_key=job_key)
     except JobGenerationError as exc:
         raise gr.Error(f"岗位配置生成失败：{exc}") from exc
 
@@ -691,24 +719,44 @@ async def _generate_from_jd(
     return (
         json.dumps(config, ensure_ascii=False, indent=2),
         status,
-        jd_text,
+        source_jd,
         gr.update(value=None),
     )
 
 
-async def generate_job_config(jd_path: str | None) -> tuple[str, str, str, dict]:
-    """新增岗位：上传 JD → 生成配置预览。不落库。"""
-    return await _generate_from_jd(jd_path)
+async def generate_job_config(
+    jd_path: str | None,
+    jd_text: str = "",
+) -> tuple[str, str, str, dict, str]:
+    """新增岗位：JD（上传文件或直接粘贴）→ 生成配置预览。不落库。
+
+    返回 (配置 JSON, 状态卡片, 用到的 JD 原文, 清空文件框, 写回文本框的 JD)。
+    """
+    config_json, status, used_jd, file_update = await _generate_from_jd(
+        jd_path, jd_text, empty_hint="请先上传岗位 JD 文件，或在文本框里粘贴 JD 内容。"
+    )
+    return config_json, status, used_jd, file_update, used_jd
 
 
 async def regenerate_job_config(
     jd_path: str | None,
-    job_key: str,
-) -> tuple[str, str, str, dict]:
-    """编辑岗位：上传新版 JD → 重新生成。job_key 锁死为原值。"""
+    job_key: str = "",
+    jd_text: str = "",
+) -> tuple[str, str, str, dict, str]:
+    """编辑岗位：按 JD 重新生成规则。job_key 锁死为原值。
+
+    JD 来源：上传的文件优先，其次是弹窗里那个可以直接改的文本框。
+    用文件生成时，文件内容会写回文本框 —— 文本框必须始终是
+    「这个岗位现在的 JD」的真相，不能文件在框外、框里还留着旧的。
+
+    返回 (配置 JSON, 状态卡片, 用到的 JD 原文, 清空文件框, 写回文本框的 JD)。
+    """
     if not job_key:
         raise gr.Error("没有正在编辑的岗位，请重新从列表点【编辑】。")
-    return await _generate_from_jd(jd_path, job_key=job_key)
+    config_json, status, used_jd, file_update = await _generate_from_jd(
+        jd_path, jd_text, job_key=job_key
+    )
+    return config_json, status, used_jd, file_update, used_jd
 
 
 def _persist_config(config_text: str, raw_jd: str | None) -> tuple[str, str]:
@@ -731,10 +779,16 @@ def _persist_config(config_text: str, raw_jd: str | None) -> tuple[str, str]:
     existed = get_job_config(job_key) is not None
 
     try:
+        # raw_jd 的三态必须原样传下去，不能在这里压成 None：
+        #   None → 「这次不动 JD 原文」，沿用库里存着的那份
+        #   ""   → 「JD 原文改成空的」（HR 亲手清空了 JD）
+        #   文本 → 「JD 原文换成这份」
+        # 之前写成 (raw_jd or "").strip() or None，于是「不动」和「清空」
+        # 变成同一件事：清空 JD 会被当成「没改」，库里的旧 JD 一直留着。
         save_job_config(
             parsed,
             source_type="auto_llm",
-            raw_jd=(raw_jd or "").strip() or None,
+            raw_jd=raw_jd.strip() if isinstance(raw_jd, str) else None,
         )
     except JobConfigError as exc:
         # 用列表渲染而不是把 errors 拼成一段文字：_notice 会转义 HTML，
@@ -748,70 +802,135 @@ def _persist_config(config_text: str, raw_jd: str | None) -> tuple[str, str]:
     return _notice(f"{verb}：{job_key}", tone="ok"), job_key
 
 
+def _jd_drift_note(jd_text: str | None, baseline_jd: str | None) -> str:
+    """JD 原文改了但规则没跟着重新生成时的提醒。返回 "" 表示两边一致。
+
+    只提醒、不拦。拦下来的话，改个错别字也要等模型跑完 150 秒；
+    模型挂了更是岗位都存不进去。规则是给人改的，JD 只是溯源材料，
+    两者对不上要说清楚，但不该由程序替人做主。
+    """
+    current = (jd_text or "").strip()
+    baseline = (baseline_jd or "").strip()
+    if current == baseline:
+        return ""
+    if not baseline:
+        return (
+            '<div class="result-card" style="background:#fff7e6;color:#9a6700">'
+            "<strong>JD 原文与当前规则不是一回事：</strong>"
+            "这个岗位此前没有留存 JD，而当前规则不是按你刚填的 JD 生成的。"
+            "建议先点【根据 JD 重新生成规则】，再保存。"
+            "</div>"
+        )
+    return (
+        '<div class="result-card" style="background:#fff7e6;color:#9a6700">'
+        "<strong>JD 原文已改动，但规则仍是按旧 JD 生成的：</strong>"
+        "本次保存会把新 JD 原文和旧规则一起存下来，两者对不上。"
+        "建议先点【根据 JD 重新生成规则】再保存。"
+        "</div>"
+    )
+
+
+def _jd_sync_hint(jd_text: str | None, baseline_jd: str | None) -> str:
+    """JD 文本框下方的实时提示：现在这份 JD 和规则对不对得上。"""
+    current = (jd_text or "").strip()
+    baseline = (baseline_jd or "").strip()
+    if not current and not baseline:
+        return (
+            '<div class="modal-hint">这个岗位没有留存原始 JD。'
+            "可以在上面直接粘贴或输入 JD 内容，再点【根据 JD 重新生成规则】。</div>"
+        )
+    if current == baseline:
+        return '<div class="modal-hint">JD 与当前规则所依据的版本一致。</div>'
+    return (
+        '<div class="modal-hint" style="color:#9a6700;">'
+        "JD 已经改动，但下面的规则还是按旧 JD 生成的。"
+        "改完请点【根据 JD 重新生成规则】，或直接保存（保存后 JD 与规则会不一致）。"
+        "</div>"
+    )
+
+
 def save_new_job(
     config_text: str,
-    raw_jd: str | None,
-) -> tuple[str, dict, list[list[str]], list[str]]:
-    """新增岗位保存。返回 (状态, 弹窗可见性, 表格, 行→key)。
+    jd_text: str | None,
+    baseline_jd: str | None = None,
+) -> tuple[str, str, dict, list[list[str]], list[str]]:
+    """新增岗位保存。返回 (弹窗状态, 页面状态, 弹窗可见性, 表格, 行→key)。
 
     存成功才关弹窗；失败保持打开，让 HR 接着改。
+
+    页面状态是给弹窗关掉之后看的 —— 成功提示写在弹窗里等于没写，
+    弹窗一关就没了，HR 只觉得「点了没反应」。
     """
-    status, saved_key = _persist_config(config_text, raw_jd)
+    status, saved_key = _persist_config(config_text, jd_text)
     rows, keys = _job_table()
-    return status, gr.update(visible=not saved_key), rows, keys
+    if not saved_key:
+        return status, "", gr.update(visible=True), rows, keys
+    page_status = status + _jd_drift_note(jd_text, baseline_jd)
+    return status, page_status, gr.update(visible=False), rows, keys
 
 
 def save_edited_job(
     config_text: str,
-    raw_jd: str | None,
+    jd_text: str | None,
     job_key: str,
-) -> tuple[str, dict, list[list[str]], list[str]]:
-    """编辑岗位保存（覆盖）。
+    baseline_jd: str | None = None,
+) -> tuple[str, str, dict, list[list[str]], list[str]]:
+    """编辑岗位保存（覆盖）。返回 (弹窗状态, 页面状态, 弹窗可见性, 表格, 行→key)。
 
     job_key 在这里再钉一次：JSON 编辑器是敞开的，HR 改分值时手滑把
     job_key 改掉，就会在库里多出一个新岗位、老岗位纹丝不动。
     编辑的语义就是「覆盖这个岗位」，key 变了就不是编辑了。
+
+    jd_text 是文本框里现在的 JD 原文 —— 原样存进 raw_jd 列。
+    baseline_jd 是当前规则所依据的那版 JD，只用来判断「改过了但没重新生成规则」。
     """
     parsed, error = _parse_config_text(config_text)
     if parsed is None:
         rows, keys = _job_table()
-        return _notice(error), gr.update(visible=True), rows, keys
+        return _notice(error), "", gr.update(visible=True), rows, keys
 
     pinned = dict(parsed)
     pinned["job_key"] = job_key
     status, saved_key = _persist_config(
-        json.dumps(pinned, ensure_ascii=False), raw_jd
+        json.dumps(pinned, ensure_ascii=False), jd_text
     )
     rows, keys = _job_table()
-    return status, gr.update(visible=not saved_key), rows, keys
+    if not saved_key:
+        return status, "", gr.update(visible=True), rows, keys
+    page_status = status + _jd_drift_note(jd_text, baseline_jd)
+    return status, page_status, gr.update(visible=False), rows, keys
 
 
 def delete_job_from_ui(
     job_key: str | None,
-) -> tuple[str, dict, list[list[str]], list[str]]:
-    """软删岗位（已在二次确认弹窗里点过确认）。"""
+) -> tuple[str, str, dict, list[list[str]], list[str]]:
+    """软删岗位（已在二次确认弹窗里点过确认）。
+
+    返回 (弹窗状态, 页面状态, 弹窗可见性, 表格, 行→key)。
+    删除弹窗本身会被关掉，所以结果必须再写一份到页面上。
+    """
     if not job_key:
         raise gr.Error("没有待删除的岗位，请重新从列表点【删除】。")
     if not delete_job_config(job_key):
         raise gr.Error(f"岗位不存在或已删除：{job_key}")
 
     rows, keys = _job_table()
-    return (
-        _notice(f"已删除岗位：{job_key}（历史测评记录仍保留关联）", tone="ok"),
-        gr.update(visible=False),
-        rows,
-        keys,
-    )
+    status = _notice(f"已删除岗位：{job_key}（历史测评记录仍保留关联）", tone="ok")
+    return status, status, gr.update(visible=False), rows, keys
 
 
 # -- 弹窗开关 ---------------------------------------------------------------
 
 
-def open_create_modal() -> tuple[dict, dict, dict, dict, str]:
-    """打开【新增岗位】。每次都清空上一次残留的 JD 和 JSON。"""
+def open_create_modal() -> tuple[dict, dict, dict, dict, dict, str]:
+    """打开【新增岗位】。每次都清空上一次残留的 JD 和 JSON。
+
+    返回 (弹窗可见性, 文件框, JD 文本框, JSON 编辑器, 状态卡片, 基准 JD)。
+    """
     return (
         gr.update(visible=True),
         gr.update(value=None),
+        gr.update(value=""),
         gr.update(value=""),
         gr.update(value=""),
         "",
@@ -825,11 +944,16 @@ def _close_modal() -> dict:
 def select_job_action(
     ev: gr.SelectData,
     keys: list[str],
-) -> tuple[str, str, dict, str, str, str, dict, dict, dict]:
+) -> tuple[str, str, dict, str, str, str, str, dict, dict, dict, str]:
     """点岗位列表的【编辑】/【删除】列 → 打开对应弹窗。
 
-    返回 (岗位 key, 原始 JD, 编辑弹窗可见性, 编辑区信息, 编辑区 JSON,
-    编辑区状态, 编辑区文件框, 删除弹窗可见性, 删除区信息)。
+    返回 (岗位 key, 原始 JD(基准), 编辑弹窗可见性, 编辑区信息,
+    JD 文本框, 编辑区 JSON, 编辑区状态, 编辑区文件框, JD 同步提示,
+    删除弹窗可见性, 删除区信息)。
+
+    JD 文本框拿到的是这个岗位现在存着的 JD 原文，**是可编辑的输入框**。
+    以前这里只把 JD 用 HTML 画出来（.jd-preview），看着像正文其实是图片，
+    鼠标点上去打不了字、删不掉、也粘不进去 —— 只能整段重传文件。
 
     只认列号，不看单元格文字：文案以后改成「编辑 ✎」之类，
     按文字匹配就全废了。
@@ -837,11 +961,11 @@ def select_job_action(
     hidden = gr.update(visible=False)
     index = list(getattr(ev, "index", None) or [])
     if len(index) < 2:
-        return "", "", hidden, "", "", "", hidden, hidden, ""
+        return "", "", hidden, "", "", "", "", hidden, "", hidden, ""
 
     row, col = int(index[0]), int(index[1])
     if not (0 <= row < len(keys or [])):
-        return "", "", hidden, "", "", "", hidden, hidden, ""
+        return "", "", hidden, "", "", "", "", hidden, "", hidden, ""
 
     job_key = keys[row]
     record = get_job_config(job_key, include_deleted=True) or {}
@@ -856,9 +980,11 @@ def select_job_action(
             raw_jd,
             gr.update(visible=True),
             info,
+            raw_jd,                                   # JD 文本框（可直接改）
             json.dumps(config, ensure_ascii=False, indent=2) if config else "",
             "",
-            gr.update(value=None),
+            gr.update(value=None),                     # 清空文件框
+            _jd_sync_hint(raw_jd, raw_jd),
             hidden,
             "",
         )
@@ -871,30 +997,35 @@ def select_job_action(
             "",
             "",
             "",
+            "",
             hidden,
+            "",
             gr.update(visible=True),
             _delete_info_html(job_name),
         )
 
     # 点到姓名/来源/时间列：不是操作，不弹窗
-    return "", "", hidden, "", "", "", hidden, hidden, ""
+    return "", "", hidden, "", "", "", "", hidden, "", hidden, ""
 
 
 def _edit_info_html(job_name: str, raw_jd: str) -> str:
-    """编辑弹窗头部：岗位名 + 原有 JD 原文。
+    """编辑弹窗头部：岗位名 + 说明。
+
+    JD 正文不再画在这里 —— 画成静态 HTML 就没法编辑（打不了字、删不掉、
+    粘不进去）。正文放到下面的 JD 文本框里，那里是真正的输入框。
 
     早期 seed 进来的岗位 raw_jd 是空的（seed_from_files 不传这个字段），
     这时要明说「没有原始 JD」，不能让 HR 以为页面坏了。
     """
     if raw_jd.strip():
         jd_block = (
-            '<div class="modal-hint">该岗位的原始 JD：</div>'
-            f'<div class="jd-preview">{html.escape(raw_jd)}</div>'
+            '<div class="modal-hint">下面的文本框里是这个岗位现在的 JD 原文，'
+            "可以直接改、粘贴或清空。</div>"
         )
     else:
         jd_block = (
             '<div class="modal-hint">该岗位没有留存原始 JD（导入的历史岗位都没有）。'
-            "请直接上传新版 JD，或展开下方【高级】直接改 JSON。</div>"
+            "请直接上传新版 JD，或在下方文本框里直接输入、粘贴 JD 内容。</div>"
         )
     return (
         f'<div class="modal-title">编辑岗位：{html.escape(job_name)}</div>'
@@ -924,7 +1055,12 @@ def build_job_manager_ui() -> gr.Blocks:
         fill_width=True,
     ) as demo:
         gr.Markdown("# 岗位管理", elem_classes=["page-title"])
-        gr.HTML(_nav_link(WORKBENCH_PATH, "← 返回测评工作台", secondary=True))
+        gr.HTML(
+            _nav_row(
+                _nav_link(WORKBENCH_PATH, "← 返回测评工作台", secondary=True),
+                _logout_form(),
+            )
+        )
 
         row_keys = gr.State(keys)
         active_job_key = gr.State("")
@@ -933,7 +1069,7 @@ def build_job_manager_ui() -> gr.Blocks:
         with gr.Row():
             add_button = gr.Button("+ 新增岗位", variant="primary", scale=0)
             table_note = gr.Markdown(
-                "岗位由 JD 自动生成规则。新增/编辑都走「上传 JD → 生成规则 → 保存」。",
+                "岗位由 JD 自动生成规则。新增/编辑都走「上传或粘贴 JD → 生成规则 → 保存」。",
                 scale=1,
             )
 
@@ -947,6 +1083,10 @@ def build_job_manager_ui() -> gr.Blocks:
             label="岗位列表（点【编辑】或【删除】所在的那一格）",
             elem_id="job-table",
         )
+
+        # 弹窗里的状态卡片会随弹窗一起关掉，结果必须在这里另留一份，
+        # 否则保存成功后 HR 眼前什么都没有，只会觉得「点了没反应」。
+        job_status = gr.HTML()
 
         # ---- 新增岗位弹窗 ----
         new_raw_jd = gr.State("")
@@ -963,6 +1103,13 @@ def build_job_manager_ui() -> gr.Blocks:
                     label="上传岗位 JD（PDF / DOC / DOCX / TXT）",
                     file_types=SUPPORTED_FILE_TYPES,
                     type="filepath",
+                )
+                new_jd_text = gr.Textbox(
+                    label="岗位 JD 原文（也可以直接粘贴到这里）",
+                    placeholder="上传文件也可以；不传文件就直接把 JD 内容粘进来。",
+                    lines=10,
+                    max_lines=20,
+                    interactive=True,
                 )
                 new_generate = gr.Button("根据 JD 生成规则", variant="primary")
                 new_status = gr.HTML()
@@ -992,11 +1139,19 @@ def build_job_manager_ui() -> gr.Blocks:
             with gr.Column(elem_classes=["modal-panel"]):
                 edit_info = gr.HTML()
                 edit_jd_file = gr.File(
-                    label="上传新版 JD（不传则保留现有规则）",
+                    label="上传新版 JD（不传则按下面的文本框生成）",
                     file_types=SUPPORTED_FILE_TYPES,
                     type="filepath",
                 )
-                edit_generate = gr.Button("根据新版 JD 重新生成规则")
+                edit_jd_text = gr.Textbox(
+                    label="岗位 JD 原文（可直接改、粘贴、删除）",
+                    placeholder="这里就是当前岗位的 JD 原文，可以直接改。",
+                    lines=12,
+                    max_lines=24,
+                    interactive=True,
+                )
+                edit_sync_hint = gr.HTML()
+                edit_generate = gr.Button("根据 JD 重新生成规则")
                 edit_status = gr.HTML()
                 with gr.Accordion("高级：直接改配置 JSON", open=False):
                     gr.Markdown(
@@ -1026,37 +1181,45 @@ def build_job_manager_ui() -> gr.Blocks:
         # ---- 事件接线 ----
         add_button.click(
             open_create_modal,
-            outputs=[create_modal, new_jd_file, new_editor, new_status, new_raw_jd],
+            outputs=[create_modal, new_jd_file, new_jd_text, new_editor, new_status, new_raw_jd],
         )
         new_cancel.click(_close_modal, outputs=create_modal)
         new_generate.click(
             generate_job_config,
-            inputs=[new_jd_file],
-            outputs=[new_editor, new_status, new_raw_jd, new_jd_file],
+            inputs=[new_jd_file, new_jd_text],
+            outputs=[new_editor, new_status, new_raw_jd, new_jd_file, new_jd_text],
         )
         new_save.click(
             save_new_job,
-            inputs=[new_editor, new_raw_jd],
-            outputs=[new_status, create_modal, job_table, row_keys],
+            inputs=[new_editor, new_jd_text, new_raw_jd],
+            outputs=[new_status, job_status, create_modal, job_table, row_keys],
         )
 
         edit_cancel.click(_close_modal, outputs=edit_modal)
         edit_generate.click(
             regenerate_job_config,
-            inputs=[edit_jd_file, active_job_key],
-            outputs=[edit_editor, edit_status, active_raw_jd, edit_jd_file],
+            inputs=[edit_jd_file, active_job_key, edit_jd_text],
+            outputs=[edit_editor, edit_status, active_raw_jd, edit_jd_file, edit_jd_text],
         )
         edit_save.click(
             save_edited_job,
-            inputs=[edit_editor, active_raw_jd, active_job_key],
-            outputs=[edit_status, edit_modal, job_table, row_keys],
+            inputs=[edit_editor, edit_jd_text, active_job_key, active_raw_jd],
+            outputs=[edit_status, job_status, edit_modal, job_table, row_keys],
+        )
+        # 用 .input() 而不是 .change()：.change() 在后端把值写回文本框时也会触发，
+        # 那时读到的 active_raw_jd 可能还是旧基准，提示会闪一下错的。
+        # .input() 只在用户真的敲了/粘了字时触发。
+        edit_jd_text.input(
+            _jd_sync_hint,
+            inputs=[edit_jd_text, active_raw_jd],
+            outputs=[edit_sync_hint],
         )
 
         delete_cancel.click(_close_modal, outputs=delete_modal)
         delete_confirm.click(
             delete_job_from_ui,
             inputs=[active_job_key],
-            outputs=[delete_info, delete_modal, job_table, row_keys],
+            outputs=[delete_info, job_status, delete_modal, job_table, row_keys],
         )
 
         job_table.select(
@@ -1064,7 +1227,8 @@ def build_job_manager_ui() -> gr.Blocks:
             inputs=[row_keys],
             outputs=[
                 active_job_key, active_raw_jd, edit_modal, edit_info,
-                edit_editor, edit_status, edit_jd_file, delete_modal, delete_info,
+                edit_jd_text, edit_editor, edit_status, edit_jd_file,
+                edit_sync_hint, delete_modal, delete_info,
             ],
         )
 
