@@ -15,12 +15,18 @@
 （list_jobs / get_job_knowledge / jobs_needing_rules / save_screening_rules）
 也全成了死代码 —— 它们只会给出第二份岗位名单，正是这次要消灭的东西。
 
-这里守住五条线：
+最后整个知识库退役：它把 job_intro.md / screen_rules.md 灌进 rag_knowledge.db，
+可从来没人读它 —— 一份只写不读的库，存的却是一份会误导人的第二份岗位名单。
+知识库唯一还有用的一小块（job_intro.md 的 ===岗位名=== 段落解析，JD 回填要用）
+跟着它唯一的用户搬进了 app/job_config_store.py。
+
+这里守住六条线：
   1. app/job_reader.py 不许回来；
   2. main.py 里不许再有 render_hr_page；
   3. 全仓源码都不许再出现 job_reader / render_hr_page（防止换个壳复活）；
   4. 知识库不许再提供第二份岗位名单读接口；
-  5. 知识库该留的还得留：job_intro.md 的段落解析（JD 回填要用）。
+  5. app/knowledge_base.py 整个不许回来，initialize_knowledge_base 也不许复活；
+  6. 该留的还得留：job_intro.md 的段落解析（JD 回填要用）跟着配置表走。
 
 纯文本检查，不碰数据库，也不发网络请求。
 """
@@ -89,10 +95,10 @@ except py_compile.PyCompileError as error:
     check("main.py 编译通过", False, str(error))
 
 
-section("5. 知识库不再提供第二份岗位名单")
+section("5. 知识库整个退役了")
 
-# 这些接口只会给出一份「知识库里的岗位名单」，跟配置表那份天然对不上。
-# 留着就等于把当初那个坑重新挖开。
+# 知识库是把 job_intro.md / screen_rules.md 灌进 rag_knowledge.db 的那套东西。
+# 它只写不读，却存着第二份岗位名单 —— 留着就等于把当初那个坑重新挖开。
 #
 # 这里查的是「有没有定义 / 有没有被引用」，不是「源码里有没有出现这几个字」——
 # 注释和 docstring 里提一嘴「以前有这套接口、为什么删的」是正经文档，
@@ -111,6 +117,8 @@ kb_dead_api = [
 defined: list[str] = []
 imported: list[str] = []
 accessed: list[str] = []
+kb_imported: list[str] = []
+init_defined: list[str] = []
 
 for path in source_files():
     rel = str(path.relative_to(ROOT))
@@ -124,8 +132,11 @@ for path in source_files():
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             if node.name in kb_dead_api:
                 defined.append(f"{rel} -> def/class {node.name}")
+            if node.name == "initialize_knowledge_base":
+                init_defined.append(f"{rel} -> def {node.name}")
         # from app.knowledge_base import list_jobs
         elif isinstance(node, ast.ImportFrom) and (node.module or "").endswith("knowledge_base"):
+            kb_imported.append(f"{rel} -> from {node.module} import ...")
             for alias in node.names:
                 if alias.name in kb_dead_api:
                     imported.append(f"{rel} -> import {alias.name}")
@@ -137,16 +148,40 @@ check("这些接口没有被定义在任何地方", not defined, "; ".join(defin
 check("这些接口没有被 import", not imported, "; ".join(imported))
 check("这些接口没有被当属性访问", not accessed, "; ".join(accessed))
 
-# 该留的还得留：JD 回填靠 job_intro.md 的段落解析，启动时还要维护知识库。
-kb_source = (ROOT / "app" / "knowledge_base.py").read_text(encoding="utf-8")
-check("_parse_marked_sections 还在（JD 回填要用）", "_parse_marked_sections" in kb_source)
-check("initialize_knowledge_base 还在（启动时维护知识库）", "initialize_knowledge_base" in kb_source)
+# 模块本身也不许回来
+kb_module = ROOT / "app" / "knowledge_base.py"
+check("app/knowledge_base.py 不存在", not kb_module.exists(), str(kb_module))
+check("app/ 包里没有 knowledge_base 模块", not any(p.stem == "knowledge_base" for p in (ROOT / "app").glob("*.py")))
+check("没有源码 import app.knowledge_base", not kb_imported, "; ".join(kb_imported))
+check("initialize_knowledge_base 没有被定义", not init_defined, "; ".join(init_defined))
+
+main_text = (ROOT / "main.py").read_text(encoding="utf-8")
+check("main.py 里没有 initialize_knowledge_base", "initialize_knowledge_base" not in main_text)
+
+# 该留的还得留：JD 回填靠 job_intro.md 的段落解析，
+# 它跟着唯一的用户搬进了 app/job_config_store.py。
+store_source = (ROOT / "app" / "job_config_store.py").read_text(encoding="utf-8")
+check("_parse_marked_sections 还在（JD 回填要用）", "_parse_marked_sections" in store_source)
 
 try:
-    py_compile.compile(str(ROOT / "app" / "knowledge_base.py"), doraise=True)
-    check("knowledge_base.py 编译通过", True)
+    py_compile.compile(str(ROOT / "app" / "job_config_store.py"), doraise=True)
+    check("job_config_store.py 编译通过", True)
 except py_compile.PyCompileError as error:
-    check("knowledge_base.py 编译通过", False, str(error))
+    check("job_config_store.py 编译通过", False, str(error))
+
+section("6. screen_rules.md 退休了")
+
+# screen_rules.md 是硬筛/追问话术稿，运行时从来只有知识库读它，
+# 知识库退役之后它就没人读了。它被挪进 docs/ 只作参考，运行时一律不读。
+check("根目录没有 screen_rules.md", not (ROOT / "screen_rules.md").exists())
+
+rule_readers: list[str] = []
+for path in source_files():
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if "screen_rules" in text:
+        rule_readers.append(str(path.relative_to(ROOT)))
+
+check("没有源码再引用 screen_rules", not rule_readers, "; ".join(rule_readers))
 
 
 print()

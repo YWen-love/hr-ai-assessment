@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -251,10 +252,11 @@ def resolve_job_by_name(job_name: str) -> Dict[str, Any]:
     配置表里没有的岗位一定测不了 —— 配置表里有的岗位就一定能测。
 
     之前这里还叠了一道知识库（rag_knowledge.db）的闸：知识库里查不到这个岗位
-    就直接 400。可知识库是 job_intro.md / screen_rules.md 的静态快照，
-    岗位管理里新建的岗位永远不会出现在里面。结果是 HR 明明配好了岗位，
-    点生成链接却被拦下，提示还让他「选择知识库中的有效岗位」——
-    两份名单并存，就有两套互相打架的答案，HR 拿哪份都对不上。
+    就直接 400。那套知识库是 job_intro.md 的静态快照，岗位管理里新建的岗位
+    永远不会出现在里面。结果是 HR 明明配好了岗位，点生成链接却被拦下，
+    提示还让他「选择知识库中的有效岗位」——两份名单并存，就有两套互相打架的
+    答案，HR 拿哪份都对不上。知识库已经整个退役（app/knowledge_base.py 已删），
+    这道闸也一并没了。
 
     失败抛 JobResolveError，reason 见类定义；调用方按 reason 给一句话，
     不要自己再猜一套判断逻辑。
@@ -370,6 +372,48 @@ def update_job_config_meta(job_key: str, *, review_status: Optional[str] = None)
     return get_job_config(job_key)
 
 
+_SECTION_PATTERN = re.compile(r"^===(.+?)===\s*$", re.MULTILINE)
+
+
+def _parse_marked_sections(content: str) -> Dict[str, str]:
+    """把 ===岗位名=== 标记的正文切成 {岗位名: 正文}。
+
+    job_intro.md 就是这种写法：每个岗位一段，用 ===初中学习顾问=== 这样的
+    标记隔开。这段解析原先住在 app/knowledge_base.py 里，知识库整个退役之后
+    它就只剩这一个用户 —— 跟着唯一的用户走，别再单开一个模块。
+
+    段内还可能按「岗位名称：xxx」再切一刀（一个岗位段落里写了好几个岗位），
+    这种子块优先用它自己的名字，前面的引言仍归外层标记。
+    """
+    markers = list(_SECTION_PATTERN.finditer(content))
+    sections: Dict[str, str] = {}
+    for index, marker in enumerate(markers):
+        start = marker.end()
+        end = markers[index + 1].start() if index + 1 < len(markers) else len(content)
+        name = marker.group(1).strip()
+        body = content[start:end].strip()
+        named_entries = list(
+            re.finditer(r"(?m)^\s*岗位名称\s*[:：]\s*(.+?)\s*$", body)
+        )
+        if named_entries:
+            prefix = body[: named_entries[0].start()].strip()
+            if name and prefix:
+                sections[name] = prefix
+            for entry_index, entry in enumerate(named_entries):
+                entry_end = (
+                    named_entries[entry_index + 1].start()
+                    if entry_index + 1 < len(named_entries)
+                    else len(body)
+                )
+                entry_name = entry.group(1).strip()
+                entry_body = body[entry.start() : entry_end].strip()
+                if entry_name and entry_body:
+                    sections[entry_name] = entry_body
+        elif name and body:
+            sections[name] = body
+    return sections
+
+
 def _load_jd_sections(config_dir) -> Dict[str, str]:
     """读 job_intro.md，按 ===岗位名=== 切成 {岗位名: JD 正文}。
 
@@ -398,10 +442,6 @@ def _load_jd_sections(config_dir) -> Dict[str, str]:
         except OSError:
             continue
         try:
-            # 延迟 import：knowledge_base 模块顶层会碰数据库，
-            # 放在函数里 import 才不会和这里的读写逻辑搅在一起。
-            from app.knowledge_base import _parse_marked_sections
-
             sections = _parse_marked_sections(content)
         except Exception:  # noqa: BLE001 - 解析器缺失/改动都不能影响启动
             return {}
@@ -611,3 +651,30 @@ def migrate_legacy_configs(*, source_db: Optional[str] = None) -> Dict[str, Any]
         src.close()
 
     return result
+
+
+def retire_legacy_knowledge_db() -> bool:
+    """删掉退役的知识库文件 rag_knowledge.db。
+
+    知识库（app/knowledge_base.py）已经整个退役：它把 job_intro.md 灌进
+    rag_knowledge.db，却从来没人读它 —— 一份只写不读的库。
+
+    但它写进去的 jobs 表是一份「知识库里的岗位名单」，跟配置表那份天然对不上
+    （HR 在岗位管理里新建的岗位永远不会出现在里面）。留着这个文件，就等于
+    在服务器上留着一份会误导人的第二份名单。
+
+    启动时自动清一次，不留需要人手执行的迁移步骤：文件不存在就什么都不做，
+    删不掉（权限/占用）也只记日志、不影响服务启动。
+
+    Returns:
+        True 表示确实删掉了文件；False 表示本来就没有或删不掉。
+    """
+    legacy_db = data_root() / "rag_knowledge.db"
+    try:
+        legacy_db.unlink()
+    except FileNotFoundError:
+        return False
+    except OSError:
+        logger.warning("清理退役的知识库文件失败：%s", legacy_db)
+        return False
+    return True

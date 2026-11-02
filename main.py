@@ -29,13 +29,13 @@ from app.job_config_store import (
     list_job_configs,
     migrate_legacy_configs,
     resolve_job_by_name,
+    retire_legacy_knowledge_db,
     save_job_config,
     seed_from_files,
     update_job_config_meta,
 )
 from app.job_generator import JobConfigGenerator, JobGenerationError
 from app.job_schema import is_valid_job_key
-from app.knowledge_base import initialize_knowledge_base
 from app.rag_bypass import init_rag_store
 from app.resume_reader import read_resume_text
 from app.session_policy import (
@@ -53,7 +53,6 @@ async def lifespan(app: FastAPI):
     init_db()
     init_hr_db()
     seed_default_admin()
-    initialize_knowledge_base()
     # 岗位配置拆库后，先把老库 resume_sessions.db 里的 job_config_table 搬过来，
     # 否则 HR 在后台配过的岗位在 HR 后台会「凭空消失」（老库还在，数据没丢）。
     # 幂等 + 非破坏，跑多少次都一样。
@@ -64,6 +63,9 @@ async def lifespan(app: FastAPI):
     seeded = seed_from_files(resource_path("job_configs"))
     if seeded:
         logger.info("已导入岗位配置：%s", ", ".join(seeded))
+    # 知识库退役了，服务器上不该再留那份第二份岗位名单，启动时顺手清掉。
+    if retire_legacy_knowledge_db():
+        logger.info("已清理退役的知识库文件 rag_knowledge.db")
     init_rag_store()
     yield
 
@@ -190,7 +192,6 @@ assessment_service = AssessmentService()
 init_db()
 init_hr_db()
 seed_default_admin()
-initialize_knowledge_base()
 
 
 def _require_hr_user(request: Request) -> str:

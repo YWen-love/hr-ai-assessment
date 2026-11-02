@@ -14,6 +14,9 @@ job_intro.md / screen_rules.md 的静态快照，岗位管理里新建的岗位�
 出现在里面。于是 HR 明明配好了岗位，点生成链接却被拦下，提示还让他去
 「知识库」里选 —— 两份名单并存，就有两套互相打架的答案。
 
+后来整个知识库退役了（app/knowledge_base.py 已删），闸 A 连同它那道假闸
+一起没了：只剩配置表这一个岗位入口。
+
 这里守住八条线：
   1. 正常岗位：按岗位名能定位到 job_key 和配置；
   2. 没选岗位：BLANK；
@@ -206,7 +209,8 @@ with tempfile.TemporaryDirectory() as tmp:
         for node in ast.walk(main_tree):
             if isinstance(node, ast.ImportFrom) and node.module == "app.knowledge_base":
                 imported_names.update(alias.name for alias in node.names)
-        check("main.py 不再 import get_job_knowledge", "get_job_knowledge" not in imported_names, str(imported_names))
+        check("main.py 不再 import 知识库", not imported_names, str(imported_names))
+        check("app/knowledge_base.py 整个不存在", not (ROOT / "app" / "knowledge_base.py").exists())
         check("main.py 里没有 get_job_knowledge 的调用", "get_job_knowledge(" not in main_source)
         check("main.py 用了 resolve_job_by_name", "resolve_job_by_name" in main_source)
         check("main.py 不再出现「知识库中的有效岗位」", "知识库中的有效岗位" not in main_source)

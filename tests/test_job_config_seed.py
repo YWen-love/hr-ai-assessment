@@ -69,10 +69,9 @@ with tempfile.TemporaryDirectory() as tmp:
 
         section("2. 岗位名要和 job_intro.md 的岗位段落对得上")
 
-        # 知识库的 jobs 表是拿 job_intro.md 的 ===岗位名=== 建的，
-        # 配置表这边用的是 job_name。两个名字必须一模一样，
-        # 否则 HR 页面的下拉和岗位管理的列表永远对不上。
-        from app.knowledge_base import _parse_marked_sections
+        # 岗位配置是从 job_intro.md 种子化来的，配置表这边用的是 job_name。
+        # 两个名字必须一模一样，否则 HR 页面的下拉和岗位管理的列表永远对不上。
+        from app.job_config_store import _parse_marked_sections
 
         sections = _parse_marked_sections(INTRO_FILE.read_text(encoding="utf-8"))
         check("job_intro.md 里有 人力实习生 这一段", "人力实习生" in sections, str(list(sections)))

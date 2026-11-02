@@ -33,7 +33,7 @@ uvicorn main:app --host 0.0.0.0 --port 8011
 #             http://127.0.0.1:8011/login （登录页）
 ```
 
-首次启动会自动：建表（3 个 SQLite 库）、从 `job_configs/*.json` 种子化岗位配置、从 `job_intro.md`/`screen_rules.md` 构建 RAG 知识库。
+首次启动会自动：建表（4 个 SQLite 库）、从 `job_configs/*.json` 种子化岗位配置、从 `job_intro.md` 回填岗位 JD。
 
 ---
 
@@ -49,8 +49,9 @@ hr-ai-assessment/
 ├── rule_engine.py             # ★ 规则引擎：打分的唯一实现点
 │
 ├── job_intro.md               # 岗位介绍（===岗位名=== 分隔）
-├── screen_rules.md            # 岗位筛选规则（同上）
 ├── job_configs/               # ★ 岗位配置种子（*.json，启动时导入 SQLite）
+├── docs/                      # 仅供参考的文档，运行时一律不读
+│   └── screen_rules.md        # 已退役的历史话术稿（硬筛/追问话术），仅供人看
 │
 ├── app/
 │   ├── llm_client.py          # LLM 客户端 + 多提供方 + JSON 重试
@@ -64,7 +65,6 @@ hr-ai-assessment/
 │   ├── job_schema.py          # ★ 岗位配置 Schema：字段定义 + 校验
 │   ├── job_generator.py       # JD → job_config 自动生成
 │   ├── job_config_store.py    # 岗位配置 CRUD（SQLite）
-│   ├── knowledge_base.py      # RAG 知识库（岗位介绍 + 筛选规则）
 │   ├── resume_reader.py       # PDF / DOCX / TXT 文本抽取
 │   ├── session_store.py       # 会话持久化（3 层数据 + 视图隔离）
 │   ├── hr_auth.py             # HR 账号（bcrypt + SQLite）
@@ -190,16 +190,19 @@ HR 工作台（`gradio_ui.py`）里改 JD 的流程：
 
 `llm_client.py` 内建 JSON 解析失败重试：追加更严格的格式指令后重试，最多 2 次。
 
-### 10. 数据库（3 个 SQLite，一业务一库）
+### 10. 数据库（4 个 SQLite，一业务一库）
 
 | 库 | 表 | 用途 |
 |---|---|---|
 | `resume_sessions.db` | `sessions` | 候选人会话：简历标签 / 对话历史 / 分数 / 意向 / HR总结 / 候选人结语（视图隔离） |
-| `rag_knowledge.db` | `jobs` / `knowledge_documents` | 岗位介绍 + 筛选规则（RAG 检索源） |
-| `job_config_table`（同 sessions 库） | `job_config_table` | 岗位配置 |
+| `job_configs.db` | `job_config_table` | 岗位配置（★ 岗位名单的唯一来源） |
+| `rag_docs.db` | `rag_docs` / `rag_chunks` | 候选人反问答疑用的旁路 RAG（按岗位隔离） |
 | `hr_users.db` | `hr_users` | HR 账号（bcrypt） |
 
 `session_store` 用 `_ensure_columns` 幂等补列 + 改名迁移，不引入迁移框架。
+
+> 旧的 `rag_knowledge.db`（岗位介绍 + 筛选规则的知识库快照）已经退役 —— 它只写不读，
+> 却存着第二份岗位名单。服务启动时会自动把这个文件删掉，不需要手动清理。
 
 ---
 
@@ -269,7 +272,8 @@ HR 工作台（`gradio_ui.py`）里改 JD 的流程：
 ## 运行数据
 
 - 候选人会话：`<data_root>/resume_sessions.db`
-- RAG 知识库：`<data_root>/rag_knowledge.db`
+- 岗位配置：`<data_root>/job_configs.db`
+- 候选人反问答疑：`<data_root>/rag_docs.db`
 - HR 账号：`<data_root>/hr_users.db`
 - 上传简历：`<data_root>/uploads/`
 
