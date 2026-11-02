@@ -48,6 +48,13 @@ OPERATORS: Dict[str, Any] = {
     "contains_any": lambda actual, expect: any(
         _as_str(e) and _as_str(e) in _as_str(actual) for e in _expect_list(expect)
     ),
+    # 「子串一个都不命中」。分级规则必须用它把低档位挡在高档位外面：
+    # 求职意向写成「课程销售」时，既要拿到高档那一份的分，又不能把
+    # 低档那条「销售 → 低分」的规则也命中一次（否则同一份简历被算两遍）。
+    # not_in 是整串精确匹配，挡不住子串，这里补的是它缺的那一半。
+    "not_contains_any": lambda actual, expect: not any(
+        _as_str(e) and _as_str(e) in _as_str(actual) for e in _expect_list(expect)
+    ),
     "in": lambda actual, expect: _as_str(actual) in {_as_str(e) for e in _expect_list(expect)},
     # 「不在这一组里」。没有它，模型表达「学历不达标 / 证书不具备」
     # 只能拿 not_equals 配一个数组 —— 引擎把数组当单个字面量比，
@@ -67,7 +74,10 @@ OPERATORS: Dict[str, Any] = {
 
 # 哪些操作符能作用于哪些字段类型 —— 校验器用它拦截类型错配的规则
 _OPERATORS_BY_TYPE: Dict[str, set[str]] = {
-    "string": {"equals", "not_equals", "contains_any", "in", "not_in", "is_empty"},
+    "string": {
+        "equals", "not_equals", "contains_any", "not_contains_any",
+        "in", "not_in", "is_empty",
+    },
     "bool": {"is_true", "is_false"},
     "list[string]": {"has_any", "has_all", "has_none"},
 }
@@ -78,6 +88,7 @@ _OPERATOR_HINTS: Dict[str, str] = {
     "equals": "实际值等于 value 里给的那一个（value 只能是单个值）",
     "not_equals": "实际值不等于 value 里给的那一个（value 只能是单个值）",
     "contains_any": "实际值包含 value 里任意一个字面量（子串命中）",
+    "not_contains_any": "实际值不包含 value 里任何一个字面量（子串都不命中）",
     "in": "实际值是 value 里列出的任意一个",
     "not_in": "实际值不是 value 里列出的任何一个",
     "is_empty": "实际值为空",
