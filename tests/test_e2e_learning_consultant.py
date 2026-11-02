@@ -106,15 +106,16 @@ s1 = score_objective_layer(JOB, teacher_school)
 s2 = score_objective_layer(JOB, other_school)
 print(f"  样本1 师范本科：{s1['total_score']}/{s1['max_score']} -> {s1['match_level']}")
 print(f"  样本2 非师范  ：{s2['total_score']}/{s2['max_score']} -> {s2['match_level']}")
-check_true("师范专业触发扣分规则",
-           any(b["rule_id"] == "major_normal_penalty" for b in teacher_school["exp_tags"]
-               and s1["score_breakdown"]) or True)
 print(f"  样本1 命中明细：{[b['rule_id'] for b in s1['score_breakdown']]}")
 print(f"  样本2 命中明细：{[b['rule_id'] for b in s2['score_breakdown']]}")
-check_true("样本2 的电子商务专业命中商科加分",
-           any(b["rule_id"] == "major_business" for b in s2["score_breakdown"]))
+# 学习顾问的打分只看「求职意向 + 实习经历」，专业/院校不参与，
+# 所以非师范的电子商务样本不应该有任何专业类加分。
+check_true("样本2 只命中求职意向规则（专业不参与打分）",
+           [b["rule_id"] for b in s2["score_breakdown"]] == ["intent_course_sales"],
+           str([b["rule_id"] for b in s2["score_breakdown"]]))
+check("样本1 得分与样本2 一致（专业不参与打分）", s1["total_score"], s2["total_score"])
 
-# 构造一个"静态高匹配"的画像：商科专业 + 意向对口 + 教培销售经历
+# 构造一个"静态高匹配"的画像：意向对口 + 课程销售类经历（专业不参与打分）
 high_tags = {
     "resume_intention": "课程顾问",
     "major": "市场营销",
@@ -155,12 +156,13 @@ print("6. 终局矩阵全组合（阈值换一组即得不同档位，引擎不�
 print("=" * 72)
 # 只改 level_threshold 就让同一份画像落到不同档位，
 # 证明档位来自岗位配置而非引擎里的写死分界。
-# 画像得分固定为 7，故 high_min 必须大于 7 才能落到中/低档。
+# 画像得分固定为 4（求职意向 2 + 课程销售类经历 2），
+# 故 high_min 必须大于 4 才能落到中/低档。
 MATRIX_CASES = [
-    ({"high_min": 5, "mid_min": 3}, "高匹配", True, "推进"),
-    ({"high_min": 5, "mid_min": 3}, "高匹配", False, "不推进"),
-    ({"high_min": 8, "mid_min": 3}, "中匹配", True, "推进"),
-    ({"high_min": 8, "mid_min": 3}, "中匹配", False, "不推进"),
+    ({"high_min": 3, "mid_min": 1}, "高匹配", True, "推进"),
+    ({"high_min": 3, "mid_min": 1}, "高匹配", False, "不推进"),
+    ({"high_min": 5, "mid_min": 2}, "中匹配", True, "推进"),
+    ({"high_min": 5, "mid_min": 2}, "中匹配", False, "不推进"),
     ({"high_min": 9, "mid_min": 8}, "低匹配", True, "谨慎推进"),
     ({"high_min": 9, "mid_min": 8}, "低匹配", False, "不推进"),
 ]
@@ -172,7 +174,7 @@ for thresholds, level, willing, expected in MATRIX_CASES:
 check("未表态一律待人工复核（与档位无关）",
       assess(JOB, high_tags, None)["final_decision"], "待人工复核")
 # 未表态必须和「明确拒绝」区分开：前者是说不清，后者是说不要
-for thresholds, level in (({"high_min": 5, "mid_min": 3}, "高匹配"),
+for thresholds, level in (({"high_min": 3, "mid_min": 1}, "高匹配"),
                           ({"high_min": 9, "mid_min": 8}, "低匹配")):
     check_true(f"{level} + 未表态 仍为待人工复核",
                assess({**JOB, "level_threshold": thresholds}, high_tags, None)["final_decision"]
