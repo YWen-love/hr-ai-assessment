@@ -30,3 +30,13 @@ logs/
 .DS_Store
 Thumbs.dbms_deploy.json
 *.png
+
+# 浏览器自动化调试残留（本地跑一遍就生成，别进仓库）
+# .playwright-cli/ 里是页快照 yml 和 fill_editor.js / save_flow.js 这类脚本
+.playwright-cli/
+pw_dumps/
+pw_*.py
+check_mobile*.py
+editor_dump.txt
+probe_raw.py
+probe_raw_out.json
