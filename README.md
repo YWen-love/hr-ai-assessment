@@ -50,8 +50,6 @@ hr-ai-assessment/
 │
 ├── job_intro.md               # 岗位介绍（===岗位名=== 分隔）
 ├── job_configs/               # ★ 岗位配置种子（*.json，启动时导入 SQLite）
-├── docs/                      # 仅供参考的文档，运行时一律不读
-│   └── screen_rules.md        # 已退役的历史话术稿（硬筛/追问话术），仅供人看
 │
 ├── app/
 │   ├── llm_client.py          # LLM 客户端 + 多提供方 + JSON 重试

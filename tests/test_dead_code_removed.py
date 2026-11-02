@@ -20,13 +20,14 @@
 知识库唯一还有用的一小块（job_intro.md 的 ===岗位名=== 段落解析，JD 回填要用）
 跟着它唯一的用户搬进了 app/job_config_store.py。
 
-这里守住六条线：
+这里守住七条线：
   1. app/job_reader.py 不许回来；
   2. main.py 里不许再有 render_hr_page；
   3. 全仓源码都不许再出现 job_reader / render_hr_page（防止换个壳复活）；
   4. 知识库不许再提供第二份岗位名单读接口；
   5. app/knowledge_base.py 整个不许回来，initialize_knowledge_base 也不许复活；
-  6. 该留的还得留：job_intro.md 的段落解析（JD 回填要用）跟着配置表走。
+  6. 该留的还得留：job_intro.md 的段落解析（JD 回填要用）跟着配置表走；
+  7. screen_rules.md 彻底退休，运行时和仓库里都不许再有它。
 
 纯文本检查，不碰数据库，也不发网络请求。
 """
@@ -172,8 +173,10 @@ except py_compile.PyCompileError as error:
 section("6. screen_rules.md 退休了")
 
 # screen_rules.md 是硬筛/追问话术稿，运行时从来只有知识库读它，
-# 知识库退役之后它就没人读了。它被挪进 docs/ 只作参考，运行时一律不读。
+# 知识库退役之后它就没人读了 —— 话术稿留着一个会误导人的副本，
+# 硬筛条件该在哪儿就在哪儿（job_configs/*.json 里）。
 check("根目录没有 screen_rules.md", not (ROOT / "screen_rules.md").exists())
+check("docs/ 里也没有 screen_rules.md", not (ROOT / "docs" / "screen_rules.md").exists())
 
 rule_readers: list[str] = []
 for path in source_files():
