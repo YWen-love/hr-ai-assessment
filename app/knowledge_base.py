@@ -5,15 +5,11 @@ import logging
 import re
 import sqlite3
 from contextlib import contextmanager
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator
+from typing import Iterator
 
 from app.paths import data_root, resource_path
-
-if TYPE_CHECKING:
-    from app.assessment_agent import AssessmentAgent
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +17,19 @@ _SECTION_PATTERN = re.compile(r"^===(.+?)===\s*$", re.MULTILINE)
 _RULE_CHUNK_SIZE = 1800
 
 
-@dataclass(frozen=True)
-class JobKnowledge:
-    job_name: str
-    job_intro: str
-    screening_rules: str
+# 这个模块现在只做两件事：
+#   1. 把 job_intro.md / screen_rules.md 按 ===岗位名=== 切开（_parse_marked_sections）；
+#   2. 把切出来的内容写进 rag_knowledge.db（initialize_knowledge_base）。
+#
+# 它原本还提供一套「岗位名单读接口」（list_jobs / get_job_knowledge /
+# jobs_needing_rules / save_screening_rules），让代码能反过来问知识库
+# 「有哪些岗位」。那套接口是这次「两份岗位名单打架」的祸根 ——
+# 测评链路只认岗位配置表，知识库里的岗位名却是另一份静态快照，
+# HR 在岗位管理里新建的岗位永远不会出现在里面。两份答案摆在一起，
+# 谁也说不清 HR 看到的下拉到底以哪份为准。
+#
+# 读接口已删：岗位名单只有一个来源，就是 job_config_table。
+# 要按岗位名找配置，走 app.job_config_store.resolve_job_by_name。
 
 
 def _database_path() -> Path:
@@ -264,109 +268,3 @@ def initialize_knowledge_base() -> None:
                     """,
                     (job_intro, job_name),
                 )
-
-
-def list_jobs(*, ready_only: bool = False) -> list[str]:
-    query = """
-        SELECT jobs.job_name
-        FROM jobs
-        JOIN knowledge_documents AS intro
-          ON intro.job_name = jobs.job_name AND intro.document_type = 'job_intro'
-        LEFT JOIN knowledge_documents AS rules
-          ON rules.job_name = jobs.job_name AND rules.document_type = 'screening_rules'
-    """
-    if ready_only:
-        query += """
-            WHERE rules.content IS NOT NULL
-              AND rules.content != ''
-              AND jobs.rules_for_intro_hash = jobs.intro_hash
-        """
-    query += " ORDER BY jobs.job_name"
-    try:
-        with _connect() as connection:
-            return [row["job_name"] for row in connection.execute(query).fetchall()]
-    except sqlite3.DatabaseError as exc:
-        logger.warning("list_jobs failed (%s); returning empty list", exc)
-        return []
-
-
-def get_job_knowledge(job_name: str, *, require_rules: bool = True) -> JobKnowledge:
-    with _connect() as connection:
-        row = connection.execute(
-            """
-            SELECT jobs.job_name, jobs.intro_hash, jobs.rules_for_intro_hash,
-                   intro.content AS job_intro, rules.content AS screening_rules
-            FROM jobs
-            JOIN knowledge_documents AS intro
-              ON intro.job_name = jobs.job_name AND intro.document_type = 'job_intro'
-            LEFT JOIN knowledge_documents AS rules
-              ON rules.job_name = jobs.job_name AND rules.document_type = 'screening_rules'
-            WHERE jobs.job_name = ?
-            """,
-            (job_name,),
-        ).fetchone()
-
-    if row is None:
-        raise KeyError(f"Unknown job: {job_name}")
-    screening_rules = row["screening_rules"] or ""
-    if require_rules and (
-        not screening_rules or row["rules_for_intro_hash"] != row["intro_hash"]
-    ):
-        raise RuntimeError(f"Screening rules are not ready for job: {job_name}")
-    return JobKnowledge(job_name, row["job_intro"], screening_rules)
-
-
-def jobs_needing_rules() -> list[JobKnowledge]:
-    with _connect() as connection:
-        rows = connection.execute(
-            """
-            SELECT jobs.job_name, intro.content AS job_intro
-            FROM jobs
-            JOIN knowledge_documents AS intro
-              ON intro.job_name = jobs.job_name AND intro.document_type = 'job_intro'
-            LEFT JOIN knowledge_documents AS rules
-              ON rules.job_name = jobs.job_name AND rules.document_type = 'screening_rules'
-            WHERE rules.content IS NULL
-               OR rules.content = ''
-               OR jobs.rules_for_intro_hash != jobs.intro_hash
-            ORDER BY jobs.job_name
-            """
-        ).fetchall()
-    return [JobKnowledge(row["job_name"], row["job_intro"], "") for row in rows]
-
-
-def save_screening_rules(job_name: str, screening_rules: str) -> None:
-    rules = screening_rules.strip()
-    if not rules:
-        raise ValueError(f"Generated screening rules are empty for job: {job_name}")
-    with _connect() as connection:
-        row = connection.execute(
-            "SELECT intro_hash FROM jobs WHERE job_name = ?",
-            (job_name,),
-        ).fetchone()
-        if row is None:
-            raise KeyError(f"Unknown job: {job_name}")
-        connection.execute(
-            """
-            INSERT INTO knowledge_documents (job_name, document_type, content)
-            VALUES (?, 'screening_rules', ?)
-            ON CONFLICT(job_name, document_type) DO UPDATE SET content = excluded.content
-            """,
-            (job_name, rules),
-        )
-        connection.execute(
-            """
-            UPDATE jobs SET rules_for_intro_hash = ?, updated_at = ?
-            WHERE job_name = ?
-            """,
-            (row["intro_hash"], datetime.now(timezone.utc).isoformat(), job_name),
-        )
-
-
-async def generate_missing_screening_rules(agent: AssessmentAgent) -> None:
-    for job in jobs_needing_rules():
-        try:
-            rules = await agent.generate_screening_rules(job.job_name, job.job_intro)
-            save_screening_rules(job.job_name, rules)
-        except Exception:
-            logger.exception("Could not prepare screening rules for job %s", job.job_name)
