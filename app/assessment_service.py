@@ -126,9 +126,19 @@ class AssessmentService:
             raise AssessmentError(f"会话不存在：{session_id}")
 
         candidate_name = session.get("candidate_name") or "候选人"
-        job_name = session.get("job_name") or ""
+        snapshot_job_name = session.get("job_name") or ""
         resume_tags = session.get("resume_tags") or session.get("resume_json") or {}
         chat_history = list(session.get("chat_history") or [])
+
+        # 岗位名以 job_config_table 当前值为准；HR 改了名这里立刻跟新。
+        # 岗位被删了才退回 sessions 里存的快照名 —— 历史报告要能还原当时叫什么。
+        job_config = None
+        config_error: str | None = None
+        try:
+            job_config = self._load_config(session.get("job_key") or "")
+        except AssessmentError as exc:
+            config_error = str(exc)
+        job_name = (job_config.get("job_name") if job_config else None) or snapshot_job_name
 
         first_question = ""
         if chat_history:
@@ -139,21 +149,18 @@ class AssessmentService:
                     break
 
         if not first_question:
-            try:
-                job_config = self._load_config(session.get("job_key") or "")
-            except AssessmentError as exc:
+            if job_config is None:
                 # 开场白生成不了，但头部信息还在 —— 返回姓名与岗位，把错误带上。
-                logger.warning("会话 %s 无法生成开场白：%s", session_id, exc)
+                logger.warning("会话 %s 无法生成开场白：%s", session_id, config_error)
                 return {
                     "session_id": session_id,
                     "candidate_name": candidate_name,
                     "job_name": job_name,
                     "first_question": "",
                     "status": session.get("status") or "in_progress",
-                    "error": f"{exc}，暂时无法开始测评，请联系 HR。",
+                    "error": f"{config_error}，暂时无法开始测评，请联系 HR。",
                 }
 
-            job_name = job_name or job_config.get("job_name", "")
             opening = await self.chat.reply(job_config, resume_tags, [])
             first_question = opening.text
             chat_history = [{"role": "assistant", "content": first_question}]

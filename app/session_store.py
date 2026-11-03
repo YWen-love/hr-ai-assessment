@@ -347,6 +347,19 @@ def get_candidate_view(session_id: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def _active_job_names() -> Dict[str, str]:
+    """查 job_config_table 里所有活岗位的 {job_key: job_name}。
+
+    sessions.job_name 是建会话时的快照，HR 改名后不会跟着变。
+    显示时用这个映射覆盖：岗位还在就显示新名，岗位被删了才退回快照。
+    """
+    try:
+        from app.job_config_store import list_job_configs
+        return {j["job_key"]: j["job_name"] for j in list_job_configs()}
+    except Exception:
+        return {}
+
+
 def list_sessions(
     *,
     job_key: Optional[str] = None,
@@ -376,12 +389,17 @@ def list_sessions(
             (*params, limit),
         ).fetchall()
 
+    overrides = _active_job_names()
     results = []
     for row in rows:
         item = dict(row)
         willing = item.get("willing_for_target_job")
         if willing is not None:
             item["willing_for_target_job"] = bool(willing)
+        # HR 改了岗位名 → 显示当前名；岗位被删了 → 退回 sessions 快照名
+        jk = item.get("job_key")
+        if jk and jk in overrides:
+            item["job_name"] = overrides[jk]
         results.append(item)
     return results
 
@@ -392,7 +410,7 @@ def stats_by_job() -> List[Dict[str, Any]]:
     with _connect() as conn:
         rows = conn.execute(
             """
-            SELECT job_key, job_name,
+            SELECT job_key, MAX(job_name) AS job_name,
                    COUNT(*) AS total,
                    SUM(CASE WHEN match_level = '高匹配' THEN 1 ELSE 0 END) AS high,
                    SUM(CASE WHEN match_level = '中匹配' THEN 1 ELSE 0 END) AS mid,
@@ -405,8 +423,18 @@ def stats_by_job() -> List[Dict[str, Any]]:
                    SUM(CASE WHEN final_decision = '待人工复核' THEN 1 ELSE 0 END) AS need_review
               FROM sessions
              WHERE job_key IS NOT NULL AND job_key != ''
-             GROUP BY job_key, job_name
+             GROUP BY job_key
              ORDER BY total DESC
             """
         ).fetchall()
-    return [dict(row) for row in rows]
+
+    overrides = _active_job_names()
+    results = []
+    for row in rows:
+        item = dict(row)
+        jk = item.get("job_key")
+        # HR 改了岗位名 → 统计显示当前名；岗位被删了 → 退回 MAX(job_name) 快照
+        if jk and jk in overrides:
+            item["job_name"] = overrides[jk]
+        results.append(item)
+    return results
