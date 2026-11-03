@@ -16,9 +16,10 @@ import json
 import logging
 import re
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 from app.job_schema import normalize_job_config, split_issues, validate_job_config
 from app.paths import data_root, resource_path
@@ -64,10 +65,24 @@ class JobResolveError(Exception):
         self.job_name = job_name
 
 
-def _connect() -> sqlite3.Connection:
+@contextmanager
+def _connect() -> Iterator[sqlite3.Connection]:
+    """开一个到岗位配置库的连接，退出 with 块时关掉。
+
+    sqlite3.Connection 自带的 __exit__ 只提交/回滚，不会 close()
+    —— 连接会一直挂着：Windows 上 .db 文件被锁住（临时目录删不掉），
+    长时间跑还会漏句柄。所以这里自己管关闭，事务语义保持不变。
+    """
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def init_db() -> None:
@@ -99,7 +114,20 @@ def init_db() -> None:
 
 
 def _now() -> str:
+    """秒级时间戳：给人看的 —— 创建时间会直接显示在岗位列表里。"""
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _now_precise() -> str:
+    """亚秒级时间戳：给「最近更新」排序用的。
+
+    岗位列表按「最近动过的在前」排。秒级精度下，同一秒里保存的两个岗位
+    时间戳一模一样，谁在前就成了 SQLite 随便定的（之前靠扫描顺序凑巧稳定，
+    后来加了个索引就翻了 —— 顺序不是产品定的，是查询计划定的）。
+
+    亚秒级 + 显式次序兜底，顺序才是真的可预期。
+    """
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds")
 
 
 def _row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
@@ -166,7 +194,7 @@ def save_job_config(
                     effective_raw_jd,
                     json.dumps(normalized, ensure_ascii=False),
                     review_status,
-                    _now(),
+                    _now_precise(),
                     existing["id"],
                 ),
             )
@@ -186,7 +214,7 @@ def save_job_config(
                     json.dumps(normalized, ensure_ascii=False),
                     review_status,
                     _now(),
-                    _now(),
+                    _now_precise(),
                 ),
             )
             job_id = cursor.lastrowid
@@ -221,12 +249,13 @@ def get_job_config_by_name(job_name: str) -> Optional[Dict[str, Any]]:
 
     取第一条命中：job_name 在业务上应唯一，但表上没加唯一约束，
     真出现重名时取最新更新的那条，避免测评链路因脏数据整条崩掉。
+    次序是全序（update_time、id），不会因为换条索引就变。
     """
     init_db()
     with _connect() as conn:
         row = conn.execute(
             "SELECT * FROM job_config_table WHERE job_name = ? AND deleted_at IS NULL "
-            "ORDER BY update_time DESC LIMIT 1",
+            "ORDER BY update_time DESC, id DESC LIMIT 1",
             (job_name,),
         ).fetchone()
     return _row_to_dict(row) if row else None
@@ -238,7 +267,7 @@ def _find_deleted_by_name(job_name: str) -> Optional[Dict[str, Any]]:
     with _connect() as conn:
         row = conn.execute(
             "SELECT * FROM job_config_table WHERE job_name = ? AND deleted_at IS NOT NULL "
-            "ORDER BY update_time DESC LIMIT 1",
+            "ORDER BY update_time DESC, id DESC LIMIT 1",
             (job_name,),
         ).fetchone()
     return _row_to_dict(row) if row else None
@@ -293,7 +322,10 @@ def list_job_configs(*, include_deleted: bool = False) -> List[Dict[str, Any]]:
     )
     if not include_deleted:
         sql += " WHERE deleted_at IS NULL"
-    sql += " ORDER BY update_time DESC"
+    # 次序必须写死：光 ORDER BY update_time DESC 的话，同一秒保存的两个岗位
+    # 时间戳一样，谁在前由 SQLite 的查询计划决定（换条索引就翻脸）。
+    # id DESC 兜底：同一时刻保存的，后建的那个排前面。
+    sql += " ORDER BY update_time DESC, id DESC"
     with _connect() as conn:
         rows = conn.execute(sql).fetchall()
     return [dict(row) for row in rows]
@@ -310,7 +342,7 @@ def delete_job_config(job_key: str, *, hard: bool = False) -> bool:
         else:
             cursor = conn.execute(
                 "UPDATE job_config_table SET deleted_at = ?, update_time = ? WHERE job_key = ? AND deleted_at IS NULL",
-                (_now(), _now(), job_key),
+                (_now(), _now_precise(), job_key),
             )
         conn.commit()
         return cursor.rowcount > 0
@@ -348,7 +380,7 @@ def update_job_config_meta(job_key: str, *, review_status: Optional[str] = None)
     with _connect() as conn:
         conn.execute(
             "UPDATE job_config_table SET review_status = COALESCE(?, review_status), update_time = ? WHERE job_key = ?",
-            (review_status, _now(), job_key),
+            (review_status, _now_precise(), job_key),
         )
         conn.commit()
         # 必须同步 config_json 里的同一字段：测评链路读的是 get_job_config_object()，
@@ -481,7 +513,7 @@ def _backfill_raw_jd(job_key: str, jd_text: str) -> bool:
             WHERE job_key = ? AND deleted_at IS NULL
               AND (raw_jd IS NULL OR TRIM(raw_jd) = '')
             """,
-            (jd_text, _now(), job_key),
+            (jd_text, _now_precise(), job_key),
         )
         conn.commit()
         return cursor.rowcount > 0

@@ -518,7 +518,15 @@ def test_select_job_action() -> None:
 
             rows, keys = ui._job_table()
             order = [r[0] for r in rows]
-            check("表格顺序可预期", order == ["岗位甲", "岗位乙"], str(order))
+            # 列表按「最近动过的在前」排 —— 后保存的岗位乙在上面。
+            # 顺序必须是确定的：之前只按 update_time 排，同一秒里保存的两个岗位
+            # 时间戳一样，谁在前由 SQLite 的查询计划说了算（换条索引就翻脸）。
+            check("表格顺序可预期", order == ["岗位乙", "岗位甲"], str(order))
+
+            # 行号跟着 job_key 走，不写死：顺序是产品定的，改了顺序测试该跟着改，
+            # 但「点哪一行打开的是哪个岗位」这件事必须永远对得上。
+            idx_a = keys.index("row_a")
+            idx_b = keys.index("row_b")
 
             def select(row, col):
                 ev = gr.SelectData(target=None, data={"index": [row, col], "value": "x"})
@@ -526,44 +534,44 @@ def test_select_job_action() -> None:
 
             # 点【编辑】列
             job_key, raw_jd, edit_vis, info, jd_box, editor, status, _, sync_hint, del_vis, _ = select(
-                0, ui.COL_EDIT
+                idx_a, ui.COL_EDIT
             )
-            check("点编辑 → 返回该行 job_key", job_key == keys[0], f"{job_key} vs {keys}")
+            check("点编辑 → 返回该行 job_key", job_key == keys[idx_a], f"{job_key} vs {keys}")
             check("点编辑 → 编辑弹窗打开", _visible(edit_vis))
             check("点编辑 → 删除弹窗不开", not _visible(del_vis))
             check("点编辑 → 带出原始 JD", raw_jd == "甲方原始 JD 内容", raw_jd)
             check("点编辑 → JD 进的是可编辑文本框，不是静态展示",
                   jd_box == "甲方原始 JD 内容", jd_box[:80])
             check("点编辑 → 说清历史分数不变", "历史测评报告的分数不会变" in info, info[:300])
-            check("点编辑 → 编辑器预填现有配置", json.loads(editor)["job_key"] == keys[0])
+            check("点编辑 → 编辑器预填现有配置", json.loads(editor)["job_key"] == keys[idx_a])
             check("点编辑 → 状态区清空", status == "")
             check("点编辑 → JD 与规则一致时提示一致", "一致" in sync_hint, sync_hint[:200])
 
             # 点【JD】列：和点【编辑】一样打开编辑弹窗，JD 全文进文本框
             job_key, raw_jd, edit_vis, info, jd_box, _, _, _, sync_hint, del_vis, _ = select(
-                0, ui.COL_JD
+                idx_a, ui.COL_JD
             )
-            check("点 JD → 返回该行 job_key", job_key == keys[0], f"{job_key} vs {keys}")
+            check("点 JD → 返回该行 job_key", job_key == keys[idx_a], f"{job_key} vs {keys}")
             check("点 JD → 编辑弹窗打开", _visible(edit_vis))
             check("点 JD → 删除弹窗不开", not _visible(del_vis))
             check("点 JD → JD 全文进文本框", jd_box == "甲方原始 JD 内容", jd_box[:80])
 
             # JD 列在列表上就能看出这个岗位有没有录 JD
-            jd_cell = rows[0][ui.COL_JD]
+            jd_cell = rows[idx_a][ui.COL_JD]
             check("JD 列显示 JD 摘要", "甲方原始 JD 内容" in jd_cell, jd_cell)
             check("JD 列标出字数", "字）" in jd_cell, jd_cell)
-            check("没录 JD 的岗位在 JD 列画破折号", rows[1][ui.COL_JD] == "—", rows[1][ui.COL_JD])
+            check("没录 JD 的岗位在 JD 列画破折号", rows[idx_b][ui.COL_JD] == "—", rows[idx_b][ui.COL_JD])
 
             # 点【删除】列
-            job_key, _, edit_vis, _, _, _, _, _, _, del_vis, del_info = select(1, ui.COL_DELETE)
-            check("点删除 → 返回该行 job_key", job_key == keys[1], f"{job_key} vs {keys}")
+            job_key, _, edit_vis, _, _, _, _, _, _, del_vis, del_info = select(idx_b, ui.COL_DELETE)
+            check("点删除 → 返回该行 job_key", job_key == keys[idx_b], f"{job_key} vs {keys}")
             check("点删除 → 删除弹窗打开", _visible(del_vis))
             check("点删除 → 编辑弹窗不开", not _visible(edit_vis))
             check("点删除 → 二次确认说清不可用于改 JD", "不是修改 JD 的方式" in del_info.replace("——", "-"), del_info[:300])
 
             # 点非操作列 / 行号越界：什么都不弹
-            for label, args in (("点姓名列", (0, ui.COL_NAME)), ("点来源列", (1, ui.COL_SOURCE)),
-                                ("点创建时间列", (0, ui.COL_CREATED)), ("行号越界", (99, ui.COL_EDIT))):
+            for label, args in (("点姓名列", (idx_a, ui.COL_NAME)), ("点来源列", (idx_b, ui.COL_SOURCE)),
+                                ("点创建时间列", (idx_a, ui.COL_CREATED)), ("行号越界", (99, ui.COL_EDIT))):
                 job_key, _, edit_vis, _, _, _, _, _, _, del_vis, _ = select(*args)
                 check(f"{label}不弹窗", not _visible(edit_vis) and not _visible(del_vis) and job_key == "")
 
