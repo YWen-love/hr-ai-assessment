@@ -25,6 +25,7 @@ from resume_parser import parse_resume_text
 from config import settings
 from app.job_config_store import (
     JobConfigError,
+    JobNameTakenError,
     delete_job_config,
     get_job_config,
     get_job_config_object,
@@ -922,6 +923,17 @@ def _persist_config(config_text: str, raw_jd: str | None) -> tuple[str, str]:
             parsed,
             source_type="auto_llm",
             raw_jd=raw_jd.strip() if isinstance(raw_jd, str) else None,
+        )
+    except JobNameTakenError as exc:
+        # 重名：这是「岗位名被人占了」，不是配置写坏了 ——
+        # 提示得说人话，别让 HR 去改 JSON。返回空 key，弹窗保持打开，
+        # HR 换个岗位名就能直接重存。
+        return (
+            _notice(
+                f"当前岗位已存在：「{exc.job_name}」这个名字已经有岗位在用了，换一个岗位名再保存。",
+                tone="error",
+            ),
+            "",
         )
     except JobConfigError as exc:
         # 用列表渲染而不是把 errors 拼成一段文字：_notice 会转义 HTML，

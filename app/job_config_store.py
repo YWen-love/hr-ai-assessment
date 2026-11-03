@@ -43,6 +43,27 @@ class JobConfigError(ValueError):
         self.errors = errors
 
 
+class JobNameTakenError(Exception):
+    """岗位显示名（job_name）已经被别的岗位占用了。
+
+    job_name 是 HR 唯一看得见的岗位标识 —— 测评页下拉、报告标题、
+    候选人链接里全是它。两个岗位同名，HR 分不清哪个是哪个；更糟的是
+    按名字反查配置时只会拿到其中一条（见 get_job_config_by_name），
+    测评有可能拿错岗位去打分。
+
+    所以重名必须在写入时就拦住，而不是靠事后人工去重。
+
+    刻意不继承 JobConfigError：那是「配置写得不对」，会让 HR 去改 JSON；
+    这件事是「名字被占了」，改个名字就好 —— 两回事，提示也不一样。
+    """
+
+    def __init__(self, job_name: str, existing_job_key: str = ""):
+        self.job_name = job_name
+        self.existing_job_key = existing_job_key
+        self.message = f"岗位已存在：{job_name}"
+        super().__init__(self.message)
+
+
 class JobResolveError(Exception):
     """按岗位名定位测评岗位失败。
 
@@ -85,6 +106,94 @@ def _connect() -> Iterator[sqlite3.Connection]:
         conn.close()
 
 
+def _normalize_job_name(name: str) -> str:
+    """岗位显示名的比较口径：去掉所有空白（含全角空格 U+3000）。
+
+    HR 在表单里手打岗位名，前后空格、词中间的空格都可能不一致。
+    「初中学习顾问」和「初中 学习顾问」在业务上是同一个岗位，
+    不能因为一个空格就把它们变成两个岗位 —— 那正是重名要拦的事。
+    """
+    return re.sub(r"\s+", "", name or "")
+
+
+def _find_name_conflict(
+    conn: sqlite3.Connection, job_name: str, exclude_job_key: str
+) -> Optional[sqlite3.Row]:
+    """找出「另一个活着的岗位」是不是已经用了这个名字。
+
+    exclude_job_key 是正在保存的那一行的 key —— 它自己叫这个名字不算冲突
+    （改配置但不改名字是正常的保存路径）。
+
+    逐行比对而不是拼 SQL：job_name 的比较口径是「去掉所有空白」，
+    这个口径没法直接写进 SQL 条件；而岗位数量是几十级别，全表扫一次
+    完全不心疼。
+    """
+    target = _normalize_job_name(job_name)
+    if not target:
+        return None
+    rows = conn.execute(
+        "SELECT job_key, job_name FROM job_config_table WHERE deleted_at IS NULL"
+    ).fetchall()
+    for row in rows:
+        if row["job_key"] == exclude_job_key:
+            continue
+        if _normalize_job_name(row["job_name"]) == target:
+            return row
+    return None
+
+
+# job_name 唯一索引建不出来时（存量库里有重名），记下这个库路径，
+# 别每次保存岗位都去全表扫一遍重名、每次都刷一条 warning。
+_name_index_failed_for: set[str] = set()
+
+
+def _ensure_name_unique_index(conn: sqlite3.Connection) -> None:
+    """给活行加一条 job_name 唯一索引（兜底）。
+
+    主要防线是 save_job_config 里的重名检查；这条索引管的是
+    「代码没走那条路」的写入 —— 并发、裸 SQL、老脚本。
+
+    存量库里如果已经有重名的行，CREATE UNIQUE INDEX 会直接报错。
+    这时候不动存量数据（删岗位是 HR 的决定，不是程序该替人做的），
+    只记一条 warning，重名照旧由保存时的检查拦住。
+    """
+    db_key = str(DB_PATH)
+    if db_key in _name_index_failed_for:
+        return
+
+    exists = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='index' AND name='idx_job_config_name_alive'"
+    ).fetchone()
+    if exists:
+        return
+
+    duplicate = conn.execute(
+        "SELECT job_name FROM job_config_table WHERE deleted_at IS NULL "
+        "GROUP BY job_name HAVING COUNT(*) > 1 LIMIT 1"
+    ).fetchone()
+    if duplicate is not None:
+        _name_index_failed_for.add(db_key)
+        logger.warning(
+            "岗位配置表里已存在重名岗位（如「%s」），未建立 job_name 唯一索引；"
+            "重名仍会在保存时被拦住。",
+            duplicate["job_name"],
+        )
+        return
+
+    try:
+        conn.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_job_config_name_alive
+            ON job_config_table(job_name) WHERE deleted_at IS NULL
+            """
+        )
+    except sqlite3.IntegrityError:
+        _name_index_failed_for.add(db_key)
+        logger.warning(
+            "建立 job_name 唯一索引失败（存量数据里有重名），重名仍会在保存时被拦住。"
+        )
+
+
 def init_db() -> None:
     with _connect() as conn:
         conn.execute(
@@ -110,6 +219,7 @@ def init_db() -> None:
             ON job_config_table(job_key) WHERE deleted_at IS NULL
             """
         )
+        _ensure_name_unique_index(conn)
         conn.commit()
 
 
@@ -148,7 +258,11 @@ def save_job_config(
     raw_jd: Optional[str] = None,
     review_status: str = "pending",
 ) -> Dict[str, Any]:
-    """校验后写入。非法配置抛 JobConfigError，不落库。"""
+    """校验后写入。非法配置抛 JobConfigError，不落库。
+
+    岗位显示名撞了已有的岗位抛 JobNameTakenError（同样不落库）——
+    job_name 在业务上必须唯一，理由见那个异常类的说明。
+    """
     init_db()
     if source_type not in VALID_SOURCE_TYPES:
         raise JobConfigError([f"source_type 必须是 {VALID_SOURCE_TYPES} 之一"])
@@ -167,57 +281,73 @@ def save_job_config(
     job_key = normalized["job_key"]
 
     with _connect() as conn:
+        # 重名拦截：job_name 是 HR 唯一看得见的岗位标识，
+        # 两个岗位同名就分不清谁是谁，按名字反查时也只会拿到其中一条
+        # （见 get_job_config_by_name）。编辑自己（同一个 job_key）不算撞名。
+        conflict = _find_name_conflict(conn, normalized["job_name"], job_key)
+        if conflict is not None:
+            raise JobNameTakenError(normalized["job_name"], conflict["job_key"])
+
         existing = conn.execute(
             "SELECT id, create_time, raw_jd FROM job_config_table "
             "WHERE job_key = ? AND deleted_at IS NULL",
             (job_key,),
         ).fetchone()
 
-        if existing:
-            # raw_jd 的三态语义：
-            #   None → 「这次不动 JD 原文」，沿用库里存着的那份
-            #   ""   → 「JD 原文改成空的」（HR 亲手清空了 JD）
-            #   文本 → 「JD 原文换成这份」
-            # 之前不管传什么都直接 SET raw_jd = ?，于是「不动」和「清空」
-            # 变成同一件事：改一次规则，原始 JD 就被抹成 NULL，再也追不回来。
-            effective_raw_jd = existing["raw_jd"] if raw_jd is None else raw_jd
-            conn.execute(
-                """
-                UPDATE job_config_table
-                SET job_name = ?, source_type = ?, raw_jd = ?, config_json = ?,
-                    review_status = ?, update_time = ?
-                WHERE id = ?
-                """,
-                (
-                    normalized["job_name"],
-                    source_type,
-                    effective_raw_jd,
-                    json.dumps(normalized, ensure_ascii=False),
-                    review_status,
-                    _now_precise(),
-                    existing["id"],
-                ),
-            )
-            job_id = existing["id"]
-        else:
-            cursor = conn.execute(
-                """
-                INSERT INTO job_config_table
-                    (job_key, job_name, source_type, raw_jd, config_json, review_status, create_time, update_time)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    job_key,
-                    normalized["job_name"],
-                    source_type,
-                    raw_jd,
-                    json.dumps(normalized, ensure_ascii=False),
-                    review_status,
-                    _now(),
-                    _now_precise(),
-                ),
-            )
-            job_id = cursor.lastrowid
+        try:
+            if existing:
+                # raw_jd 的三态语义：
+                #   None → 「这次不动 JD 原文」，沿用库里存着的那份
+                #   ""   → 「JD 原文改成空的」（HR 亲手清空了 JD）
+                #   文本 → 「JD 原文换成这份」
+                # 之前不管传什么都直接 SET raw_jd = ?，于是「不动」和「清空」
+                # 变成同一件事：改一次规则，原始 JD 就被抹成 NULL，再也追不回来。
+                effective_raw_jd = existing["raw_jd"] if raw_jd is None else raw_jd
+                conn.execute(
+                    """
+                    UPDATE job_config_table
+                    SET job_name = ?, source_type = ?, raw_jd = ?, config_json = ?,
+                        review_status = ?, update_time = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        normalized["job_name"],
+                        source_type,
+                        effective_raw_jd,
+                        json.dumps(normalized, ensure_ascii=False),
+                        review_status,
+                        _now_precise(),
+                        existing["id"],
+                    ),
+                )
+                job_id = existing["id"]
+            else:
+                cursor = conn.execute(
+                    """
+                    INSERT INTO job_config_table
+                        (job_key, job_name, source_type, raw_jd, config_json, review_status, create_time, update_time)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        job_key,
+                        normalized["job_name"],
+                        source_type,
+                        raw_jd,
+                        json.dumps(normalized, ensure_ascii=False),
+                        review_status,
+                        _now(),
+                        _now_precise(),
+                    ),
+                )
+                job_id = cursor.lastrowid
+        except sqlite3.IntegrityError as exc:
+            # 撞上唯一索引：多半是并发写入时另一个请求抢先把同名岗位建了。
+            # 只有确认确实是重名才翻译成 JobNameTakenError，
+            # 其它完整性错误原样抛出去，别把真问题说成重名。
+            conflict = _find_name_conflict(conn, normalized["job_name"], job_key)
+            if conflict is not None:
+                raise JobNameTakenError(normalized["job_name"], conflict["job_key"]) from exc
+            raise
         conn.commit()
 
     return get_job_config(job_key)  # type: ignore[return-value]
@@ -247,9 +377,10 @@ def get_job_config_by_name(job_name: str) -> Optional[Dict[str, Any]]:
     内部标识。这里提供 job_name → config 的反查，让 /hr/parse-link 能在
     创建会话时把 job_key 一并存进去。
 
-    取第一条命中：job_name 在业务上应唯一，但表上没加唯一约束，
-    真出现重名时取最新更新的那条，避免测评链路因脏数据整条崩掉。
-    次序是全序（update_time、id），不会因为换条索引就变。
+    取第一条命中：job_name 在业务上应唯一 —— save_job_config 写入时会拦重名，
+    但表上并没有 job_name 的唯一约束（只有 job_key 有），老库里可能已经躺着
+    几条重名的脏数据（那是重名拦截上线之前留下的）。真撞上了就取最新更新的
+    那条，避免测评链路因脏数据整条崩掉。
     """
     init_db()
     with _connect() as conn:
@@ -541,6 +672,7 @@ def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
 
     imported: List[str] = []
     skipped_deleted: List[str] = []
+    skipped_duplicate: List[str] = []
     jd_sections = _load_jd_sections(config_dir)
     for path in sorted(Path(config_dir).glob("*.json")):
         try:
@@ -587,17 +719,29 @@ def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
             jd_to_write = file_jd or intro_jd or None
 
         # 文件里的配置视为人工维护，默认直接生效
-        save_job_config(
-            config,
-            source_type="manual",
-            review_status="reviewed",
-            raw_jd=jd_to_write,
-        )
+        try:
+            save_job_config(
+                config,
+                source_type="manual",
+                review_status="reviewed",
+                raw_jd=jd_to_write,
+            )
+        except JobNameTakenError as exc:
+            # 文件里的岗位名和库里某个岗位撞了。种子化不该因为这个把
+            # 服务启动搞崩（那是 HR 自己在后台建出来的同名岗位），
+            # 跳过并记一条 warning，重名照旧由后台保存时的检查拦住。
+            skipped_duplicate.append(f"{job_key}（撞上「{exc.job_name}」）")
+            continue
         imported.append(job_key)
 
     if skipped_deleted:
         logger.info(
             "跳过的已删除岗位（HR 曾删除，种子化不复活）：%s", ", ".join(skipped_deleted)
+        )
+    if skipped_duplicate:
+        logger.warning(
+            "跳过的重名岗位配置（job_name 已被别的岗位占用）：%s",
+            ", ".join(skipped_duplicate),
         )
     return imported
 

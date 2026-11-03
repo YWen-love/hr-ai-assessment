@@ -22,6 +22,7 @@ from app.paths import data_root, resource_path
 from app.assessment_service import AssessmentError, AssessmentService
 from app.job_config_store import (
     JobConfigError,
+    JobNameTakenError,
     JobResolveError,
     delete_job_config,
     get_job_config,
@@ -748,6 +749,9 @@ async def api_job_save(
             raw_jd=str(raw_jd) if raw_jd else None,
             review_status=review_status,
         )
+    except JobNameTakenError as exc:
+        # 岗位显示名已经被别的岗位占了。409：不是配置写坏了，是名字要换一个。
+        raise HTTPException(status_code=409, detail=exc.message) from exc
     except JobConfigError as exc:
         raise HTTPException(status_code=422, detail=exc.errors) from exc
 
@@ -794,6 +798,12 @@ async def api_job_copy(
     duplicate["job_key"] = new_key
     if payload.get("job_name"):
         duplicate["job_name"] = str(payload["job_name"])
+    else:
+        # 没指定岗位名时不能沿用原岗位的名字 ——
+        # 两个岗位同名，HR 分不清谁是谁，按名字反查也只会拿到其中一条。
+        # 复制品的名字默认加「（副本）」后缀；真撞了名就让调用方自己传一个。
+        source_name = str(source.get("job_name") or job_key)
+        duplicate["job_name"] = f"{source_name}（副本）"
     # 一岗一库：复制品必须换 rag_doc_id，否则两个岗位共用一份知识库，
     # 违反 RAG 约定 4（各岗位独立 rag_doc_id 隔离）。
     duplicate["rag_doc_id"] = new_key
@@ -801,6 +811,8 @@ async def api_job_copy(
 
     try:
         return save_job_config(duplicate, source_type="manual", review_status="pending")
+    except JobNameTakenError as exc:
+        raise HTTPException(status_code=409, detail=exc.message) from exc
     except JobConfigError as exc:
         raise HTTPException(status_code=422, detail=exc.errors) from exc
 

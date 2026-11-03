@@ -31,6 +31,7 @@ TESTS = [
     "test_dead_code_removed.py",       # 死代码清理：job_reader / render_hr_page 不许复活
     "test_job_picker_refresh.py",      # 工作台岗位下拉自动刷新：指纹 / 跳过 / 兜底提示
     "test_parse_link_job_resolver.py",  # 测评链接只认岗位配置表：不再叠知识库那道闸
+    "test_job_name_unique.py",          # 岗位显示名唯一：重名新增被拦住 / 编辑自己不受影响 / 409 + UI 提示
     "test_job_list_order.py",           # 岗位列表顺序：最近动过的在前 / 换索引顺序不翻脸
 ]
 

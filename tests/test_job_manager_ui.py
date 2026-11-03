@@ -488,7 +488,10 @@ def test_job_table() -> None:
             manual = valid_config("t_manual")
             manual["job_name"] = "课程顾问"
             store.save_job_config(manual, source_type="manual")
-            store.save_job_config(valid_config("t_gone"), source_type="manual")
+            # 岗位名在库里必须唯一，所以每个岗位得有自己的名字
+            gone = valid_config("t_gone")
+            gone["job_name"] = "待删除的岗位"
+            store.save_job_config(gone, source_type="manual")
             store.delete_job_config("t_gone")
 
             rows, keys = ui._job_table()
