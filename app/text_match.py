@@ -6,7 +6,7 @@
 
 两处共用同一份实现，避免日后各自漂移：
 1. 简历解析 —— 用它从 exp_keywords 封闭词表里捞出有字面依据的 exp_tags
-   （allow_partial=False，参与打分，必须精确）
+   （find_hits_spanning，参与打分，必须精确）
 2. 备选岗映射佐证 —— app/report.py 的 keyword_hints()
    （allow_partial=True，仅提示性，允许召回）
 """
@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 import re
-from typing import Iterable, List
+from typing import Dict, Iterable, List, Set, Tuple
 
 # 常见分隔符 + 标点，用于把长句切成候选 token
 _TOKEN_SPLIT_RE = re.compile(r"[\s、，,。;；:：!！?？~～/\\|()（）\[\]【】<>《》“”\"'`\-—–]+")
@@ -104,3 +104,63 @@ def find_hits(tokens: Iterable[str], haystack: str, *, allow_partial: bool = Tru
             seen.add(cleaned)
             hits.append(cleaned)
     return hits
+
+
+def find_hits_spanning(tokens: Iterable[str], haystack: str, *, min_len: int = 2) -> List[str]:
+    """长词优先占位：词表里互相包含的词不会同时命中。
+
+    find_hits 是"每个词各自判断在不在"，所以词表里同时有「销售」和「课程销售」时，
+    简历上一句「任职课程销售。」两个都会命中 —— 短词是长词的一部分，
+    这就是**子串污染**。打到 exp_tags 上会直接抬高档位：
+    一份只写了课程销售的简历，因为还带着"销售"这个更泛的词，
+    会被算成既有课程销售、又有普通销售经历。
+
+    这里改成占位制：按长度从长到短处理，长词先占住它在原文里的位置，
+    短词只能去占长词没占过的位置，占不到就不算命中。
+    同一个词在原文里出现多次时，只要有一处没被占就算命中
+    （否则「课程销售 课程销售」会留一个空位让"销售"钻进来）。
+
+    命中词按**传入顺序**返回（不是按出现位置），方便和词表对得上。
+    """
+    hay = normalize(haystack or "")
+    if not hay:
+        return []
+
+    ordered: List[str] = []
+    seen: Set[str] = set()
+    for token in tokens:
+        cleaned = (token or "").strip()
+        if not cleaned or cleaned in seen:
+            continue
+        seen.add(cleaned)
+        ordered.append(cleaned)
+
+    # 每个词在原文里的所有整词出现位置
+    spans: Dict[str, List[Tuple[int, int]]] = {}
+    for token in ordered:
+        if len(token) < min_len:
+            continue
+        found: List[Tuple[int, int]] = []
+        start = hay.find(token)
+        while start >= 0:
+            found.append((start, start + len(token)))
+            start = hay.find(token, start + 1)
+        if found:
+            spans[token] = found
+
+    claimed: List[Tuple[int, int]] = []
+    hits: Set[str] = set()
+
+    def _is_free(span: Tuple[int, int]) -> bool:
+        start, end = span
+        return all(end <= c_start or start >= c_end for c_start, c_end in claimed)
+
+    # 长词先占位。sorted 是稳定排序，同长度按传入顺序
+    for token in sorted(spans, key=len, reverse=True):
+        free = [span for span in spans[token] if _is_free(span)]
+        if not free:
+            continue
+        hits.add(token)
+        claimed.extend(free)
+
+    return [token for token in ordered if token in hits]

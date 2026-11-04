@@ -34,6 +34,7 @@ from app.job_config_store import (
 )
 from app.job_generator import JobConfigGenerator, JobGenerationError, soft_gap_warnings
 from app.job_schema import normalize_job_config, split_issues, validate_job_config
+from app.rag_bypass import delete_rag_document, get_rag_document_content, save_rag_document
 from app.resume_reader import read_resume_text
 from app.session_store import create_session, get_session, list_sessions
 
@@ -48,13 +49,21 @@ _SOURCE_LABELS = {"auto_llm": "AI 生成", "manual": "手动"}
 
 # 岗位列表的列序。操作列靠下标区分，所以这个顺序是契约，改了要同步改
 # _job_table() 和 select_job_action()。
-COL_NAME, COL_JD, COL_SOURCE, COL_CREATED, COL_EDIT, COL_DELETE = range(6)
+COL_NAME, COL_JD, COL_SOURCE, COL_CREATED, COL_EDIT, COL_DELETE, COL_KB = range(7)
 
 WORKBENCH_PATH = "/hr"
 # 尾斜杠不能省。Starlette 的 Mount 正则是 ^/hr/jobs/(?P<path>.*)$，
 # 不带斜杠的 /hr/jobs 会被后注册的 /hr mount 完整匹配走（当成工作台的子路径），
 # 结果是 404 —— 看起来像挂载顺序错了，其实是斜杠。
 JOB_MANAGER_PATH = "/hr/jobs/"
+
+# 品牌静态资源。四个文件都放在 <data_root>/static/dist/ 下，文件名是中文，
+# 这里写死百分号编码后的 URL —— 浏览器和 StaticFiles 都能正常解析，
+# 也不用在服务端再转义一遍。
+#   高途大字.png   → 右上角的品牌角标
+#   途小跃.jpg     → 工作台英雄条的背景（见 HR_WORKBENCH_CSS）
+BRAND_MARK_URL = "/static/dist/%E9%AB%98%E9%80%94%E5%A4%A7%E5%AD%97.png"
+MASCOT_URL = "/static/dist/%E9%80%94%E5%B0%8F%E8%B7%83.jpg"
 
 
 def _resolve_base_url(request: gr.Request | None = None) -> str:
@@ -83,24 +92,68 @@ def _resolve_base_url(request: gr.Request | None = None) -> str:
 
 
 HR_UI_CSS = """
-html, body, .gradio-container, .main.app, main.contain {
-    background:
-        linear-gradient(rgba(255,255,255,0.86), rgba(255,255,255,0.86)),
-        url('/static/hr.jpg') center/cover no-repeat fixed !important;
+/* =============================================================================
+   HR 工作台 / 岗位管理 公共样式
+   -----------------------------------------------------------------------------
+   Gradio 6 会把注入进来的 CSS 复制成两份：一份原样，一份加上
+   ".gradio-container.gradio-container-<版本> .contain " 前缀。
+   于是每条规则同时以 (0,x,0) 和 (0,4,0) 两种权重出现，原样那份排在前面 ——
+   也就是说 **在同一个样式表内部，后写的赢**。据此：
+     1. 要压过 Gradio 主题的规则 → 加 !important（主题规则不带 important）；
+     2. 要压过自己前面写的规则 → 写后面，或换更具体的选择器；
+     3. html / body / gradio-app 在 .contain 外面，带前缀那份永远匹配不上，
+        只有原样那份生效 —— 正好用来铺整页底色。
+   ============================================================================= */
+
+/* ------------------------------ 1. 设计变量 ------------------------------ */
+:root {
+    --hr-blue: #2457f5;
+    --hr-blue-dark: #1d4ed8;
+    --hr-blue-soft: #eef3ff;
+    --hr-ink: #16213a;
+    --hr-ink-2: #4d5b73;
+    --hr-ink-3: #8695ad;
+    --hr-line: #e4eaf5;
+    --hr-line-2: #d3dcee;
+    --hr-card: #ffffff;
+    --hr-canvas: #f1f5ff;
+    --hr-navy: #0b1440;
+    --hr-navy-2: #16297a;
+    --hr-r-card: 16px;
+    --hr-r-ctl: 10px;
+    --hr-r-lg: 20px;
+    --hr-shadow-sm: 0 1px 2px rgba(15, 23, 42, .06), 0 2px 8px rgba(15, 23, 42, .05);
+    --hr-shadow-md: 0 10px 26px rgba(15, 23, 42, .08), 0 2px 6px rgba(15, 23, 42, .04);
+    --hr-shadow-lg: 0 24px 60px rgba(11, 20, 64, .22);
+    --hr-font: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+    /* Gradio 的布局块默认是白底，铺在彩色画布上会割裂 —— 统一透明。 */
+    --block-background-fill: transparent !important;
+    --body-background-fill: transparent !important;
+}
+
+/* --------------------- 2. 铺底色：打通 Gradio 的几层底色 --------------------- */
+html {
+    background-color: var(--hr-canvas) !important;
+    background-image:
+        radial-gradient(900px 520px at 10% -8%, rgba(36, 87, 245, .13), rgba(36, 87, 245, 0) 62%),
+        radial-gradient(780px 460px at 94% 2%, rgba(124, 92, 255, .10), rgba(124, 92, 255, 0) 60%) !important;
+    background-repeat: no-repeat !important;
     background-attachment: fixed !important;
 }
-/* Gradio 默认给根元素和容器加了浅灰底色，把背景图遮住了。强制设透明。*/
-.gradio-app, .gradio-container, .app {
+body { background: transparent !important; }
+gradio-app { background: transparent !important; }
+html body .gradio-container,
+html body .gradio-container .main.app,
+html body .gradio-container .main.app > .wrap,
+html body .gradio-container main.contain,
+html body .gradio-container footer {
     background: transparent !important;
 }
-/* panel / block / wrap 用半透明白底，既透出背景图又保证文字可读*/
-.gradio-group, .block, .wrap, .panel, .form, .styler, .gr-group, .container {
-    background: rgba(255, 255, 255, 0.78) !important;
+body, .gradio-container, input, textarea, select, button {
+    font-family: var(--hr-font) !important;
 }
-/* Gradio 6 在 Group 里包了一层 .styler 和 .gr-group，默认浅灰 rgb(226,232,240) 也会盖住背景。*/
-.svelte-1p9262q {
-    background: rgba(255, 255, 255, 0.78) !important;
-}
+
+/* ------------------------------- 3. 版心 ------------------------------- */
 .gradio-container {
     width: 100% !important;
     max-width: none !important;
@@ -109,55 +162,140 @@ html, body, .gradio-container, .main.app, main.contain {
 .main.app {
     width: 100% !important;
     max-width: none !important;
-    padding: 0 20px !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
 }
 main.contain {
     width: 100% !important;
-    max-width: none !important;
-    min-height: calc(100vh - 24px) !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding: 20px 24px 28px !important;
+    box-sizing: border-box !important;
+    min-height: 100vh !important;
 }
-.page-title {padding: 8px 0 4px;}
-.page-nav {display: flex; gap: 10px; align-items: center; margin: 0 0 14px;}
+html body .gradio-container .prose { max-width: none !important; }
+
+/* ---------------------------- 4. 页头英雄条 ---------------------------- */
+.page-hero {
+    position: relative;
+    margin: 0 0 18px;
+    padding: 20px 26px 18px;
+    min-height: 116px;
+    border-radius: var(--hr-r-lg);
+    background: linear-gradient(135deg, var(--hr-navy-2) 0%, var(--hr-navy) 60%, #050a20 100%);
+    box-shadow: var(--hr-shadow-lg);
+    overflow: hidden;
+}
+.page-hero-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 25px !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+    color: #ffffff !important;
+    letter-spacing: .4px;
+}
+.page-hero-sub {
+    margin: 6px 0 0 !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+    color: rgba(210, 224, 255, .78) !important;
+}
+.page-nav {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 14px 0 0;
+    padding-right: 60px;
+}
+/* 高途大字：钉在导航行的右上角 */
+.brand-mark {
+    position: absolute;
+    top: -6px;
+    right: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, .22);
+    box-shadow: 0 8px 18px rgba(3, 8, 30, .45);
+}
+.brand-mark img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ------------------------------ 5. 导航按钮 ------------------------------ */
 .nav-link {
     display: inline-block;
     padding: 8px 18px;
-    border-radius: 8px;
-    background: #2457f5;
+    border-radius: var(--hr-r-ctl);
+    background: var(--hr-blue) !important;
     color: #ffffff !important;
     text-decoration: none;
     font-weight: 600;
-    border: 1px solid #1d4ed8;
+    font-size: 14px;
+    line-height: 1.4;
+    border: 1px solid rgba(255, 255, 255, .18) !important;
+    box-shadow: 0 6px 16px rgba(36, 87, 245, .38) !important;
+    transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
 }
-.nav-link:hover {background: #1d4ed8;}
-.nav-link.secondary {background: #ffffff; color: #334155 !important; border-color: #cbd5e1;}
-.nav-link.secondary:hover {background: #f1f5f9;}
+.nav-link:hover {
+    background: var(--hr-blue-dark) !important;
+    transform: translateY(-1px);
+}
+.nav-link.secondary {
+    background: rgba(255, 255, 255, .13) !important;
+    color: #e6edff !important;
+    border-color: rgba(255, 255, 255, .30) !important;
+    box-shadow: none !important;
+}
+.nav-link.secondary:hover { background: rgba(255, 255, 255, .22) !important; }
 /* 登出是个 <form><button>，得把 Gradio 给 button 的默认样式压掉，看起来才像导航按钮 */
-.nav-logout {margin: 0;}
+.nav-logout { margin: 0; }
 button.nav-link {
     cursor: pointer;
     font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
+    font-size: 14px;
+    line-height: 1.4;
     min-width: 0;
     min-height: 0;
+    padding: 8px 18px;
+    border-radius: var(--hr-r-ctl);
 }
 
+/* ---------------------------- 6. 工作台面板 ---------------------------- */
 #workbench-row {
-    /* 扣掉的 170px = 页头标题 + 导航条。右栏底部是测评结果，
+    /* 扣掉的 200px = 页头英雄条 + 上下留白。右栏底部是测评结果，
        留窄了会被挤出视口，HR 每次都得滚页面看结论。 */
-    height: calc(100vh - 170px) !important;
-    min-height: 480px !important;
+    height: calc(100vh - 200px) !important;
+    min-height: 460px !important;
     align-items: stretch !important;
 }
-.workbench-column {height: 100% !important; min-height: 0 !important;}
+.workbench-column { height: 100% !important; min-height: 0 !important; }
 #left-panel, #right-panel {
     height: 100% !important;
     min-height: 0 !important;
     box-sizing: border-box !important;
+    background: var(--hr-card) !important;
+    border: 1px solid var(--hr-line) !important;
+    border-radius: var(--hr-r-card) !important;
+    box-shadow: var(--hr-shadow-md) !important;
+    padding: 18px 20px 20px !important;
 }
-.result-card {padding: 18px; border-radius: 12px; background: #f1f5ff; line-height: 2;}
-.result-card a {color: #2457f5; word-break: break-all;}
+.result-card {
+    padding: 18px;
+    border-radius: 12px;
+    background: var(--hr-blue-soft);
+    border: 1px solid #dbe4ff;
+    line-height: 2;
+}
+.result-card a { color: var(--hr-blue) !important; word-break: break-all; }
 .result-card pre {
     white-space: pre-wrap;
     font: inherit;
@@ -167,18 +305,12 @@ button.nav-link {
     background: #f8fafc;
     margin-bottom: 0;
 }
-.result-empty {min-height: 220px; box-sizing: border-box;}
-#result-panel .result-card {
-    max-height: 60vh;
-    overflow-y: auto;
-}
-#sessions-table .table-wrap {
-    max-height: 240px !important;
-    overflow-y: auto !important;
-}
-#candidate-picker {position: relative !important;}
-#candidate-picker input {padding-right: 52px !important;}
-#candidate-picker .icon-wrap {right: 52px !important;}
+.result-empty { min-height: 220px; box-sizing: border-box; }
+#result-panel .result-card { max-height: 60vh; overflow-y: auto; }
+#sessions-table .table-wrap { max-height: 240px !important; overflow-y: auto !important; }
+#candidate-picker { position: relative !important; }
+#candidate-picker input { padding-right: 52px !important; }
+#candidate-picker .icon-wrap { right: 52px !important; }
 #refresh-button {
     position: absolute !important;
     top: 45px !important;
@@ -189,13 +321,63 @@ button.nav-link {
     height: 38px !important;
     padding: 0 !important;
     border-radius: 50% !important;
-    border: 1px solid #cbd5e1 !important;
+    border: 1px solid var(--hr-line-2) !important;
     background: white !important;
-    color: #334155 !important;
+    color: var(--hr-ink-2) !important;
     font-size: 24px !important;
+    box-shadow: var(--hr-shadow-sm) !important;
 }
 
-/* ---- 弹窗 ---- */
+/* ------------------------------ 7. 表格 ------------------------------ */
+/* Gradio 6 的 Dataframe：表头是一个 sticky 的 header-table，
+   数据行是绝对定位的 .virtual-body > .virtual-row（.row-odd 是斑马行）。 */
+#job-table {
+    background: var(--hr-card) !important;
+    border: 1px solid var(--hr-line) !important;
+    border-radius: var(--hr-r-card) !important;
+    box-shadow: var(--hr-shadow-md) !important;
+    overflow: hidden;
+}
+#job-table table {
+    table-layout: fixed !important;
+    width: 100% !important;
+}
+#job-table th, #job-table td {
+    text-align: center !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#job-table th:nth-child(1), #job-table td:nth-child(1) { width: 14%; }
+#job-table th:nth-child(2), #job-table td:nth-child(2) { width: 42%; }
+#job-table th:nth-child(3), #job-table td:nth-child(3) { width: 8%; }
+#job-table th:nth-child(4), #job-table td:nth-child(4) { width: 18%; }
+#job-table th:nth-child(5), #job-table td:nth-child(5) { width: 6%; }
+#job-table th:nth-child(6), #job-table td:nth-child(6) { width: 6%; }
+#job-table th:nth-child(7), #job-table td:nth-child(7) { width: 6%; }
+#job-table thead th button, #job-table thead [class*="menu"] { display: none !important; }
+#job-table .header-table th,
+#sessions-table .header-table th {
+    background: #f2f6ff !important;
+    color: var(--hr-ink) !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 9px 8px !important;
+    border-bottom: 1px solid var(--hr-line-2) !important;
+}
+#job-table .virtual-body .virtual-row,
+#sessions-table .virtual-body .virtual-row {
+    background: #ffffff !important;
+    border-bottom: 1px solid #eef2f9;
+    font-size: 13px;
+}
+#job-table .virtual-body .virtual-row.row-odd,
+#sessions-table .virtual-body .virtual-row.row-odd {
+    background: #f7f9ff !important;
+}
+#job-table .virtual-body .virtual-row:hover { background: #eaf0ff !important; }
+
+/* ------------------------------ 8. 弹窗 ------------------------------ */
 /* Gradio 6 没有 Modal 组件，遮罩层只能用普通 Column + CSS 造。
    面板里的组件默认 min-width 很大，不压掉的话 flex 子项会被撑破。 */
 .modal-overlay {
@@ -207,7 +389,9 @@ button.nav-link {
     width: 100vw !important;
     height: 100vh !important;
     z-index: 900 !important;
-    background: rgba(15, 23, 42, 0.45) !important;
+    background: rgba(11, 20, 64, .55) !important;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -219,9 +403,9 @@ button.nav-link {
 }
 .modal-panel {
     background: #ffffff !important;
-    border-radius: 16px !important;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35) !important;
-    padding: 24px !important;
+    border-radius: var(--hr-r-lg) !important;
+    box-shadow: 0 28px 70px rgba(6, 12, 40, .45) !important;
+    padding: 26px !important;
     width: 100% !important;
     max-width: 900px !important;
     min-width: 0 !important;
@@ -229,9 +413,9 @@ button.nav-link {
     margin: 0 !important;
     gap: 14px !important;
 }
-.modal-panel .result-card {line-height: 1.8;}
-.modal-title {font-size: 1.15em; font-weight: 700; margin: 0 0 4px;}
-.modal-hint {color: #64748b; font-size: 13px; line-height: 1.7; margin: 0;}
+.modal-panel .result-card { line-height: 1.8; }
+.modal-title { font-size: 1.15em; font-weight: 700; margin: 0 0 4px; }
+.modal-hint { color: var(--hr-ink-3); font-size: 13px; line-height: 1.7; margin: 0; }
 .modal-danger {
     background: #fef2f2;
     color: #dc2626;
@@ -240,6 +424,36 @@ button.nav-link {
     padding: 14px 16px;
     line-height: 1.8;
 }
+"""
+
+
+HR_WORKBENCH_CSS = """
+/* =============================================================================
+   HR 工作台专属：深蓝英雄条 + 途小跃当页头背景。
+   途小跃.jpg 的四角是纯黑，screen 混合之后黑会整个化成英雄条的深蓝，
+   不会留下一块方形的图片边界。
+   ============================================================================= */
+.page-hero {
+    min-height: 178px;
+    background-image:
+        url('/static/dist/%E9%80%94%E5%B0%8F%E8%B7%83.jpg'),
+        linear-gradient(135deg, var(--hr-navy-2) 0%, var(--hr-navy) 58%, #050a20 100%);
+    background-size: auto 172px, cover;
+    background-position: right 92px center, center center;
+    background-repeat: no-repeat, no-repeat;
+    background-blend-mode: screen, normal;
+}
+.page-hero-title { font-size: 27px !important; }
+"""
+
+
+HR_JOB_MANAGER_CSS = """
+/* =============================================================================
+   岗位管理专属：跟工作台同一条英雄条，但不放吉祥物，
+   右上角只留一个高途大字。
+   ============================================================================= */
+.page-hero { min-height: 116px; }
+.page-hero-title { font-size: 25px !important; }
 """
 
 
@@ -265,9 +479,37 @@ def _logout_form() -> str:
     )
 
 
+def _brand_mark() -> str:
+    """导航行右上角的高途大字。
+
+    静态资源放在 <data_root>/static/dist/ 下，文件名是中文，
+    这里直接写百分号编码后的 URL，省得服务端再转义一次。
+    """
+    return (
+        '<span class="brand-mark">'
+        f'<img src="{BRAND_MARK_URL}" alt="高途" />'
+        "</span>"
+    )
+
+
 def _nav_row(*items: str) -> str:
-    """一行导航。"""
-    return f'<div class="page-nav">{"".join(items)}</div>'
+    """一行导航，右上角挂高途大字。"""
+    return f'<nav class="page-nav">{"".join(items)}{_brand_mark()}</nav>'
+
+
+def _page_header(title: str, subtitle: str = "", nav: str = "") -> str:
+    """整块页头：标题 + 副标题 + 导航行。
+
+    以前标题是 gr.Markdown、导航是 gr.HTML，两个独立的 block，
+    底色会在中间断一道缝。合成一个 header 之后才能画成一条完整的英雄条。
+    """
+    sub = f'<p class="page-hero-sub">{html.escape(subtitle)}</p>' if subtitle else ""
+    return (
+        '<header class="page-hero">'
+        f'<h1 class="page-hero-title">{html.escape(title)}</h1>'
+        f"{sub}{nav}"
+        "</header>"
+    )
 
 
 def _candidate_url(session_id: str, request: gr.Request | None = None) -> str:
@@ -551,10 +793,16 @@ def build_workbench_ui() -> gr.Blocks:
         fill_height=True,
         fill_width=True,
     ) as demo:
-        gr.Markdown("# 简历评测 · HR工作台", elem_classes=["page-title"])
-        # 唯一的跨页入口。Gradio 没有页面跳转 API，Button 只能触发 Python 函数，
+        # 页头。标题和导航合成一个 HTML 块，才能画成一条不断的英雄条。
+        # 导航是唯一的跨页入口：Gradio 没有页面跳转 API，Button 只能触发 Python 函数，
         # 所以这里直接塞一个 <a>，点了走浏览器导航。
-        gr.HTML(_nav_row(_nav_link(JOB_MANAGER_PATH, "岗位管理"), _logout_form()))
+        gr.HTML(
+            _page_header(
+                "简历评测 · HR工作台",
+                "上传简历，生成候选人测评链接，随时查看测评进度与结果。",
+                _nav_row(_nav_link(JOB_MANAGER_PATH, "岗位管理"), _logout_form()),
+            )
+        )
 
         with gr.Row(equal_height=True, elem_id="workbench-row"):
             with gr.Column(scale=5, elem_classes=["workbench-column"]):
@@ -581,7 +829,7 @@ def build_workbench_ui() -> gr.Blocks:
                     created_link = gr.HTML(label="候选人测评链接")
             with gr.Column(scale=7, elem_classes=["workbench-column"]):
                 with gr.Group(elem_id="right-panel"):
-                    gr.Markdown("### 候选人筛选列表")
+                    gr.Markdown("### 测评进度")
                     sessions_table = gr.Dataframe(
                         headers=["候选人", "岗位", "状态", "创建时间"],
                         datatype=["str", "str", "str", "str"],
@@ -721,6 +969,7 @@ def _job_table(
             config.get("create_time") or "",
             "编辑",
             "删除",
+            "知识库",
         ])
     return rows, keys
 
@@ -752,7 +1001,7 @@ def _render_validation(errors: list[str], warnings: list[str]) -> str:
             '<div class="result-card" style="background:#fef2f2;color:#dc2626">'
             f"<strong>校验不通过，共 {len(errors)} 项，保存将被拦截：</strong>"
             f"<ul>{items}</ul>"
-            "<div>如需修正，请展开下方【高级：直接改配置 JSON】修改后再保存。</div>"
+            "<div>如需修正，请调整 JD 后重新生成规则，或联系开发。</div>"
             "</div>"
         )
     if warnings:
@@ -795,25 +1044,17 @@ def _validate_config_text(config_text: str) -> tuple[str, dict | None]:
     return _render_validation(errors, warnings + soft_gap_warnings(normalized)), normalized
 
 
-async def _generate_from_jd(
+async def _read_jd_source(
     jd_path: str | None,
     jd_text: str = "",
     *,
-    job_key: str | None = None,
     empty_hint: str = "请先提供岗位 JD：上传 JD 文件，或在文本框里粘贴 JD 内容。",
-) -> tuple[str, str, str, dict]:
-    """JD → 岗位配置预览。**不落库。**
-
-    返回 (配置 JSON, 状态卡片, JD 原文, 清空文件框的 gr.update())。
-    JD 原文一并回传是为了保存时存进 raw_jd 列，事后能追回这份配置
-    来自哪份 JD。末尾清空文件框，省得 HR 连传第二份时还得手动取消。
+) -> str:
+    """把「上传的文件」和「粘贴/编辑的文本」合成一份 JD 原文。
 
     JD 有两个来源：上传的文件和直接粘贴/编辑的文本。传了文件就用文件
     （HR 特意传了文件就是要用这一份），没传文件就用文本框里的内容。
-
-    job_key 传了就锁死：生成器会自己按 JD 猜一个 key，编辑老岗位时
-    猜出来的新 key 会把配置挂到另一个岗位名下，等于凭空多一个岗位、
-    老岗位还是旧规则 —— 这正是需求里「job_key 不变」要防的事。
+    两样都没有 → 报错，并把 empty_hint 原样抛出去。
     """
     source_jd = jd_text or ""
 
@@ -835,8 +1076,33 @@ async def _generate_from_jd(
     if not source_jd.strip():
         raise gr.Error(empty_hint)
 
+    return source_jd
+
+
+async def _generate_from_jd(
+    jd_path: str | None,
+    jd_text: str = "",
+    *,
+    job_key: str | None = None,
+    key_points: str = "",
+    empty_hint: str = "请先提供岗位 JD：上传 JD 文件，或在文本框里粘贴 JD 内容。",
+) -> tuple[str, str, str, dict]:
+    """JD → 岗位配置预览。**不落库。**
+
+    返回 (配置 JSON, 状态卡片, JD 原文, 清空文件框的 gr.update())。
+    JD 原文一并回传是为了保存时存进 raw_jd 列，事后能追回这份配置
+    来自哪份 JD。末尾清空文件框，省得 HR 连传第二份时还得手动取消。
+
+    job_key 传了就锁死：生成器会自己按 JD 猜一个 key，编辑老岗位时
+    猜出来的新 key 会把配置挂到另一个岗位名下，等于凭空多一个岗位、
+    老岗位还是旧规则 —— 这正是需求里「job_key 不变」要防的事。
+    """
+    source_jd = await _read_jd_source(jd_path, jd_text, empty_hint=empty_hint)
+
     try:
-        result = await JobConfigGenerator().generate(source_jd, job_key=job_key)
+        result = await JobConfigGenerator().generate(
+            source_jd, job_key=job_key, key_points=key_points
+        )
     except JobGenerationError as exc:
         raise gr.Error(f"岗位配置生成失败：{exc}") from exc
 
@@ -861,13 +1127,15 @@ async def _generate_from_jd(
 async def generate_job_config(
     jd_path: str | None,
     jd_text: str = "",
+    key_points: str = "",
 ) -> tuple[str, str, str, dict, str]:
     """新增岗位：JD（上传文件或直接粘贴）→ 生成配置预览。不落库。
 
     返回 (配置 JSON, 状态卡片, 用到的 JD 原文, 清空文件框, 写回文本框的 JD)。
     """
     config_json, status, used_jd, file_update = await _generate_from_jd(
-        jd_path, jd_text, empty_hint="请先上传岗位 JD 文件，或在文本框里粘贴 JD 内容。"
+        jd_path, jd_text, key_points=key_points,
+        empty_hint="请先上传岗位 JD 文件，或在文本框里粘贴 JD 内容。"
     )
     return config_json, status, used_jd, file_update, used_jd
 
@@ -876,6 +1144,7 @@ async def regenerate_job_config(
     jd_path: str | None,
     job_key: str = "",
     jd_text: str = "",
+    key_points: str = "",
 ) -> tuple[str, str, str, dict, str]:
     """编辑岗位：按 JD 重新生成规则。job_key 锁死为原值。
 
@@ -888,7 +1157,7 @@ async def regenerate_job_config(
     if not job_key:
         raise gr.Error("没有正在编辑的岗位，请重新从列表点【编辑】。")
     config_json, status, used_jd, file_update = await _generate_from_jd(
-        jd_path, jd_text, job_key=job_key
+        jd_path, jd_text, job_key=job_key, key_points=key_points
     )
     return config_json, status, used_jd, file_update, used_jd
 
@@ -902,6 +1171,14 @@ def _persist_config(config_text: str, raw_jd: str | None) -> tuple[str, str]:
     parsed, error = _parse_config_text(config_text)
     if parsed is None:
         return _notice(error), ""
+
+    # 模型生成的配置会带 _gen_source 标记（auto_llm / key_points），
+    # 落库前剥掉并据它设 source_type。没有这个标记 = HR 手写 JSON → manual。
+    gen_source = parsed.pop("_gen_source", None)
+    if gen_source in ("auto_llm", "key_points"):
+        source_type = gen_source
+    else:
+        source_type = "manual"
 
     job_key = parsed.get("job_key")
     if not job_key:
@@ -921,7 +1198,7 @@ def _persist_config(config_text: str, raw_jd: str | None) -> tuple[str, str]:
         # 变成同一件事：清空 JD 会被当成「没改」，库里的旧 JD 一直留着。
         save_job_config(
             parsed,
-            source_type="auto_llm",
+            source_type=source_type,
             raw_jd=raw_jd.strip() if isinstance(raw_jd, str) else None,
         )
     except JobNameTakenError as exc:
@@ -1064,13 +1341,41 @@ def delete_job_from_ui(
     return status, status, gr.update(visible=False), rows, keys
 
 
+def save_knowledge(
+    job_key: str | None,
+    content: str,
+) -> tuple[str, dict]:
+    """保存岗位知识库：整份覆盖写入 rag_docs.db。
+
+    候选人深度问答（排班、KPI、提成等）检索的就是这份内容。
+    保存后立即生效，不需要重启。
+    """
+    if not job_key:
+        raise gr.Error("请先从列表选择一个岗位。")
+    content = (content or "").strip()
+    if not content:
+        raise gr.Error("知识库内容不能为空。如果要清空，请点【清空】按钮。")
+    save_rag_document(rag_doc_id=job_key, job_key=job_key, content=content, title=job_key)
+    status = _notice("知识库已保存，候选人提问时立即生效。", tone="ok")
+    return status, gr.update(visible=False)
+
+
+def clear_knowledge(job_key: str | None) -> tuple[str, dict, str]:
+    """清空岗位知识库。"""
+    if not job_key:
+        raise gr.Error("请先从列表选择一个岗位。")
+    delete_rag_document(job_key)
+    status = _notice("知识库已清空。", tone="ok")
+    return status, gr.update(visible=False), ""
+
+
 # -- 弹窗开关 ---------------------------------------------------------------
 
 
-def open_create_modal() -> tuple[dict, dict, dict, dict, dict, str]:
-    """打开【新增岗位】。每次都清空上一次残留的 JD 和 JSON。
+def open_create_modal() -> tuple[dict, dict, dict, dict, dict, str, dict]:
+    """打开【新增岗位】。每次都清空上一次残留的 JD、JSON、打分关键点。
 
-    返回 (弹窗可见性, 文件框, JD 文本框, JSON 编辑器, 状态卡片, 基准 JD)。
+    返回 (弹窗可见性, 文件框, JD 文本框, JSON 编辑器, 状态卡片, 基准 JD, 打分关键点)。
     """
     return (
         gr.update(visible=True),
@@ -1079,6 +1384,7 @@ def open_create_modal() -> tuple[dict, dict, dict, dict, dict, str]:
         gr.update(value=""),
         gr.update(value=""),
         "",
+        gr.update(value=""),
     )
 
 
@@ -1089,33 +1395,51 @@ def _close_modal() -> dict:
 def select_job_action(
     ev: gr.SelectData,
     keys: list[str],
-) -> tuple[str, str, dict, str, str, str, str, dict, dict, dict, str]:
-    """点岗位列表的【编辑】/【删除】列 → 打开对应弹窗。
+) -> tuple:
+    """点岗位列表的【编辑】/【删除】/【知识库】列 → 打开对应弹窗。
 
     返回 (岗位 key, 原始 JD(基准), 编辑弹窗可见性, 编辑区信息,
     JD 文本框, 编辑区 JSON, 编辑区状态, 编辑区文件框, JD 同步提示,
-    删除弹窗可见性, 删除区信息)。
+    打分关键点,
+    删除弹窗可见性, 删除区信息,
+    知识库弹窗可见性, 知识库文本框, 知识库头部信息)。
 
-    JD 文本框拿到的是这个岗位现在存着的 JD 原文，**是可编辑的输入框**。
-    以前这里只把 JD 用 HTML 画出来（.jd-preview），看着像正文其实是图片，
-    鼠标点上去打不了字、删不掉、也粘不进去 —— 只能整段重传文件。
+    打分关键点每次都清空 —— 那是上一个岗位的东西，
+    留着的话 HR 会对着一棵不相关的树做决定。
 
     只认列号，不看单元格文字：文案以后改成「编辑 ✎」之类，
     按文字匹配就全废了。
     """
     hidden = gr.update(visible=False)
+    kb_hidden = gr.update(visible=False)
+    blank = gr.update(value="")
     index = list(getattr(ev, "index", None) or [])
     if len(index) < 2:
-        return "", "", hidden, "", "", "", "", hidden, "", hidden, ""
+        return "", "", hidden, "", "", "", "", hidden, "", blank, hidden, "", kb_hidden, "", ""
 
     row, col = int(index[0]), int(index[1])
     if not (0 <= row < len(keys or [])):
-        return "", "", hidden, "", "", "", "", hidden, "", hidden, ""
+        return "", "", hidden, "", "", "", "", hidden, "", blank, hidden, "", kb_hidden, "", ""
 
     job_key = keys[row]
     record = get_job_config(job_key, include_deleted=True) or {}
     config = get_job_config_object(job_key) or {}
     job_name = config.get("job_name") or job_key
+
+    # 点【知识库】→ 打开知识库维护弹窗
+    if col == COL_KB:
+        kb_content = get_rag_document_content(job_key)
+        kb_info = (
+            f'<div class="modal-hint">岗位：<strong>{html.escape(job_name)}</strong>'
+            f" —— 这里维护候选人深度问答的补充知识（排班、KPI、提成等）。"
+            f"保存后整份覆盖，立即生效。</div>"
+        )
+        return (
+            "", "", hidden, "", "", "", "", hidden, "",
+            blank,
+            hidden, "",
+            gr.update(visible=True), kb_content, kb_info,
+        )
 
     # 点【JD】那格和点【编辑】是同一件事：都是打开编辑弹窗看/改这个岗位。
     if col in (COL_JD, COL_EDIT):
@@ -1131,8 +1455,10 @@ def select_job_action(
             "",
             gr.update(value=None),                     # 清空文件框
             _jd_sync_hint(raw_jd, raw_jd),
+            blank,                                      # 打分关键点
             hidden,
             "",
+            kb_hidden, "", "",
         )
 
     if col == COL_DELETE:
@@ -1146,12 +1472,14 @@ def select_job_action(
             "",
             hidden,
             "",
+            blank,
             gr.update(visible=True),
             _delete_info_html(job_name),
+            kb_hidden, "", "",
         )
 
     # 点到姓名/来源/时间列：不是操作，不弹窗
-    return "", "", hidden, "", "", "", "", hidden, "", hidden, ""
+    return "", "", hidden, "", "", "", "", hidden, "", blank, hidden, "", kb_hidden, "", ""
 
 
 def _edit_info_html(job_name: str, raw_jd: str) -> str:
@@ -1200,11 +1528,14 @@ def build_job_manager_ui() -> gr.Blocks:
         fill_height=True,
         fill_width=True,
     ) as demo:
-        gr.Markdown("# 岗位管理", elem_classes=["page-title"])
         gr.HTML(
-            _nav_row(
-                _nav_link(WORKBENCH_PATH, "← 返回测评工作台", secondary=True),
-                _logout_form(),
+            _page_header(
+                "岗位管理",
+                "维护岗位 JD 与打分规则；改动会立刻影响新建的候选人测评。",
+                _nav_row(
+                    _nav_link(WORKBENCH_PATH, "← 返回HR工作台", secondary=True),
+                    _logout_form(),
+                ),
             )
         )
 
@@ -1214,19 +1545,16 @@ def build_job_manager_ui() -> gr.Blocks:
 
         with gr.Row():
             add_button = gr.Button("+ 新增岗位", variant="primary", scale=0)
-            table_note = gr.Markdown(
-                "岗位由 JD 自动生成规则。新增/编辑都走「上传或粘贴 JD → 生成规则 → 保存」。",
-                scale=1,
-            )
+            kb_button = gr.Button("知识库更新", scale=0)
 
         job_table = gr.Dataframe(
-            headers=["岗位名称", "JD", "来源", "创建时间", "编辑", "删除"],
-            datatype=["str"] * 6,
+            headers=["岗位名称", "岗位JD", "来源", "创建时间", "编辑", "删除", "知识库"],
+            datatype=["str"] * 7,
             value=rows,
             interactive=False,
-            wrap=True,
+            wrap=False,
             max_height=320,
-            label="岗位列表（点【JD】【编辑】或【删除】所在的那一格）",
+            label="岗位列表（点【编辑】【删除】或【知识库】所在的那一格）",
             elem_id="job-table",
         )
 
@@ -1257,22 +1585,29 @@ def build_job_manager_ui() -> gr.Blocks:
                     max_lines=20,
                     interactive=True,
                 )
+                new_key_points = gr.Textbox(
+                    label="岗位筛选打分关键点（选填）",
+                    placeholder=(
+                        "想人工指定怎么筛，就写在这里，一行一条。\n"
+                        "例如：\n"
+                        "本科及以上，学信网可查\n"
+                        "同专业优先，机械/自动化优先\n"
+                        "近三年有 3D 建模或 CAM 软件经验加分\n"
+                        "接受长期出差"
+                    ),
+                    lines=5,
+                    max_lines=12,
+                    interactive=True,
+                )
                 new_generate = gr.Button("根据 JD 生成规则", variant="primary")
                 new_status = gr.HTML()
-                with gr.Accordion("高级：直接改配置 JSON", open=False):
-                    gr.Markdown(
-                        "给开发/测试用：生成完想微调分值或阈值，直接改这里。"
-                        "HR 日常不用展开。"
-                    )
+                with gr.Accordion("查看岗位 JSON", open=False):
                     new_editor = gr.Code(
                         label="岗位配置 JSON",
                         language="json",
                         value="",
                         lines=20,
-                        # 显式打开：Gradio 6 的 interactive 默认是 None，
-                        # 实际能不能编辑要看前端回退。这个框存在的意义就是让人改，
-                        # 不能赌默认值。
-                        interactive=True,
+                        interactive=False,
                     )
                 with gr.Row():
                     new_cancel = gr.Button("取消", scale=1)
@@ -1297,18 +1632,25 @@ def build_job_manager_ui() -> gr.Blocks:
                     interactive=True,
                 )
                 edit_sync_hint = gr.HTML()
+                edit_key_points = gr.Textbox(
+                    label="岗位筛选打分关键点（选填）",
+                    placeholder=(
+                        "想人工指定怎么筛，就写在这里，一行一条。留空就完全按 JD 拆。\n"
+                        "例如：本科及以上；同专业优先；接受长期出差"
+                    ),
+                    lines=4,
+                    max_lines=12,
+                    interactive=True,
+                )
                 edit_generate = gr.Button("根据 JD 重新生成规则")
                 edit_status = gr.HTML()
-                with gr.Accordion("高级：直接改配置 JSON", open=False):
-                    gr.Markdown(
-                        "改分值、阈值、勾选项都直接改这里，不用重新调模型。"
-                    )
+                with gr.Accordion("查看岗位 JSON", open=False):
                     edit_editor = gr.Code(
                         label="岗位配置 JSON",
                         language="json",
                         value="",
                         lines=20,
-                        interactive=True,
+                        interactive=False,
                     )
                 with gr.Row():
                     edit_cancel = gr.Button("取消", scale=1)
@@ -1324,15 +1666,43 @@ def build_job_manager_ui() -> gr.Blocks:
                     delete_cancel = gr.Button("取消", scale=1)
                     delete_confirm = gr.Button("确认删除", variant="stop", scale=1)
 
+        # ---- 知识库维护弹窗 ----
+        with gr.Column(
+            visible=False, elem_id="kb-modal", elem_classes=["modal-overlay"]
+        ) as knowledge_modal:
+            with gr.Column(elem_classes=["modal-panel"]):
+                kb_info = gr.HTML()
+                knowledge_text = gr.Textbox(
+                    label="补充知识库 Q&A",
+                    placeholder="Q：有没有排班制？\nA：大小周，工作日早9晚6。\n\nQ：提成怎么算？\nA：阶梯式 8%-20%。",
+                    lines=15,
+                    max_lines=30,
+                    interactive=True,
+                )
+                with gr.Row():
+                    kb_cancel = gr.Button("取消", scale=1)
+                    kb_clear = gr.Button("清空", scale=1)
+                    kb_save = gr.Button("保存", variant="primary", scale=1)
+
         # ---- 事件接线 ----
         add_button.click(
             open_create_modal,
-            outputs=[create_modal, new_jd_file, new_jd_text, new_editor, new_status, new_raw_jd],
+            outputs=[
+                create_modal, new_jd_file, new_jd_text, new_editor, new_status,
+                new_raw_jd, new_key_points,
+            ],
+        )
+        kb_button.click(
+            lambda: _notice(
+                "请在岗位列表中点击某行的「知识库」列，维护该岗位的补充问答（排班、KPI、提成等）。",
+                tone="warn",
+            ),
+            outputs=[job_status],
         )
         new_cancel.click(_close_modal, outputs=create_modal)
         new_generate.click(
             generate_job_config,
-            inputs=[new_jd_file, new_jd_text],
+            inputs=[new_jd_file, new_jd_text, new_key_points],
             outputs=[new_editor, new_status, new_raw_jd, new_jd_file, new_jd_text],
         )
         new_save.click(
@@ -1344,7 +1714,7 @@ def build_job_manager_ui() -> gr.Blocks:
         edit_cancel.click(_close_modal, outputs=edit_modal)
         edit_generate.click(
             regenerate_job_config,
-            inputs=[edit_jd_file, active_job_key, edit_jd_text],
+            inputs=[edit_jd_file, active_job_key, edit_jd_text, edit_key_points],
             outputs=[edit_editor, edit_status, active_raw_jd, edit_jd_file, edit_jd_text],
         )
         edit_save.click(
@@ -1368,13 +1738,28 @@ def build_job_manager_ui() -> gr.Blocks:
             outputs=[delete_info, job_status, delete_modal, job_table, row_keys],
         )
 
+        # 知识库弹窗接线
+        kb_cancel.click(_close_modal, outputs=knowledge_modal)
+        kb_save.click(
+            save_knowledge,
+            inputs=[active_job_key, knowledge_text],
+            outputs=[job_status, knowledge_modal],
+        )
+        kb_clear.click(
+            clear_knowledge,
+            inputs=[active_job_key],
+            outputs=[job_status, knowledge_modal, knowledge_text],
+        )
+
         job_table.select(
             select_job_action,
             inputs=[row_keys],
             outputs=[
                 active_job_key, active_raw_jd, edit_modal, edit_info,
                 edit_jd_text, edit_editor, edit_status, edit_jd_file,
-                edit_sync_hint, delete_modal, delete_info,
+                edit_sync_hint, edit_key_points,
+                delete_modal, delete_info,
+                knowledge_modal, knowledge_text, kb_info,
             ],
         )
 

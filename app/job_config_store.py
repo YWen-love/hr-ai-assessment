@@ -24,7 +24,11 @@ from typing import Any, Dict, Iterator, List, Optional
 from app.job_schema import normalize_job_config, split_issues, validate_job_config
 from app.paths import data_root, resource_path
 
-VALID_SOURCE_TYPES = ("auto_llm", "manual")
+# 来源优先级（从低到高）：
+#   auto_llm   —— 模型纯根据 JD 生成的，最低优先级，开发者手动 json 可覆盖
+#   key_points —— HR 在工作台输入打分关键点后模型生成的
+#   manual     —— 开发者写在 job_configs/*.json 里的，或 HR 手动编辑 JSON 保存的，最高
+VALID_SOURCE_TYPES = ("auto_llm", "key_points", "manual")
 VALID_REVIEW_STATUS = ("pending", "reviewed")
 
 TABLE_NAME = "job_config_table"
@@ -705,11 +709,34 @@ def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
             config.get("job_name"),
         )
 
-        if existing and not overwrite:
-            # 已经在库里了：不能用文件里的 config_json 覆盖 HR 在后台改过的东西，
+        existing_source = (existing or {}).get("source_type")
+
+        # 优先级覆盖规则：
+        #   - 库里没有 → 直接新增
+        #   - 库里是 auto_llm（模型纯 JD 生成，最低优先级）→ 用开发者 json 覆盖，
+        #     source_type 升为 manual
+        #   - 库里是 key_points 或 manual（更高优先级）→ 不覆盖配置，只补 raw_jd
+        #   - overwrite=True 强制覆盖所有（运维用，正常启动不走）
+        if existing and not overwrite and existing_source != "auto_llm":
+            # 库里已经是更高优先级的来源，不能用文件里的 config_json 覆盖，
             # 但 JD 原文是空的话可以顺手补上 —— 只动 raw_jd 一列。
             _backfill_raw_jd(job_key, file_jd or intro_jd)
             continue
+
+        # overwrite=True 或 existing_source == "auto_llm" 时：
+        # 先比对文件 config 和库里 config_json，内容没变就跳过，避免无谓的覆盖操作。
+        if existing and overwrite:
+            existing_json = (existing.get("config_json") or "").strip()
+            new_json = json.dumps(config, ensure_ascii=False, sort_keys=True)
+            existing_sorted = ""
+            try:
+                existing_sorted = json.dumps(json.loads(existing_json), ensure_ascii=False, sort_keys=True)
+            except (ValueError, TypeError):
+                pass
+            if existing_sorted == new_json:
+                # 内容没变，跳过
+                _backfill_raw_jd(job_key, file_jd or intro_jd)
+                continue
 
         if existing and not file_jd:
             # 强制覆盖配置时，不用岗位介绍去盖掉 HR 亲手维护的 JD 原文。
@@ -719,13 +746,29 @@ def seed_from_files(config_dir, *, overwrite: bool = False) -> List[str]:
             jd_to_write = file_jd or intro_jd or None
 
         # 文件里的配置视为人工维护，默认直接生效
+        # 库里已有记录时：
+        #   - 原 source_type 是 auto_llm（模型纯 JD 生成）→ 开发者 json 覆盖，升为 manual
+        #   - 原 source_type 是 key_points/manual → 保留（更高优先级不动）
+        # overwrite=True 强制覆盖时也保留原 source_type，不重置
         try:
-            save_job_config(
-                config,
-                source_type="manual",
-                review_status="reviewed",
-                raw_jd=jd_to_write,
-            )
+            if existing:
+                promoted_source = (
+                    "manual" if existing_source == "auto_llm"
+                    else existing_source
+                )
+                save_job_config(
+                    config,
+                    source_type=promoted_source,
+                    review_status=existing.get("review_status", "reviewed"),
+                    raw_jd=jd_to_write,
+                )
+            else:
+                save_job_config(
+                    config,
+                    source_type="manual",
+                    review_status="reviewed",
+                    raw_jd=jd_to_write,
+                )
         except JobNameTakenError as exc:
             # 文件里的岗位名和库里某个岗位撞了。种子化不该因为这个把
             # 服务启动搞崩（那是 HR 自己在后台建出来的同名岗位），

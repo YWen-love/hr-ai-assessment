@@ -123,15 +123,25 @@ class JobConfigGenerator:
         jd_text: str,
         *,
         job_key: Optional[str] = None,
+        key_points: str = "",
     ) -> Dict[str, Any]:
         """把 JD 转成岗位配置。**只返回预览，不落库。**
 
+        key_points 是 HR 手动输入的打分关键点，优先级高于 JD 自动生成。
         返回 {config, errors, warnings} —— errors 非空时配置不可保存，
         warnings 表示可保存但建议人工确认。
         """
         text = (jd_text or "").strip()
         if not text:
             raise JobGenerationError("JD 内容为空")
+
+        user_message = f"岗位 JD：\n{text}"
+        key_points_clean = (key_points or "").strip()
+        if key_points_clean:
+            user_message += (
+                f"\n\n【HR 手动指定的打分关键点，必须优先参考，分值 0~2】\n"
+                f"{key_points_clean}"
+            )
 
         system_prompt = (
             JD_TO_CONFIG_SYSTEM_PROMPT
@@ -144,7 +154,7 @@ class JobConfigGenerator:
 
         try:
             raw = await self.client.chat_json(
-                system_prompt, f"岗位 JD：\n{text}"
+                system_prompt, user_message
             )
         except Exception as exc:
             logger.exception("JD 生成失败")
@@ -155,7 +165,10 @@ class JobConfigGenerator:
 
         notes: List[str] = []
         config = _build_config(raw, jd_hint=text, job_key=job_key, notes=notes)
-        errors, warnings = _validate(config)
+        # 生成来源标记：保存时据它决定 source_type，落库前会被剥掉，不进 config_json。
+        # 有打分关键点 → key_points（中优先级），纯 JD → auto_llm（最低优先级）。
+        config["_gen_source"] = "key_points" if key_points_clean else "auto_llm"
+        errors, warnings = _validate(config, enforce_score_02=True)
         # 模型给的规则一条都用不上时，提示排在最前面 —— 这是最需要人看的一条
         warnings = notes + warnings
 
@@ -189,6 +202,20 @@ def _build_config(
     score_rules, note = _merge_score_rules(raw.get("score_rules"))
     if note and notes is not None:
         notes.append(note)
+
+    # 强制分值范围 0~2：模型可能生成 3 分、4 分，截断到 0/1/2
+    for group_key in ("add_score", "minus_score"):
+        for rule in score_rules.get(group_key, []):
+            if isinstance(rule, dict):
+                raw_score = rule.get("score", 0)
+                try:
+                    s = int(raw_score)
+                except (TypeError, ValueError):
+                    s = 0
+                if s > 2:
+                    rule["score"] = 2
+                elif s < 0:
+                    rule["score"] = 0
 
     config: Dict[str, Any] = {
         "job_key": job_key or raw.get("job_key") or _guess_job_key(
@@ -286,13 +313,29 @@ def _group_entries(raw: Dict[str, Any]) -> Dict[str, List[Any]]:
     return picked
 
 
-def _validate(config: Dict[str, Any]) -> Tuple[List[str], List[str]]:
+def _validate(config: Dict[str, Any], *, enforce_score_02: bool = False) -> Tuple[List[str], List[str]]:
     """校验。errors 必须修，warnings 建议人工确认。
 
     走的是和保存入库同一个校验器，同一套分段口径 ——
     预览说「能存」的结果如果被保存拦下，HR 会以为页面坏了。
+
+    enforce_score_02=True 时（仅模型生成路径），强制每条加分/扣分项的分值
+    只能是 0/1/2；手动配置（json 文件、HR 手改 JSON）不受此限。
     """
     errors, warnings = split_issues(validate_job_config(config))
+
+    if enforce_score_02:
+        rules = config.get("score_rules") or {}
+        for group in ("add_score", "minus_score"):
+            for index, rule in enumerate(rules.get(group) or []):
+                if not isinstance(rule, dict):
+                    continue
+                score = rule.get("score")
+                if isinstance(score, bool) or not isinstance(score, int) or score not in (0, 1, 2):
+                    errors.append(
+                        f"score_rules.{group}[{index}]（{rule.get('id') or '未命名'}）"
+                        f"的 score={score!r}，模型生成的规则分值只能取 0、1、2"
+                    )
 
     warnings.extend(soft_gap_warnings(config))
     warnings.append(

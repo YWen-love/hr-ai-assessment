@@ -79,9 +79,6 @@ class Settings:
     _env_max_age = os.getenv("SESSION_MAX_AGE", "").strip()
     SESSION_MAX_AGE: Optional[int] = int(_env_max_age) if _env_max_age else None
 
-    # 静态资源目录中的背景图文件名（启动时检测存在性）
-    BACKGROUND_IMAGE_NAME: str = os.getenv("BACKGROUND_IMAGE_NAME", "bg.jpg")
-
     # ------------------------------------------------------------------
     # LLM 提供方解析：一处切换，URL/Key/模型全部随之切换
     # ------------------------------------------------------------------

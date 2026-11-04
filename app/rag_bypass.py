@@ -36,7 +36,7 @@ _CHUNK_OVERLAP = 120
 _TOP_K = 4
 
 # 检索不到任何资料时的兜底。这不是"装作答了"，是如实告知并立刻回归主线。
-NO_CONTEXT_ANSWER = "这个我这边暂时没有查到准确的说法，我帮你转给 HR 确认一下。"
+NO_CONTEXT_ANSWER = "途途这边还无法确认，后续可以和HR以电话的形式沟通。"
 
 
 # ---------------------------------------------------------------------------
@@ -129,6 +129,57 @@ def delete_rag_document(rag_doc_id: str) -> None:
         conn.commit()
 
 
+def get_rag_document_content(rag_doc_id: str) -> str:
+    """读出某岗位知识库的全文（所有 chunk 按顺序拼起来）。
+
+    岗位管理页打开"知识库维护"弹窗时用：把当前存着的 Q&A 原文
+    填进文本框，HR 直接在上面改，保存时整份覆盖。
+    """
+    if not rag_doc_id:
+        return ""
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT content FROM rag_chunks WHERE rag_doc_id = ? ORDER BY chunk_index",
+            (rag_doc_id,),
+        ).fetchall()
+    return "\n\n".join(row["content"] for row in rows)
+
+
+def seed_rag_from_files(directory=None) -> List[str]:
+    """扫描目录下的 .md 文件，按文件名（去 .md）作为 rag_doc_id 灌入 rag_docs.db。
+
+    每个文件对应一个岗位的补充知识库 Q&A。文件名就是 job_key，
+    例如 education_learning_consultant.md → rag_doc_id=education_learning_consultant。
+    重复导入是覆盖式的（save_rag_document 先 DELETE 再 INSERT），可安全重复执行。
+    """
+    if directory is None:
+        directory = data_root()
+    directory = Path(directory)
+    if not directory.is_dir():
+        return []
+
+    imported: List[str] = []
+    for path in sorted(directory.glob("*.md")):
+        rag_doc_id = path.stem  # 文件名去掉 .md
+        try:
+            content = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if not content.strip():
+            continue
+        try:
+            save_rag_document(
+                rag_doc_id=rag_doc_id,
+                job_key=rag_doc_id,
+                content=content,
+                title=rag_doc_id,
+            )
+            imported.append(rag_doc_id)
+        except Exception:  # noqa: BLE001 - 一个文件失败不影响其他岗位
+            logger.exception("灌 RAG 文档失败：%s", path.name)
+    return imported
+
+
 def retrieve(rag_doc_id: str, question: str, *, top_k: int = _TOP_K) -> List[str]:
     """按 rag_doc_id 检索片段。
 
@@ -138,8 +189,8 @@ def retrieve(rag_doc_id: str, question: str, *, top_k: int = _TOP_K) -> List[str
     if not rag_doc_id:
         return []
 
-    query_tokens = set(tokenize(question or ""))
-    if not query_tokens:
+    question = (question or "").strip()
+    if not question:
         return []
 
     with _connect() as conn:
@@ -150,7 +201,7 @@ def retrieve(rag_doc_id: str, question: str, *, top_k: int = _TOP_K) -> List[str
 
     scored: List[tuple[int, int, str]] = []
     for row in rows:
-        score = _overlap_score(query_tokens, row["content"])
+        score = _overlap_score(question, row["content"])
         if score > 0:
             scored.append((score, row["chunk_index"], row["content"]))
 
@@ -158,31 +209,41 @@ def retrieve(rag_doc_id: str, question: str, *, top_k: int = _TOP_K) -> List[str
     return [content for _, _, content in scored[:top_k]]
 
 
-def _overlap_score(query_tokens: set[str], content: str) -> int:
-    """bigram 命中计数。无向量库依赖，对短问句够用。"""
-    if not query_tokens:
-        return 0
-    content_tokens = set(tokenize(content))
-    return len(query_tokens & content_tokens)
+def _bigrams(text: str) -> set:
+    """提取字符级 bigram，去掉空白和标点，不区分大小写。"""
+    import re
+    cleaned = re.sub(r"[\s\W_]+", "", text).lower()
+    return {cleaned[i : i + 2] for i in range(len(cleaned) - 1)} if len(cleaned) >= 2 else set()
+
+
+def _overlap_score(question: str, content: str) -> int:
+    """字符 bigram 命中计数。
+
+    整词匹配召回率太差：候选人问"团队销售多吗"，文档写"销售多吗"，
+    按分隔符切词两者完全不相交。字符 bigram 能命中"销售""售多""多吗"
+    这三个共有片段，口语化问法也能对上。
+    """
+    q_bigrams = _bigrams(question)
+    c_bigrams = _bigrams(content)
+    return len(q_bigrams & c_bigrams)
 
 
 def _split(content: str) -> List[str]:
-    """按段落切，段落过长再按句子切，最后按字符硬切并保留重叠。"""
+    """按空行切分：每个 Q&A 块独立成 chunk。
+
+    之前把所有段落攒到 700 字才切，结果整篇文档变成一个 chunk，
+    检索命中后大模型拿到的是全部 Q&A，不精准。
+    现在每个 Q&A（Q行+A行）独立成块，检索能直接命中对应那条。
+    """
     chunks: List[str] = []
-    buffer = ""
-    for paragraph in (content or "").split("\n"):
-        paragraph = paragraph.strip()
-        if not paragraph:
+    for block in (content or "").split("\n\n"):
+        block = block.strip()
+        if not block:
             continue
-        while len(paragraph) > _CHUNK_SIZE:
-            head, paragraph = paragraph[: _CHUNK_SIZE - _CHUNK_OVERLAP], paragraph[_CHUNK_SIZE - _CHUNK_OVERLAP :]
+        while len(block) > _CHUNK_SIZE:
+            head, block = block[: _CHUNK_SIZE - _CHUNK_OVERLAP], block[_CHUNK_SIZE - _CHUNK_OVERLAP :]
             chunks.append(head.strip())
-        buffer = f"{buffer}\n{paragraph}".strip() if buffer else paragraph
-        if len(buffer) >= _CHUNK_SIZE:
-            chunks.append(buffer.strip())
-            buffer = ""
-    if buffer:
-        chunks.append(buffer.strip())
+        chunks.append(block)
     return [c for c in chunks if c]
 
 
@@ -207,7 +268,7 @@ class RagAnswer:
 
 
 RAG_BYPASS_SYSTEM_PROMPT = """
-你是招聘方，回答候选人在测评过程中提出的深度咨询问题。
+你是途途测评小助手，回答候选人在测评过程中提出的岗位咨询问题。你不是HR本人，是帮HR做初筛沟通的AI助手。
 
 【可用的参考资料】
 {{context}}

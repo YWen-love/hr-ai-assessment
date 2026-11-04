@@ -142,6 +142,20 @@ def is_valid_field(dotted: str) -> bool:
     return dotted in FIELD_TYPES
 
 
+def operators_for_field(dotted: str) -> set[str]:
+    """某个字段允许用的运算符集合。
+
+    对外公开：拼规则的地方（打分树工具）要按字段类型自己挑运算符，
+    让调用方去摸 _OPERATORS_BY_TYPE 私有表，等于把「op 必须配得上 field」
+    这条硬约束藏起来 —— 藏起来的那天就会有人写出 not_equals 配数组这种
+    恒真条件，然后所有人都拿到满分还没查出来。
+    """
+    ftype = FIELD_TYPES.get(dotted)
+    if ftype is None:
+        return set()
+    return set(_OPERATORS_BY_TYPE.get(ftype, set()))
+
+
 # ---------------------------------------------------------------------------
 # 单条打分规则求值
 # ---------------------------------------------------------------------------
@@ -173,21 +187,36 @@ def evaluate_rule(rule: Dict[str, Any], tags: Dict[str, Any]) -> bool:
 def score_rules_for(config: Dict[str, Any], tags: Dict[str, Any]) -> Tuple[int, List[Dict[str, Any]]]:
     """按配置计算总分与命中明细。
 
-    返回 (总分, 命中明细列表)。明细用于给 HR 解释"为什么是这个分数"，
-    也是 regression test 的比对基线。
+    打分规则：同 field（同维度）内取最高分，不累积；不同 field 之间累加。
+    例如 field=exp_tags 有三条规则：课程销售=2分、销售=1分、教师=0分，
+    简历命中"课程销售"就给2分，不再叠加"销售"的1分。
+
+    返回 (总分, 命中明细列表)。明细用于给 HR 解释"为什么是这个分数"。
     """
     rules = (config.get("score_rules") or {})
     total = 0
     hits: List[Dict[str, Any]] = []
 
-    for rule in _iter_rules(rules.get("add_score")):
-        if evaluate_rule(rule, tags):
-            total += int(rule.get("score", 0))
-            hits.append(rule)
+    # add_score：按 field 分组，同 field 内取最高分
+    add_rules = _iter_rules(rules.get("add_score"))
+    # 按 field 分组
+    by_field: Dict[str, List[Dict[str, Any]]] = {}
+    no_field: List[Dict[str, Any]] = []
+    for rule in add_rules:
+        f = rule.get("field") or "_no_field"
+        by_field.setdefault(f, []).append(rule)
+
+    for f, group in by_field.items():
+        # 同 field 内按分值从高到低排序
+        group.sort(key=lambda r: int(r.get("score", 0)), reverse=True)
+        for rule in group:
+            if evaluate_rule(rule, tags):
+                total += int(rule.get("score", 0))
+                hits.append(rule)
+                break  # 命中最高档，同 field 不再往下看
 
     for rule in _iter_rules(rules.get("minus_score")):
         if evaluate_rule(rule, tags):
-            # minus_score 里 score 记正数，方向由所在分组决定，避免 AI 写出 -2 又被减一次
             total -= abs(int(rule.get("score", 0)))
             hits.append(rule)
 
@@ -916,12 +945,12 @@ def score_rule_table_for_prompt() -> str:
             "简历解析只按 exp_keywords 捞标签，词表里没有的词永远匹配不上，"
             "规则等于不存在。",
             "is_true / is_false / is_empty 不需要 value。",
-            "- score：整数，加分项建议 1-10 分。",
+            "- score：整数，加分项只能取 0、1、2 三档（2=强匹配，1=弱匹配，0=不加分）。",
             "- desc：一句话说明这条规则为什么加分，HR 要靠它理解。",
             "只有当一条要求必须同时满足多个字段时才用 AND 容器：",
-            '{"id": "normal_school_and_major", "all_of": [{"field": "school_type.is_normal_university", "op": "is_true", "value": true}], "score": 3, "desc": "..."}',
+            '{"id": "normal_school_and_major", "all_of": [{"field": "school_type.is_normal_university", "op": "is_true", "value": true}], "score": 2, "desc": "..."}',
             "示例（一条加分项）：",
-            '{"id": "exp_teaching", "field": "exp_tags", "op": "has_any", "value": ["授课", "代课"], "score": 5, "desc": "有授课或代课经历"}',
+            '{"id": "exp_teaching", "field": "exp_tags", "op": "has_any", "value": ["授课", "代课"], "score": 2, "desc": "有授课或代课经历"}',
         ]
     )
 

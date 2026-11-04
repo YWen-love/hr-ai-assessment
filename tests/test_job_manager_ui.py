@@ -4,7 +4,8 @@
 生成 / 保存（新增与编辑）/ 删除 / 列表渲染 / 弹窗分发，
 以及支撑「历史报告不随配置改动」的岗位配置快照。
 
-不发起真实模型调用：把 gradio_ui.JobConfigGenerator 换成固定输出的假类。
+不发起真实模型调用：把 gradio_ui.JobConfigGenerator
+换成固定输出的假类。
 不碰真实数据库：把 job_config_store / session_store 的 DB_PATH 都猴补丁到临时文件。
 
 Gradio 组件接线不在这里测 —— 组件由 build_*_ui() 构建时校验。
@@ -27,6 +28,7 @@ import app.gradio_ui as ui
 import app.job_config_store as store
 import app.session_store as ss
 from app.assessment_service import AssessmentService
+from app.job_schema import level_for_score, score_rules_for
 
 PASS, FAIL = [], []
 
@@ -88,7 +90,7 @@ class FakeGenerator:
     last_job_key = ""
     payload: dict = {}
 
-    async def generate(self, jd_text: str, *, job_key: str | None = None) -> dict:
+    async def generate(self, jd_text: str, *, job_key: str | None = None, key_points: str = "") -> dict:
         FakeGenerator.last_jd = jd_text
         FakeGenerator.last_job_key = job_key or ""
         return json.loads(json.dumps(FakeGenerator.payload, ensure_ascii=False))
@@ -213,7 +215,7 @@ def test_generate_auto_validation() -> None:
                 _, status_html, _, _, _ = run(ui.generate_job_config(str(jd_path)))
                 check("缺必填字段当场报不通过", "校验不通过" in status_html and "job_name" in status_html, status_html[:200])
                 check("告诉 HR 会被拦截", "保存将被拦截" in status_html, status_html[:200])
-                check("告诉 HR 去哪改", "高级" in status_html, status_html[:200])
+                check("告诉 HR 去哪改", "重新生成规则" in status_html, status_html[:200])
 
                 # 软性坑只提示不拦：词表为空但规则用到了 exp_tags
                 soft = valid_config("soft_demo")
@@ -389,7 +391,8 @@ def test_edit_jd_textbox_flow() -> None:
                 # 点【编辑】→ JD 落在可编辑文本框里，不是静态展示
                 ev = gr.SelectData(target=None, data={"index": [0, ui.COL_EDIT], "value": "编辑"})
                 (
-                    job_key, baseline, _, _, jd_box, editor, _, _, sync_hint, _, _
+                    job_key, baseline, _, _, jd_box, editor, _, _, sync_hint,
+                    _, _, _, _, _, _,
                 ) = ui.select_job_action(ev, ["jd_demo"])
                 check("文本框里带出的是这个岗位的 JD", jd_box == "原始 JD 正文", jd_box[:80])
                 check("基准 JD 就是存着的那份", baseline == "原始 JD 正文", baseline[:80])
@@ -536,9 +539,10 @@ def test_select_job_action() -> None:
                 return ui.select_job_action(ev, keys)
 
             # 点【编辑】列
-            job_key, raw_jd, edit_vis, info, jd_box, editor, status, _, sync_hint, del_vis, _ = select(
-                idx_a, ui.COL_EDIT
-            )
+            (
+                job_key, raw_jd, edit_vis, info, jd_box, editor, status, _, sync_hint,
+                key_points, del_vis, _, _, _, _,
+            ) = select(idx_a, ui.COL_EDIT)
             check("点编辑 → 返回该行 job_key", job_key == keys[idx_a], f"{job_key} vs {keys}")
             check("点编辑 → 编辑弹窗打开", _visible(edit_vis))
             check("点编辑 → 删除弹窗不开", not _visible(del_vis))
@@ -549,11 +553,14 @@ def test_select_job_action() -> None:
             check("点编辑 → 编辑器预填现有配置", json.loads(editor)["job_key"] == keys[idx_a])
             check("点编辑 → 状态区清空", status == "")
             check("点编辑 → JD 与规则一致时提示一致", "一致" in sync_hint, sync_hint[:200])
+            check("点编辑 → 打分关键点清空（不留上个岗位的）",
+                  key_points.get("value") == "", str(key_points))
 
             # 点【JD】列：和点【编辑】一样打开编辑弹窗，JD 全文进文本框
-            job_key, raw_jd, edit_vis, info, jd_box, _, _, _, sync_hint, del_vis, _ = select(
-                idx_a, ui.COL_JD
-            )
+            (
+                job_key, raw_jd, edit_vis, info, jd_box, _, _, _, sync_hint,
+                _, del_vis, _, _, _, _,
+            ) = select(idx_a, ui.COL_JD)
             check("点 JD → 返回该行 job_key", job_key == keys[idx_a], f"{job_key} vs {keys}")
             check("点 JD → 编辑弹窗打开", _visible(edit_vis))
             check("点 JD → 删除弹窗不开", not _visible(del_vis))
@@ -566,7 +573,10 @@ def test_select_job_action() -> None:
             check("没录 JD 的岗位在 JD 列画破折号", rows[idx_b][ui.COL_JD] == "—", rows[idx_b][ui.COL_JD])
 
             # 点【删除】列
-            job_key, _, edit_vis, _, _, _, _, _, _, del_vis, del_info = select(idx_b, ui.COL_DELETE)
+            (
+                job_key, _, edit_vis, _, _, _, _, _, _, _, del_vis, del_info,
+                _, _, _,
+            ) = select(idx_b, ui.COL_DELETE)
             check("点删除 → 返回该行 job_key", job_key == keys[idx_b], f"{job_key} vs {keys}")
             check("点删除 → 删除弹窗打开", _visible(del_vis))
             check("点删除 → 编辑弹窗不开", not _visible(edit_vis))
@@ -575,7 +585,7 @@ def test_select_job_action() -> None:
             # 点非操作列 / 行号越界：什么都不弹
             for label, args in (("点姓名列", (idx_a, ui.COL_NAME)), ("点来源列", (idx_b, ui.COL_SOURCE)),
                                 ("点创建时间列", (idx_a, ui.COL_CREATED)), ("行号越界", (99, ui.COL_EDIT))):
-                job_key, _, edit_vis, _, _, _, _, _, _, del_vis, _ = select(*args)
+                job_key, _, edit_vis, _, _, _, _, _, _, _, _, del_vis, _, _, _, _ = select(*args)
                 check(f"{label}不弹窗", not _visible(edit_vis) and not _visible(del_vis) and job_key == "")
 
 
@@ -588,7 +598,10 @@ def test_edit_info_without_raw_jd() -> None:
             check("确认前提：老岗位确实没存 raw_jd", not record["raw_jd"], str(record["raw_jd"]))
 
             ev = gr.SelectData(target=None, data={"index": [0, ui.COL_EDIT], "value": "编辑"})
-            _, _, _, info, jd_box, _, _, _, sync_hint, _, _ = ui.select_job_action(ev, ["legacy"])
+            (
+                _, _, _, info, jd_box, _, _, _, sync_hint,
+                _, _, _, _, _, _,
+            ) = ui.select_job_action(ev, ["legacy"])
             check("明说没有原始 JD", "没有留存原始 JD" in info, info[:200])
             check("并给出下一步指引", "请直接上传新版 JD" in info, info[:300])
             check("JD 文本框是空的，可以直接往里粘", jd_box == "", jd_box[:80])
@@ -689,6 +702,7 @@ def test_snapshot_fallback_for_legacy_sessions() -> None:
             check("老会话退回实时配置重算，不报错",
                   report["objective_layer"]["total_score"] == 3,
                   str(report["objective_layer"]))
+
 
 
 def main() -> int:

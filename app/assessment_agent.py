@@ -109,6 +109,28 @@ class ChatAgent:
     def render_system_prompt(self, job_config: Dict[str, Any], resume_tags: Dict[str, Any]) -> str:
         """只注入主岗信息。alternate_role_mapping 不在这里，也没有别的地方。"""
         responsibilities, work_time, salary = _profile_lines(job_config)
+
+        # 根据候选人毕业状态，决定讲哪段薪资
+        grad_status = (resume_tags.get("graduation_status") or "").strip()
+        grad_year = str(resume_tags.get("graduation_year") or "").strip()
+        is_graduated = ("已毕业" in grad_status) or ("毕业" in grad_status and "未" not in grad_status)
+        if is_graduated:
+            salary_rule = (
+                "\n\n【薪资沟通规则】该候选人已毕业，按正式员工身份沟通。"
+                "薪资只讲正式员工的底薪+提成+补贴+社保部分，不要提实习日薪、实习期待遇。"
+                "严禁说“实习期和正式员工在底薪、提成、补贴及社保方面会有差异”这类对比性表述，"
+                "候选人已毕业，不存在实习期与正式期的差异问题。"
+            )
+        else:
+            salary_rule = (
+                "\n\n【薪资沟通规则】该候选人尚未毕业（在校生/实习身份），"
+                "薪资沟通只讲实习日薪+实习提成部分。"
+                "不要主动提转正后正式员工的底薪和社保，"
+                "也不要说“实习期和正式员工在底薪、提成、补贴及社保方面会有差异”这类对比性表述。"
+                "只有当候选人主动询问转正后待遇时，才可以提及正式员工的薪资，"
+                "且如实说明即可，不要强调“差异”。"
+            )
+
         return (
             CHAT_SYSTEM_PROMPT
             .replace("{{job_name}}", job_config.get("job_name", "该岗位"))
@@ -116,7 +138,7 @@ class ChatAgent:
             .replace("{{job_nature}}", "、".join((job_config.get("job_profile") or {}).get("nature") or []) or "详见岗位职责")
             .replace("{{job_work_time}}", work_time)
             .replace("{{job_rest_schedule}}", "、".join((job_config.get("job_profile") or {}).get("rest_schedule") or []) or "未配置")
-            .replace("{{job_salary}}", salary)
+            .replace("{{job_salary}}", salary + salary_rule)
             .replace("{{check_items}}", "；".join(iter_check_item_texts(job_config)) or "（无）")
             .replace("{{resume_tags}}", render_resume_tags(resume_tags))
         )

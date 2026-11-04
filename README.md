@@ -222,7 +222,6 @@ HR 工作台（`gradio_ui.py`）里改 JD 的流程：
 | `SESSION_SECRET` | Session 签名密钥（不配则每次启动随机，重启后旧 cookie 失效） |
 | `SESSION_MAX_AGE` | cookie 有效期秒数（默认空 = 浏览器关闭即失效） |
 | `APP_DATA_DIR` | 自定义数据目录 |
-| `BACKGROUND_IMAGE_NAME` | 背景图文件名（默认 `bg.jpg`） |
 
 ---
 
@@ -263,9 +262,22 @@ HR 工作台（`gradio_ui.py`）里改 JD 的流程：
 - 自注册：用户名 3-32 字符字母开头，密码至少 6 位；重名靠 `username UNIQUE` 约束兜底
 - 关闭标签页自动登出（`pagehide` + `sendBeacon`）
 
-## 背景图
+## 品牌图（静态资源）
 
-三页（登录 / HR 工作台 / 候选人）共用一张背景图，放 `<data_root>/static/bg.jpg`。图片缺失时渐变 overlay 仍生效，页面正常显示。
+品牌图放在 `<data_root>/static/dist/`，由 `main.py` 把 `<data_root>/static` mount 到 `/static`，
+所以线上访问路径是 `/static/dist/<文件名>`。文件名是中文，代码里写的是**百分号编码后的 URL**。
+
+| 文件 | 用在哪 | 怎么用 |
+|---|---|---|
+| `高途外观.png` | 登录页 / 注册页 | 卡片顶部横幅的背景（`background-size: cover`），图里自带高途 logo 和题字 |
+| `途途半身像.png` | 候选人测评页 `/candidate` | 整页背景，固定贴右下角。PNG 左右是**透明**留白，贴边不会露出方形边界 |
+| `途小跃.jpg` | HR 工作台 `/hr` | 顶部 hero 区的背景，用 `background-blend-mode: screen` 融进深蓝底色（黑底会消失） |
+| `高途大字.png` | 候选人页入口栏 + 两个 Gradio 导航栏 | 右上角品牌角标（红色高途 App 图标） |
+
+岗位管理页 `/hr/jobs/` 的 hero 只有「高途大字」，**不放途小跃** —— 和工作台区开。
+
+图片缺失时页面照常渲染：渐变底色 / 深蓝底色仍在，只是没有那张图。
+`app/data/` 在 `.gitignore` 里，所以这四张图**不在 git 中**，部署时要单独拷过去。
 
 ## 运行数据
 
@@ -292,4 +304,3 @@ pytest tests/ -q
 3. 环境变量设 `LLM_PROVIDER` + 对应 API Key / Base URL / Model
 4. 数据自动持久化到 `/mnt/workspace/hr-ai-assessment/`（容器重启不丢）
 5. 候选人链接域名自动从 `X-Forwarded-Proto` / `X-Forwarded-Host` 取，无需硬编码
-test 

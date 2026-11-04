@@ -14,7 +14,13 @@ from fastapi.staticfiles import StaticFiles
 
 from resume_parser import parse_resume_text
 from config import settings
-from app.gradio_ui import HR_UI_CSS, build_job_manager_ui, build_workbench_ui
+from app.gradio_ui import (
+    HR_JOB_MANAGER_CSS,
+    HR_UI_CSS,
+    HR_WORKBENCH_CSS,
+    build_job_manager_ui,
+    build_workbench_ui,
+)
 from app.hr_auth import init_db as init_hr_db, seed_default_admin, verify_login, create_user
 from app.login_page import render_login_page, render_register_page
 from app.candidate_page import render_candidate_page
@@ -37,7 +43,7 @@ from app.job_config_store import (
 )
 from app.job_generator import JobConfigGenerator, JobGenerationError
 from app.job_schema import is_valid_job_key
-from app.rag_bypass import init_rag_store
+from app.rag_bypass import init_rag_store, seed_rag_from_files
 from app.resume_reader import read_resume_text
 from app.session_policy import (
     SameOriginGuardMiddleware,
@@ -68,6 +74,9 @@ async def lifespan(app: FastAPI):
     if retire_legacy_knowledge_db():
         logger.info("已清理退役的知识库文件 rag_knowledge.db")
     init_rag_store()
+    seeded_rags = seed_rag_from_files()
+    if seeded_rags:
+        logger.info("已导入 RAG 知识库：%s", ", ".join(seeded_rags))
     yield
 
 
@@ -184,7 +193,7 @@ app.add_middleware(InjectLogoutJSMiddleware)
 app.add_middleware(SessionCookiePolicyMiddleware, cookie_name=settings.SESSION_COOKIE_NAME)
 app.add_middleware(SameOriginGuardMiddleware)
 
-# 静态资源（背景图 bg.jpg 放在 <data_root>/static/ 下，自动随魔搭/本地路径解析）
+# 静态资源（品牌图放在 <data_root>/static/dist/ 下，自动随魔搭/本地路径解析）
 STATIC_DIR = data_root() / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -302,7 +311,7 @@ async def api_login(
 
 @app.get("/register")
 async def register_page(request: Request, next: str = "/hr") -> HTMLResponse:
-    """注册页（与登录页同款背景图 + 卡片）。"""
+    """注册页（与登录页同款卡片 + 同一张横幅图）。"""
     return HTMLResponse(
         content=render_register_page(next_url=next or "/hr"),
         media_type="text/html",
@@ -643,7 +652,24 @@ async def candidate_result(session_id: str) -> dict:
 # 挂载顺序是硬约束，不能调换：Starlette 的 Mount 正则是 ^/hr/jobs/(?P<path>.*)$，
 # 而 ^/hr/(?P<path>.*)$ 会把 /hr/jobs 也完整匹配掉。所以岗位管理必须先挂，
 # 工作台后挂，否则 /hr/jobs/ 会被工作台吞掉。
-_HR_THEME = gr.themes.Soft(primary_hue="blue", neutral_hue="slate")
+# 主题只管 Gradio 组件自身的配色和圆角；页面级的大面积底色、英雄条、
+# 表格斑马行这些都写在注入的 CSS 里（见 app/gradio_ui.py 的 HR_UI_CSS）。
+# font 必须传列表而不是单个字符串，否则 Gradio 会把整个字符串当成一个字体名。
+_HR_THEME = gr.themes.Soft(
+    primary_hue="blue",
+    neutral_hue="slate",
+    radius_size=gr.themes.Size(
+        xxs="4px", xs="6px", sm="8px", md="10px", lg="14px", xl="18px", xxl="22px"
+    ),
+    font=[
+        "PingFang SC",
+        "Microsoft YaHei",
+        "Hiragino Sans GB",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif",
+    ],
+)
 
 # 手敲 /hr/jobs（不带尾斜杠）要走这里：它不匹配上面的 Mount，会掉进
 # /hr mount 当成工作台的子路径，直接 404。挂载前的普通路由优先于 Mount。
@@ -661,7 +687,7 @@ app = gr.mount_gradio_app(
     # FastAPI 的 /candidate /assessment /hr/* 路由不受影响。
     path="/hr/jobs",
     theme=_HR_THEME,
-    css=HR_UI_CSS,
+    css=HR_UI_CSS + HR_JOB_MANAGER_CSS,
 )
 
 app = gr.mount_gradio_app(
@@ -669,7 +695,7 @@ app = gr.mount_gradio_app(
     build_workbench_ui(),
     path="/hr",
     theme=_HR_THEME,
-    css=HR_UI_CSS,
+    css=HR_UI_CSS + HR_WORKBENCH_CSS,
 )
 
 

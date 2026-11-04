@@ -24,7 +24,7 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 
 from app.llm_client import LLMClient
-from app.text_match import find_hits, normalize
+from app.text_match import find_hits_spanning, normalize
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ RESUME_PARSE_SYSTEM_PROMPT = """
   "degree": "最高学历，取值用 专科/本科/硕士研究生/博士研究生；没写填 null",
   "major": "专业名称，照抄简历原文（如 汉语言文学）；没写填 null",
   "school_name": "毕业院校全称，照抄简历原文；没写填 null",
-  "graduation_year": "毕业年份，整数；在读就填预计毕业年份；没写填 null",
+  "graduation_year": "最高学历（与 degree 字段一致的那一段教育）的毕业年份，整数；在读就填该学历的预计毕业年份；没写填 null。注意：必须取最高学历对应的年份，不能取较低学历的毕业年份",
   "resume_intention": "简历上写的求职意向原文，照抄；没写填 null",
   "work_experience": "工作与实习经历的一句话概括；没有就填 null",
   "school_type": {
@@ -154,8 +154,10 @@ def _extract_graduation_year(text: str) -> Optional[int]:
     if heading:
         scoped = [m for m in ranges if m.start() >= heading.end()]
         if scoped:
-            return int(scoped[0].group(2))
-    return int(ranges[-1].group(2))
+            # 取教育经历里结束年份最大的那段 → 最高学历的毕业年份
+            return int(max(int(m.group(2)) for m in scoped))
+    # 兜底：全文取最大结束年份
+    return int(max(int(m.group(2)) for m in ranges))
 
 
 def _extract_degree(text: str) -> Optional[str]:
@@ -196,14 +198,17 @@ def detect_exp_tags(resume_text: str, exp_keywords: List[str]) -> List[str]:
     匹配只认整词（allow_partial=False）。原因见 app/text_match.has_trace 的
     文档：放宽到 bigram 会让 "课程顾问/电话销售/教育培训" 在一份小学教师
     简历上全部命中，白送 3 分。宁可少命中，让 LLM 通道去补。
+
+    另外用 find_hits_spanning 做**长词优先占位**：词表里同时有「销售」和
+    「课程销售」时，"任职课程销售。"只能算成课程销售，不能再顺带算一个
+    泛泛的"销售" —— 否则这份简历会同时命中两个档位，白送分。
     """
     if not exp_keywords:
         return []
     haystack = normalize(resume_text or "")
-    return find_hits(
+    return find_hits_spanning(
         [k for k in exp_keywords if isinstance(k, str)],
         haystack,
-        allow_partial=False,
     )
 
 

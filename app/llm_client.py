@@ -26,7 +26,15 @@ _FALLBACK_STATUS = {401, 403, 404, 408, 425, 429, 500, 502, 503, 504}
 
 
 class LLMError(RuntimeError):
-    """所有提供方都失败后抛出。"""
+    """所有提供方都失败后抛出。
+
+    tools_unsupported=True 表示「提供方不认 tools 参数」——
+    调用方可以据此改用 JSON 信封模式（让模型把工具调用写成一段 JSON）重试。
+    """
+
+    def __init__(self, message: str, *, tools_unsupported: bool = False):
+        super().__init__(message)
+        self.tools_unsupported = tools_unsupported
 
 
 class LLMClient:
@@ -84,27 +92,10 @@ class LLMClient:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ]
-        last_error: Optional[Exception] = None
-
-        for entry in settings.llm_providers().values():
-            if not (entry["api_key"] and entry["base_url"] and entry["model"]):
-                logger.debug("跳过未配置的提供方：%s", entry["label"])
-                continue
-            try:
-                return await self._request(
-                    entry, messages,
-                    temperature if temperature is not None else self.temperature,
-                    max_tokens,
-                )
-            except _ProviderError as exc:
-                last_error = exc
-                logger.warning(
-                    "提供方 %s 调用失败，降级到下一个：%s", entry["label"], exc
-                )
-
-        raise LLMError(
-            f"所有 LLM 提供方均不可用，最后一个错误：{last_error}"
-        ) from last_error
+        text, _calls, _raw = await self.chat_messages(
+            messages, temperature=temperature, max_tokens=max_tokens
+        )
+        return text
 
     async def chat_json(
         self,
@@ -138,14 +129,93 @@ class LLMClient:
 
         raise LLMError(f"模型未返回可解析的 JSON：{last_error}") from last_error
 
-    async def _request(
+    async def chat_messages(
+        self,
+        messages: List[Dict[str, Any]],
+        *,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        tool_choice: Optional[Any] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+    ) -> Tuple[str, List[Dict[str, Any]], List[Any]]:
+        """多轮对话。返回 (正文, 工具调用, 原始工具调用)。
+
+        工具调用归一化成 {"id", "name", "arguments", "arguments_error"}；
+        原始 tool_calls 一并返回 —— 继续对话时要把它们原样塞回 assistant 消息，
+        网关按 id 认这次调用。
+
+        提供方不认 tools 参数时不会静默吞掉：抛 LLMError(tools_unsupported=True)，
+        由调用方改用 JSON 信封模式重试。
+        """
+        last_error: Optional[Exception] = None
+        saw_tools_unsupported = False
+
+        for entry in settings.llm_providers().values():
+            if not (entry["api_key"] and entry["base_url"] and entry["model"]):
+                logger.debug("跳过未配置的提供方：%s", entry["label"])
+                continue
+            try:
+                return await self._request_messages(
+                    entry, messages,
+                    temperature if temperature is not None else self.temperature,
+                    max_tokens, tools, tool_choice,
+                )
+            except _ProviderError as exc:
+                last_error = exc
+                if exc.tools_unsupported:
+                    saw_tools_unsupported = True
+                    logger.warning(
+                        "提供方 %s 不支持原生函数调用：%s", entry["label"], exc
+                    )
+                else:
+                    logger.warning(
+                        "提供方 %s 调用失败，降级到下一个：%s", entry["label"], exc
+                    )
+
+        if saw_tools_unsupported:
+            raise LLMError(
+                f"所有 LLM 提供方均不支持原生函数调用，最后一个错误：{last_error}",
+                tools_unsupported=True,
+            ) from last_error
+
+        raise LLMError(
+            f"所有 LLM 提供方均不可用，最后一个错误：{last_error}"
+        ) from last_error
+
+    async def chat_with_tools(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        *,
+        tools: List[Dict[str, Any]],
+        tool_choice: Optional[Any] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+    ) -> Tuple[str, List[Dict[str, Any]], List[Any]]:
+        """发一次带工具定义的请求。返回 (正文, 工具调用, 原始工具调用)。
+
+        注意：提供方不支持原生函数调用时这里直接抛 LLMError(tools_unsupported=True)，
+        不会自动改成信封模式 —— 提示词里【怎么调】那一段也要跟着换，
+        所以这个决定得由拿着提示词的调用方做。
+        """
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        return await self.chat_messages(
+            messages, tools=tools, tool_choice=tool_choice,
+            temperature=temperature, max_tokens=max_tokens,
+        )
+
+    async def _request_messages(
         self,
         provider: Dict[str, str],
-        messages: List[Dict[str, str]],
+        messages: List[Dict[str, Any]],
         temperature: float,
         max_tokens: Optional[int],
-    ) -> str:
-        url = f"{provider['base_url'].rstrip('/')}/chat/completions"
+        tools: Optional[List[Dict[str, Any]]] = None,
+        tool_choice: Optional[Any] = None,
+    ) -> Tuple[str, List[Dict[str, Any]], List[Any]]:
         payload: Dict[str, Any] = {
             "model": provider["model"],
             "messages": messages,
@@ -153,6 +223,31 @@ class LLMClient:
         }
         if max_tokens:
             payload["max_tokens"] = max_tokens
+        if tools:
+            payload["tools"] = tools
+            if tool_choice is not None:
+                payload["tool_choice"] = tool_choice
+
+        body = await self._post(provider, payload)
+
+        if not tools:
+            return _extract_content(body), [], []
+
+        text, calls, raw_calls = _extract_tool_calls(body)
+        if not text and not calls:
+            raise _ProviderError(
+                "响应里既没有正文也没有工具调用；"
+                f"message 字段={sorted((body.get('choices') or [{}])[0].get('message') or {})}"
+            )
+        return text, calls, raw_calls
+
+    async def _post(
+        self,
+        provider: Dict[str, str],
+        payload: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """发一次请求，返回解析后的 JSON body。错误统一抛 _ProviderError。"""
+        url = f"{provider['base_url'].rstrip('/')}/chat/completions"
 
         headers = {
             "Authorization": f"Bearer {provider['api_key']}",
@@ -175,16 +270,22 @@ class LLMClient:
             raise _ProviderError(
                 f"HTTP {response.status_code}（{provider['label']}）：{response.text[:300]}",
                 retryable=retryable,
+                tools_unsupported=_looks_like_tools_unsupported(
+                    response.status_code, response.text
+                ),
             )
 
         try:
-            return _extract_content(response.json())
-        except _ProviderError:
-            raise
+            body = response.json()
         except Exception as exc:
             raise _ProviderError(
                 f"响应结构异常：{exc}；原文：{response.text[:300]}"
             ) from exc
+
+        if not isinstance(body, dict):
+            raise _ProviderError(f"响应结构异常：顶层不是 JSON 对象（{type(body).__name__}）")
+
+        return body
 
 
 # ---------------------------------------------------------------------------
@@ -252,11 +353,135 @@ def _extract_content(payload: Dict[str, Any]) -> str:
 
 
 class _ProviderError(RuntimeError):
-    """单个提供方的失败。retryable=False 表示换谁都一样，直接终止。"""
+    """单个提供方的失败。retryable=False 表示换谁都一样，直接终止。
 
-    def __init__(self, message: str, *, retryable: bool = True):
+    tools_unsupported=True 表示「这个网关不认 tools 参数」——
+    不是配置问题，是能力缺失，换提供方也许能解决，所以和普通失败分开标记。
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        retryable: bool = True,
+        tools_unsupported: bool = False,
+    ):
         super().__init__(message)
         self.retryable = retryable
+        self.tools_unsupported = tools_unsupported
+
+
+# ---------------------------------------------------------------------------
+# 工具调用解析
+# ---------------------------------------------------------------------------
+
+
+def _extract_text_lenient(message: Dict[str, Any], choice: Dict[str, Any]) -> str:
+    """取正文，取不到就返回空串（不抛错）。
+
+    走工具调用时正文可能是空的 —— 模型把整轮回答都放在 tool_calls 里，
+    这时候空串是正常状态，不能当错误。
+    """
+    content = message.get("content")
+    if isinstance(content, str) and content.strip():
+        return strip_reasoning(content)
+    if isinstance(content, list):  # 片段数组
+        joined = "".join(
+            part.get("text", "") if isinstance(part, dict) else str(part)
+            for part in content
+        )
+        if joined.strip():
+            return strip_reasoning(joined)
+
+    reasoning = message.get("reasoning_content")
+    if isinstance(reasoning, str) and reasoning.strip():
+        return strip_reasoning(reasoning)
+
+    text = choice.get("text")
+    if isinstance(text, str) and text.strip():
+        return strip_reasoning(text)
+
+    return ""
+
+
+def _coerce_arguments(args: Any) -> Tuple[Dict[str, Any], Optional[str]]:
+    """把工具参数归一成 dict。
+
+    OpenAI 标准里 arguments 是 JSON 字符串，部分网关直接给对象；
+    两种都认。解析不了就返回 ({}, 错误说明)，让调用方把错误回灌给模型重发。
+    """
+    if isinstance(args, dict):
+        return args, None
+    if isinstance(args, str) and args.strip():
+        text = strip_reasoning(args).strip()
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            try:
+                parsed = extract_json_object(text)
+            except Exception:
+                return {}, f"工具参数不是合法 JSON：{text[:200]}"
+        if isinstance(parsed, dict):
+            return parsed, None
+        return {}, f"工具参数不是 JSON 对象：{text[:200]}"
+    return {}, "工具参数为空"
+
+
+def _extract_tool_calls(
+    payload: Dict[str, Any],
+) -> Tuple[str, List[Dict[str, Any]], List[Any]]:
+    """从 chat/completions 响应里取出正文和工具调用。
+
+    返回 (正文, 归一化后的调用, 原始调用列表)。
+    原始调用要原样回填进 assistant 消息 —— 继续对话时网关按 id 认这次调用。
+    """
+    choices = payload.get("choices") or []
+    if not choices:
+        raise _ProviderError(f"响应缺少 choices 字段：{str(payload)[:200]}")
+
+    choice = choices[0]
+    message = choice.get("message") or {}
+    text = _extract_text_lenient(message, choice)
+
+    raw_calls = message.get("tool_calls") or []
+    if not isinstance(raw_calls, list):
+        raw_calls = []
+
+    calls: List[Dict[str, Any]] = []
+    for raw in raw_calls:
+        if not isinstance(raw, dict):
+            continue
+        function = raw.get("function") or {}
+        name = function.get("name") or raw.get("name")
+        if not isinstance(name, str) or not name.strip():
+            continue
+        arguments, error = _coerce_arguments(
+            function.get("arguments", raw.get("arguments"))
+        )
+        calls.append(
+            {
+                "id": raw.get("id"),
+                "name": name.strip(),
+                "arguments": arguments,
+                "arguments_error": error,
+                "type": raw.get("type") or "function",
+            }
+        )
+
+    return text, calls, list(raw_calls)
+
+
+def _looks_like_tools_unsupported(status_code: int, text: str) -> bool:
+    """判断这个 4xx 是不是「不认 tools 参数」。
+
+    只在 400/404/415/422 这类「请求形状不对」的状态码上看，
+    并且要求报错正文里提到了 tool 或 function —— 否则那多半是别的参数写错了，
+    换个提供方也没用。
+    """
+    if status_code not in (400, 404, 415, 422):
+        return False
+    low = (text or "").lower()
+    return "tool" in low or "function" in low
 
 
 # ---------------------------------------------------------------------------

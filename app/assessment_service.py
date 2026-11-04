@@ -32,7 +32,7 @@ from app.assessment_agent import (
     config_hash,
 )
 from app.job_config_store import get_job_config_object
-from app.rag_bypass import RagBypass
+from app.rag_bypass import RagBypass, retrieve
 from app.report import assemble_report, render_report_text
 from app.redline import build_forbidden_terms
 from app.session_store import (
@@ -57,10 +57,11 @@ MAX_TURNS = 20
 _MAINLINE_CONFIRMATIONS = frozenset({
     "好的", "好", "可以", "行", "接受", "没问题", "是的", "对", "没错",
     "知道了", "明白了", "了解了", "嗯", "好的可以", "可以接受",
+    "能接受", "能行", "ok", "OK",
 })
 
 # 问句正文最短长度。低于此值说明缺少上下文。
-_DEEP_QUESTION_MIN_LEN = 8
+_DEEP_QUESTION_MIN_LEN = 3
 
 
 class AssessmentError(RuntimeError):
@@ -161,8 +162,11 @@ class AssessmentService:
                     "error": f"{config_error}，暂时无法开始测评，请联系 HR。",
                 }
 
-            opening = await self.chat.reply(job_config, resume_tags, [])
-            first_question = opening.text
+            # 开场白固定模板，不调模型生成，避免每次说法都不一样
+            first_question = (
+                f"您好，我是途途测评小助手，看到您投递了【{job_name}】，"
+                f"现在想与您沟通一下这个岗位。想先听听看，您目前怎么理解这个岗位的？"
+            )
             chat_history = [{"role": "assistant", "content": first_question}]
             save_session_answers(
                 session_id,
@@ -207,37 +211,52 @@ class AssessmentService:
 
         reply = await self.chat.reply(job_config, resume_tags, chat_history)
 
-        # --- 约束 1 的代码闸：只有候选人主动发问才受理旁路 ---
-        # 提示词里已限制触发场景，这里再挡一道：若本轮 Agent 是在推进要点
-        # （上一条是 HR 的话、候选人这句是在回答），即使模型误打了 [NEED_RAG] 也不受理。
+        # --- 主线答不了时，自动查 RAG 知识库 ---
+        # 主线回答里出现兜底话术（说明 JD/job_config 里没有这个信息），
+        # 就用候选人原话直接查知识库，命中了就用知识库答案替换兜底话术。
         rag_used = False
         text = reply.text
-        if reply.need_rag_question and _is_deep_question(user_answer):
-            rag_result = await self.rag.answer(
-                reply.need_rag_question,
-                job_config,
-                forbidden_terms=build_forbidden_terms(job_config),
-            )
-            append_rag_event(
-                session_id,
-                {
-                    "question": reply.need_rag_question,
-                    "answered": bool(rag_result.answer),
-                    "citations": rag_result.citations,
-                    "blocked": rag_result.blocked,
-                    "offline_hit": rag_result.offline_hit,
-                },
-            )
-            text = f"{text}\n\n{rag_result.text}".strip() if text else rag_result.text
-            rag_used = True
-        elif reply.need_rag_question:
-            logger.info(
-                "旁路请求被拒：本轮并非候选人主动提问，job=%s", session.get("job_key")
-            )
-            append_rag_event(
-                session_id,
-                {"question": reply.need_rag_question, "rejected": "not_candidate_initiated"},
-            )
+
+        _FALLBACK_MARKERS = (
+            "帮您问", "帮你问", "暂时无法", "暂时没有", "无法准确确认",
+            "帮您确认", "帮你确认", "需要帮您确认", "我这边暂时",
+            "还无法确认", "后续可以和HR",
+            "帮你跟HR", "帮您跟HR", "和HR核实", "跟HR核实",
+            "后续和HR", "后续可以和HR", "再帮你", "再帮您",
+        )
+        is_fallback = any(m in text for m in _FALLBACK_MARKERS)
+
+        if is_fallback and not reply.is_done:
+            rag_doc_id = job_config.get("rag_doc_id") or ""
+            if rag_doc_id:
+                hits = retrieve(rag_doc_id, user_answer)
+                if hits:
+                    rag_result = await self.rag.answer(
+                        user_answer,
+                        job_config,
+                        forbidden_terms=build_forbidden_terms(job_config),
+                    )
+                    if rag_result.answer:
+                        text = rag_result.text
+                        rag_used = True
+                        append_rag_event(session_id, {
+                            "question": user_answer,
+                            "answered": True,
+                            "citations": rag_result.citations,
+                            "source": "auto_retrieve",
+                        })
+                    else:
+                        append_rag_event(session_id, {
+                            "question": user_answer,
+                            "answered": False,
+                            "source": "auto_retrieve",
+                        })
+                else:
+                    append_rag_event(session_id, {
+                        "question": user_answer,
+                        "answered": False,
+                        "reason": "no_chunk_hit",
+                    })
 
         turn_limit_hit = len(answers) >= MAX_TURNS
         should_finish = bool(reply.is_done) or turn_limit_hit
@@ -445,7 +464,7 @@ def _is_deep_question(text: str) -> bool:
     这是约束 1 的代码闸。提示词已明令禁止在确认要点时走旁路，
     但提示词是软约束，模型偶尔仍会误打 [NEED_RAG]。这里按机械信号兜底：
 
-    - 必须是问句（含问号）—— 陈述、短句回答、表态都不含
+    - 含问号，或带中文疑问标记（吗、呢、什么、怎么、几、多少、哪、是否、有没有、能不能）
     - 长度不能太短 —— "有前途吗？" 这类反问缺少上下文，答了必然是编的
     - 排除纯确认语的反问 —— "好的？""可以？" 仍属主线
 
@@ -453,7 +472,16 @@ def _is_deep_question(text: str) -> bool:
     答什么、能不能答，仍由检索命中与越界校验把关。
     """
     content = (text or "").strip()
-    if "?" not in content and "？" not in content:
+    if not content:
+        return False
+
+    # 含问号就算问句
+    has_question_mark = "?" in content or "？" in content
+    # 中文口语疑问标记（候选人打字经常不加问号）
+    question_markers = ("吗", "呢", "什么", "怎么", "几", "多少", "哪", "是否", "有没有", "能不能", "会不会", "是不是", "行不行", "有没有", "啥")
+    has_marker = any(m in content for m in question_markers)
+
+    if not has_question_mark and not has_marker:
         return False
 
     stripped = content.rstrip("?？").strip()
